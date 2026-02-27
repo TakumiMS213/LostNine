@@ -168,7 +168,80 @@ public class ComuStartandEndManager : MonoBehaviour
         }
     }
 
-    private async UniTaskVoid StartComuFlow(string Startid)
+    public async UniTask ComuStartTask(string scenarioId, bool allowAnimation = true)
+    {
+        if (allowAnimation)
+        {
+            await StartComuFlow(scenarioId);
+        }
+        else
+        {
+            // Instant Setup
+            SetPortraitInteractable(false);
+            
+            fadeFrame.gameObject.SetActive(false);
+            NamePlate.SetActive(true);
+            messageWindow.SetActive(true);
+            messageWindowBackGround.SetActive(true);
+            NamePlateBackGround.SetActive(true);
+            ObjectiveDisplay.SetActive(true);
+            Memorizer.SetActive(false); 
+            LostNote.SetActive(false);
+            ToggleEffect.SetActive(false);
+            
+            // Ensure UI panels are in correct state (Open)
+            if (comuStartUI.TryGetComponent<MoveOnClickandReturn>(out var startMove)) 
+            {
+                // Force open state without animation logic if possible, or just play instantly?
+                // For MoveOnClickandReturn, "Play()" usually toggles. 
+                // If we want to skip animation, we might need to set positions manually.
+                // For now, let's assume setting Active is enough for the main window, 
+                // but comuStartUI is the "Chapter Title" overlay. We might want to skip showing it entirely?
+                // Usually "No Animation" means "Resume conversation state instantly".
+                // So we don't show the Title Card.
+            }
+            
+            SetPortraitInteractable(true);
+
+            if (!string.IsNullOrEmpty(scenarioId))
+            {
+                messageWindowIndexStarter.StartScenarioById(scenarioId);
+            }
+        }
+    }
+
+    public async UniTask ComuEndTask(string scenarioId, bool allowAnimation = true)
+    {
+        if (allowAnimation)
+        {
+            await EndComuFlow(scenarioId);
+        }
+        else
+        {
+            // Instant Teardown
+            SetPortraitInteractable(false);
+            
+            NamePlate.SetActive(false);
+            messageWindow.SetActive(false);
+            messageWindowBackGround.SetActive(false);
+            NamePlateBackGround.SetActive(false);
+            ObjectiveDisplay.SetActive(true); // Keep objective visible in exploration?
+            fadeFrame.gameObject.SetActive(false);
+            ToggleEffect.SetActive(false);
+            
+            Memorizer.SetActive(true);
+            LostNote.SetActive(true);
+            
+            SetPortraitInteractable(true);
+
+            if (!string.IsNullOrEmpty(scenarioId))
+            {
+                messageWindowIndexStarter.StartScenarioById(scenarioId);
+            }
+        }
+    }
+
+    private async UniTask StartComuFlow(string Startid)
     {
         _isAnimating = true;
         SetPortraitInteractable(false);
@@ -211,10 +284,15 @@ public class ComuStartandEndManager : MonoBehaviour
         _isAnimating = false;
         SetPortraitInteractable(true);
 
-        messageWindowIndexStarter.StartScenarioById(Startid);
+        // Note: New flow system might handle message starting separately.
+        // For backward compatibility, we keep this, but if scenarioId is null/empty, we skip.
+        if (!string.IsNullOrEmpty(Startid))
+        {
+            messageWindowIndexStarter.StartScenarioById(Startid);
+        }
     }
 
-    private async UniTaskVoid EndComuFlow(string Endid)
+    private async UniTask EndComuFlow(string Endid)
     {
         _isAnimating = true;
         SetPortraitInteractable(false);
@@ -250,7 +328,10 @@ public class ComuStartandEndManager : MonoBehaviour
         _isAnimating = false;
         SetPortraitInteractable(true);
 
-        messageWindowIndexStarter.StartScenarioById(Endid);
+        if (!string.IsNullOrEmpty(Endid))
+        {
+            messageWindowIndexStarter.StartScenarioById(Endid);
+        }
     }
 
     private void PlayDeskAnimation()

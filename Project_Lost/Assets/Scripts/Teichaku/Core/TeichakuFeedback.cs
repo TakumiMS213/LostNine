@@ -1,0 +1,211 @@
+using System;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
+using DG.Tweening;
+
+namespace Teichaku.Core
+{
+    /// <summary>
+    /// 定着ミニゲームの演出処理。
+    /// 失敗時：画面シェイク
+    /// クリア時：画面フラッシュ
+    /// </summary>
+    public class TeichakuFeedback : MonoBehaviour
+    {
+        [Header("グリッドコンテナ（シェイク対象）")]
+        [Tooltip("タイルが配置されている親RectTransform（シェイク演出で揺らす）")]
+        [SerializeField] private RectTransform gridContainer;
+
+        [Header("フラッシュ演出")]
+        [Tooltip("フラッシュ演出用オーバーレイ画像（白い全画面Image）")]
+        [SerializeField] private Image flashOverlay;
+
+        [Tooltip("フラッシュの最大アルファ値")]
+        [SerializeField] private float flashMaxAlpha = 0.8f;
+
+        [Tooltip("フラッシュのフェードイン時間")]
+        [SerializeField] private float flashFadeInDuration = 0.05f;
+
+        [Tooltip("フラッシュのフェードアウト時間")]
+        [SerializeField] private float flashFadeOutDuration = 0.4f;
+
+        [Header("シェイク演出")]
+        [Tooltip("シェイクの強さ（ピクセル）")]
+        [SerializeField] private float shakeStrength = 15f;
+
+        [Tooltip("シェイクの持続時間")]
+        [SerializeField] private float shakeDuration = 0.4f;
+
+        [Tooltip("シェイクの振動回数")]
+        [SerializeField] private int shakeVibrato = 20;
+
+        [Header("タイル訪問演出")]
+        [Tooltip("タイル訪問時のスケールパンチ強度")]
+        [SerializeField] private float tilePunchScale = 0.15f;
+
+        [Tooltip("タイル訪問時のパンチ持続時間")]
+        [SerializeField] private float tilePunchDuration = 0.2f;
+
+        [Header("フェード演出")]
+        [Tooltip("フェード演出用オーバーレイ（黒い全画面Image）")]
+        [SerializeField] private Image fadeOverlay;
+
+        [Header("オーディオ")]
+        [Tooltip("SE再生用AudioSource")]
+        [SerializeField] private AudioSource seSource;
+
+        [Tooltip("タイルなぞり時のSE")]
+        [SerializeField] private AudioClip tileSE;
+
+        [Tooltip("クリア時のSE")]
+        [SerializeField] private AudioClip clearSE;
+
+        [Tooltip("失敗時のSE")]
+        [SerializeField] private AudioClip failSE;
+
+        private Vector2 _gridInitialPos;
+
+        private void Awake()
+        {
+            // フラッシュオーバーレイの初期化
+            if (flashOverlay != null)
+            {
+                var c = flashOverlay.color;
+                c.a = 0f;
+                flashOverlay.color = c;
+            }
+
+            // グリッドの初期位置を記憶
+            if (gridContainer != null)
+            {
+                _gridInitialPos = gridContainer.anchoredPosition;
+            }
+        }
+
+        /// <summary>
+        /// タイルがなぞられた時の演出
+        /// </summary>
+        public void OnTileVisited(TeichakuTile tile)
+        {
+            if (tile != null)
+            {
+                // タイルのスケールパンチ
+                RectTransform rt = tile.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    rt.DOKill();
+                    rt.localScale = Vector3.one;
+                    rt.DOPunchScale(Vector3.one * tilePunchScale, tilePunchDuration, 1, 0f);
+                }
+            }
+
+            // SE再生
+            if (seSource != null && tileSE != null)
+            {
+                seSource.PlayOneShot(tileSE);
+            }
+        }
+
+        /// <summary>
+        /// クリア時の演出（フラッシュ）
+        /// </summary>
+        public void OnClear()
+        {
+            // 画面フラッシュ
+            if (flashOverlay != null)
+            {
+                flashOverlay.DOKill();
+                flashOverlay.color = new Color(
+                    flashOverlay.color.r,
+                    flashOverlay.color.g,
+                    flashOverlay.color.b,
+                    0f
+                );
+                flashOverlay
+                    .DOFade(flashMaxAlpha, flashFadeInDuration)
+                    .OnComplete(() => flashOverlay.DOFade(0f, flashFadeOutDuration));
+            }
+
+            // SE再生
+            if (seSource != null && clearSE != null)
+            {
+                seSource.PlayOneShot(clearSE);
+            }
+
+            Debug.Log("[TeichakuFeedback] Clear flash played.");
+        }
+
+        /// <summary>
+        /// 失敗時の演出（シェイク）
+        /// </summary>
+        public void OnFail()
+        {
+            // 画面シェイク（グリッドコンテナを揺らす）
+            if (gridContainer != null)
+            {
+                gridContainer.DOKill();
+                gridContainer.anchoredPosition = _gridInitialPos;
+                gridContainer
+                    .DOShakeAnchorPos(shakeDuration, shakeStrength, shakeVibrato, 90f, false, true)
+                    .OnComplete(() => gridContainer.anchoredPosition = _gridInitialPos);
+            }
+
+            // SE再生
+            if (seSource != null && failSE != null)
+            {
+                seSource.PlayOneShot(failSE);
+            }
+
+            Debug.Log("[TeichakuFeedback] Fail shake played.");
+        }
+
+        /// <summary>
+        /// フェードアウト演出
+        /// </summary>
+        public void FadeOut(float duration, Action onComplete)
+        {
+            if (fadeOverlay != null)
+            {
+                fadeOverlay.color = new Color(0f, 0f, 0f, 0f);
+                fadeOverlay.DOFade(1f, duration).OnComplete(() => onComplete?.Invoke());
+            }
+            else
+            {
+                onComplete?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// フェードイン演出
+        /// </summary>
+        public void FadeIn(float duration)
+        {
+            if (fadeOverlay != null)
+            {
+                fadeOverlay.color = new Color(0f, 0f, 0f, 1f);
+                fadeOverlay.DOFade(0f, duration);
+            }
+        }
+
+        /// <summary>
+        /// 演出状態をリセットする
+        /// </summary>
+        public void ResetFeedback()
+        {
+            if (flashOverlay != null)
+            {
+                flashOverlay.DOKill();
+                var c = flashOverlay.color;
+                c.a = 0f;
+                flashOverlay.color = c;
+            }
+
+            if (gridContainer != null)
+            {
+                gridContainer.DOKill();
+                gridContainer.anchoredPosition = _gridInitialPos;
+            }
+        }
+    }
+}

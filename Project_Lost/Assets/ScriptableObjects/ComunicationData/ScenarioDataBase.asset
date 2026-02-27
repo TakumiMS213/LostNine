@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: ScenarioDataBase
   m_EditorClassIdentifier: 
   allScenarios:
-  - {fileID: 11400000, guid: f5dab916f21824316819fe937dbd3b91, type: 2}
-  - {fileID: 11400000, guid: 3289f45ea05fb4d8a9ad0cd1e7da2c1c, type: 2}
-  - {fileID: 11400000, guid: d276575f68c3c44bbbbe41e4646bf58a, type: 2}
-  - {fileID: 11400000, guid: 1f788817000f944d8aadd143e4eb7bf6, type: 2}
-  - {fileID: 11400000, guid: a695d374a739c4576b5e9258d8bfd985, type: 2}
-  - {fileID: 11400000, guid: a542a065794bd4e8388fbe399e288702, type: 2}
-  - {fileID: 11400000, guid: b053f092bb6f24252b20d22e8836c8ff, type: 2}
-  - {fileID: 11400000, guid: 6db85092dc87b4c91b1a045d9400f60a, type: 2}
-  - {fileID: 11400000, guid: e32102b4c72004a57a1766e9c6411f8e, type: 2}
+  - {fileID: 11400000, guid: 23f22adf723b6284abf0394c5c604461, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}

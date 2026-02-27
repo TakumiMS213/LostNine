@@ -12,10 +12,24 @@ public class ProgressManager : MonoBehaviour
     [SerializeField] private int _currentChapter = 1;
     [SerializeField] private GamePhase _currentPhase = GamePhase.Prologue;
 
+    [Header("Keyword Progress")]
+    [Tooltip("現在のキーワード獲得数")]
+    [SerializeField] private int _currentKeywordProgress = 0;
+
+    [Tooltip("シークエンス起動に必要なキーワード数")]
+    [SerializeField] private int _keywordThreshold = 3;
+
     public int CurrentChapter => _currentChapter;
     public GamePhase CurrentPhase => _currentPhase;
+    public int CurrentKeywordProgress => _currentKeywordProgress;
+    public int KeywordThreshold => _keywordThreshold;
 
     public event Action OnProgressChanged;
+
+    /// <summary>
+    /// キーワード獲得数がしきい値に達した時に発火するイベント
+    /// </summary>
+    public event Action OnKeywordThresholdReached;
 
     private void Awake()
     {
@@ -23,9 +37,11 @@ public class ProgressManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            Debug.Log("[ProgressManager] Initialized and marked DontDestroyOnLoad.");
         }
         else
         {
+            Debug.LogWarning("[ProgressManager] Duplicate instance detected. Destroying this gameObject.");
             Destroy(gameObject);
         }
     }
@@ -35,8 +51,10 @@ public class ProgressManager : MonoBehaviour
     /// </summary>
     public void SetProgress(int chapter, GamePhase phase)
     {
+        Debug.Log($"[ProgressManager] SetProgress: {_currentChapter}-{_currentPhase} -> {chapter}-{phase}");
         _currentChapter = chapter;
         _currentPhase = phase;
+        ResetKeywordProgress();
         OnProgressChanged?.Invoke();
     }
 
@@ -53,7 +71,10 @@ public class ProgressManager : MonoBehaviour
             _currentChapter++;
         }
         
+        // Debug.Log($"[ProgressManager] AdvancePhase: {_currentPhase} -> {(GamePhase)nextPhase} (Chapter {_currentChapter})");
+        
         _currentPhase = (GamePhase)nextPhase;
+        ResetKeywordProgress();
         OnProgressChanged?.Invoke();
     }
 
@@ -64,7 +85,31 @@ public class ProgressManager : MonoBehaviour
     {
         _currentChapter++;
         _currentPhase = GamePhase.Prologue;
+        ResetKeywordProgress();
         OnProgressChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// キーワードを1つ追加する。しきい値に達したらイベントを発火する。
+    /// </summary>
+    public void AddKeyword()
+    {
+        _currentKeywordProgress++;
+        Debug.Log($"[ProgressManager] Keyword added. Progress: {_currentKeywordProgress}/{_keywordThreshold}");
+
+        if (_currentKeywordProgress >= _keywordThreshold)
+        {
+            Debug.Log($"[ProgressManager] Keyword threshold reached! ({_currentKeywordProgress}/{_keywordThreshold})");
+            OnKeywordThresholdReached?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// キーワード進捗をリセットする（章の切り替え時などに使用）。
+    /// </summary>
+    public void ResetKeywordProgress()
+    {
+        _currentKeywordProgress = 0;
     }
 
     /// <summary>

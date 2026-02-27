@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 namespace Tuning.Core
 {
@@ -243,16 +244,18 @@ namespace Tuning.Core
             if (successMoveVisual != null)
             {
                 successMoveVisual.Play();
-                // 1秒後にもう一度再生（元の位置に戻る等の動作を想定）
+                // 2秒後にもう一度再生（元の位置に戻る等の動作を想定）
                 DOVirtual.DelayedCall(2f, () => 
                 {
                     if (successMoveVisual != null) successMoveVisual.Play();
                 });
-                DOVirtual.DelayedCall(3f, () => 
-                {
-                    if(ToNextStepVisual != null) ToNextStepVisual.Play();
-                });
             }
+
+            // 次のステップへの遷移演出（successMoveVisualとは独立して実行）
+            DOVirtual.DelayedCall(3f, () => 
+            {
+                SceneManager.LoadScene("Memorize_2");
+            }).SetLink(gameObject);
         }
 
         /// <summary>

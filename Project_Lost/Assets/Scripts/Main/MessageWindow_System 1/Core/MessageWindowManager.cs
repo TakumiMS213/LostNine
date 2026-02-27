@@ -58,6 +58,9 @@ namespace MessageWindowSystem.Core
         [Header("Database")]
         [SerializeField] private ScenarioDatabase scenarioDatabase;
 
+        [Header("Debug")]
+        [SerializeField] private bool showDebugGUI = true;
+
         #endregion
 
         #region Public Properties
@@ -89,6 +92,7 @@ namespace MessageWindowSystem.Core
         private bool _shouldBlockNext;
         private bool _nameOriginalCaptured;
         private bool _isWaitingForChoice;
+        private Action _onScenarioComplete;
 
         #endregion
 
@@ -110,15 +114,51 @@ namespace MessageWindowSystem.Core
             HideAllChoices();
         }
 
+        private void OnGUI()
+        {
+            if (!showDebugGUI) return;
+
+            GUI.color = Color.black;
+            GUILayout.BeginArea(new Rect(10, 10, 400, 200), GUI.skin.box);
+            GUI.color = Color.white;
+            
+            GUILayout.Label($"<b>[Debug Info]</b>");
+            if (ProgressManager.Instance != null)
+            {
+                GUILayout.Label($"Chapter: {ProgressManager.Instance.CurrentChapter} | Phase: {ProgressManager.Instance.CurrentPhase}");
+            }
+            else
+            {
+                GUILayout.Label("ProgressManager: NULL");
+            }
+
+            if (_currentScenarioData != null)
+            {
+                GUILayout.Label($"Scenario: {_currentScenarioData.name} ({_currentScenarioData.scenarioId})");
+                GUILayout.Label($"UpdateProgress: {_currentScenarioData.updateProgressOnEnd}");
+                GUILayout.Label($"Action: {_currentScenarioData.progressAction}");
+                GUILayout.Label($"ToggleComu: {_currentScenarioData.toggleComuOnEnd}");
+            }
+            else
+            {
+                GUILayout.Label("Scenario: None");
+            }
+            GUILayout.EndArea();
+        }
+
         #endregion
 
         #region Public API
 
         public void SetKeywordEnabled(bool enable) => _isKeywordEnabled = enable;
 
-        public void StartScenario(DialogueScenario scenario)
+        public void StartScenario(DialogueScenario scenario, Action onComplete = null)
         {
-            if (scenario == null) return;
+            if (scenario == null)
+            {
+                onComplete?.Invoke();
+                return;
+            }
 
             // Reset choice state
             _isWaitingForChoice = false;
@@ -132,16 +172,21 @@ namespace MessageWindowSystem.Core
                 _linesQueue.Enqueue(line);
 
             _currentScenarioData = scenario;
+            _onScenarioComplete = onComplete; // Store callback
 
             if (windowRoot) windowRoot.SetActive(true);
             _isWindowActive = true;
+            
+            Debug.Log($"[MWM] StartScenario: {scenario.name} (ID: {scenario.scenarioId})");
+            Debug.Log($"[MWM] Settings -> updateProgressOnEnd: {scenario.updateProgressOnEnd}, Action: {scenario.progressAction}");
+
             DisplayNextLine();
         }
 
-        public void StartScenario(DialogueScenario scenario, bool enableKeywords)
+        public void StartScenario(DialogueScenario scenario, bool enableKeywords, Action onComplete = null)
         {
             SetKeywordEnabled(enableKeywords);
-            StartScenario(scenario);
+            StartScenario(scenario, onComplete);
         }
 
         public void Next()
@@ -156,28 +201,6 @@ namespace MessageWindowSystem.Core
         }
 
         public IReadOnlyList<(string speaker, string text)> GetLog() => _log;
-
-        /// <summary>
-        /// Called by choice buttons when selected.
-        /// </summary>
-        public void OnChoiceSelected(int index)
-        {
-            if (!_isWaitingForChoice || _currentLine?.choices == null) return;
-            if (index < 0 || index >= _currentLine.choices.Count) return;
-
-            var choice = _currentLine.choices[index];
-            _isWaitingForChoice = false;
-            HideAllChoices();
-
-            if (choice.nextScenario != null)
-            {
-                StartScenario(choice.nextScenario);
-            }
-            else
-            {
-                DisplayNextLine();
-            }
-        }
 
         #endregion
 
@@ -249,7 +272,19 @@ namespace MessageWindowSystem.Core
         public void StartKeywordConversation(string id)
         {
             var ds = Resources.Load<DialogueScenario>($"KeywordConversations/{id}");
-            if (ds != null) StartScenario(ds);
+            if (ds != null) 
+            {
+                // Pause current flow? Ideally, we should stack scenarios.
+                // For now, simple fire-and-forget or nested call.
+                // Keyword conversations are usually interruptions.
+                // We might want to resume the previous one?
+                // Let's just play it.
+                StartScenario(ds, () => 
+                {
+                    // Maybe return to previous? 
+                    // For now, just allow it to end.
+                });
+            }
         }
 
         #endregion
@@ -346,6 +381,7 @@ namespace MessageWindowSystem.Core
 
             OnKeywordClicked?.Invoke(linkID);
             ClueManager.Instance?.ProcessKeywordClick(linkID);
+            ProgressManager.Instance?.AddKeyword();
 
             // Try to play corresponding scenario from database
             if (scenarioDatabase != null)
@@ -385,63 +421,122 @@ namespace MessageWindowSystem.Core
             DisplayNextLine();
         }
 
-        private void DisplayNextLine()
+#region Dialogue Flow
+
+private void DisplayNextLine()
+{
+    if (_linesQueue.Count == 0)
+    {
+        // ループ判定：同一シナリオを繰り返す設定なら再開
+        if (_currentScenarioData != null && _currentScenarioData.loopScenario)
         {
-            if (_linesQueue.Count == 0)
-            {
-                // Check for loop
-                if (_currentScenarioData != null && _currentScenarioData.loopScenario)
-                {
-                    StartScenario(_currentScenarioData);
-                    return;
-                }
-
-                // Check for next scenario chain
-                if (_currentScenarioData?.nextScenario != null)
-                {
-                    StartScenario(_currentScenarioData.nextScenario);
-                    return;
-                }
-
-                EndScenario();
-                return;
-            }
-
-            _currentLine = _linesQueue.Dequeue();
-            string speakerName = _currentLine.speakerName ?? string.Empty;
-
-            if (speakerNameText) speakerNameText.text = speakerName;
-            _log.Add((speakerName, _currentLine.text));
-
-            UpdatePortrait();
-            PlayEffects();
-            AnimateSpeakerName(speakerName);
-
-            _previousSpeakerName = speakerName;
-
-            if (_typingCoroutine != null) StopCoroutine(_typingCoroutine);
-            float speed = _currentLine.typingSpeed > 0 ? _currentLine.typingSpeed : typingSpeed;
-            _typingCoroutine = StartCoroutine(TypeText(_currentLine.text, speed));
+            StartScenario(_currentScenarioData, _onScenarioComplete);
+            return;
         }
+
+        // それ以外（終了、または次のシナリオへ）はすべて EndScenario に集約
+        EndScenario();
+        return;
+    }
+
+    _currentLine = _linesQueue.Dequeue();
+    string speakerName = _currentLine.speakerName ?? string.Empty;
+
+    if (speakerNameText) speakerNameText.text = speakerName;
+    _log.Add((speakerName, _currentLine.text));
+
+    UpdatePortrait();
+    PlayEffects();
+    AnimateSpeakerName(speakerName);
+
+    _previousSpeakerName = speakerName;
+
+    if (_typingCoroutine != null) StopCoroutine(_typingCoroutine);
+    float speed = _currentLine.typingSpeed > 0 ? _currentLine.typingSpeed : typingSpeed;
+    _typingCoroutine = StartCoroutine(TypeText(_currentLine.text, speed));
+}
 
         private void EndScenario()
         {
-            // まずウィンドウ自体は一度閉じるような形になるが、連続再生の場合はStartScenarioで再設定される
-            // ただし、一瞬消えるのを防ぐため、連続再生が確定したら非表示化をスキップすることも可能
-            // ここではシンプルに、次のシナリオがない場合のみ閉じるロジックにする
+            // 1. 進行状況の更新（フェーズ移行など）を、次のシナリオへ行く前に実行
+            HandleScenarioCompletionActions();
 
-            bool hasNextChain = false;
-            
-            // Cache toggleComuOnEnd before _currentScenarioData could change
-            bool shouldToggleComu = _currentScenarioData != null && _currentScenarioData.toggleComuOnEnd;
-
-            // Update Progress if configured
-            if (_currentScenarioData != null && _currentScenarioData.updateProgressOnEnd && ProgressManager.Instance != null)
+            // 2. 次のシナリオチェーンがあるか確認
+            if (_currentScenarioData?.nextScenario != null)
             {
+                Debug.Log($"[MWM] Transitioning to next scenario: {_currentScenarioData.nextScenario.name}");
+                // 次のシナリオを開始（ウィンドウは閉じない）
+                StartScenario(_currentScenarioData.nextScenario, _onScenarioComplete);
+                return;
+            }
+
+            // 3. チェーンがない場合はウィンドウを閉じる
+            _isWindowActive = false;
+            if (windowRoot) windowRoot.SetActive(false);
+
+            // 4. 全行程終了のコールバックを実行
+            _onScenarioComplete?.Invoke();
+            _onScenarioComplete = null;
+        }
+
+        #endregion
+
+        #region Choice Methods
+
+        public void OnChoiceSelected(int index)
+        {
+            if (!_isWaitingForChoice || _currentLine?.choices == null) return;
+            if (index < 0 || index >= _currentLine.choices.Count) return;
+
+            var choice = _currentLine.choices[index];
+            _isWaitingForChoice = false;
+            HideAllChoices();
+
+            // ★ 選択肢を選んだ際も、現在のシナリオとしての完了アクション（フェーズ移行等）を先に処理
+            HandleScenarioCompletionActions();
+
+            if (choice.nextScenario != null)
+            {
+                // 選択肢によって指定された次のシナリオへ移行
+                StartScenario(choice.nextScenario, _onScenarioComplete);
+            }
+            else
+            {
+                // 飛び先がない場合は、現在のキューをクリアして終了処理（EndScenario）へ
+                _linesQueue.Clear();
+                EndScenario();
+            }
+        }
+
+        #endregion
+
+        private void HandleScenarioCompletionActions()
+        {
+            if (_currentScenarioData == null) return;
+
+            // Handle Communication Toggle
+            if (_currentScenarioData.toggleComuOnEnd)
+            {
+                var comuManager = FindObjectOfType<ComuStartandEndManager>();
+                if (comuManager != null)
+                {
+                    Debug.Log("[MWM] toggleComuOnEnd: Calling ToggleComu().");
+                    comuManager.ToggleComu();
+                }
+                else
+                {
+                    Debug.LogWarning("[MWM] toggleComuOnEnd is set but ComuStartandEndManager not found.");
+                }
+            }
+
+            // Handle Progress Update
+            if (_currentScenarioData.updateProgressOnEnd && ProgressManager.Instance != null)
+            {
+                Debug.Log($"[MWM] updateProgressOnEnd: Executing {_currentScenarioData.progressAction}");
                 switch (_currentScenarioData.progressAction)
                 {
                     case ProgressActionType.AdvancePhase:
-                        ProgressManager.Instance.AdvancePhase();
+                        ProgressManager.Instance.AdvancePhase(); 
                         break;
                     case ProgressActionType.AdvanceChapter:
                         ProgressManager.Instance.AdvanceChapter();
@@ -450,42 +545,6 @@ namespace MessageWindowSystem.Core
                         ProgressManager.Instance.SetProgress(_currentScenarioData.targetChapter, _currentScenarioData.targetPhase);
                         break;
                 }
-                
-                Debug.Log($"[MWM] Progress Updated via Scenario: {_currentScenarioData.name}");
-
-                // Try to find the next scenario based on new progress
-                if (scenarioDatabase != null)
-                {
-                    string newKey = ProgressManager.Instance.GetScenarioKey();
-                    var nextScenario = scenarioDatabase.GetScenarioById(newKey);
-                    if (nextScenario != null)
-                    {
-                        Debug.Log($"[MWM] Found consecutive scenario: {newKey}. Playing immediately.");
-                        StartScenario(nextScenario);
-                        hasNextChain = true;
-                    }
-                    else
-                    {
-                        Debug.Log($"[MWM] No consecutive scenario found for key: {newKey}");
-                    }
-                }
-            }
-
-            // Call ToggleComu if configured (ONLY when no consecutive scenario)
-            // Note: If there's a chain, we don't toggle because we're continuing the conversation
-
-            if (hasNextChain) return;
-
-            // If no chain, close window
-            _isWindowActive = false;
-            if (windowRoot) windowRoot.SetActive(false);
-
-            // Call ToggleComu after closing window (only when no chain)
-            if (shouldToggleComu)
-            {
-                Debug.Log($"[MWM] Calling ToggleComu");
-                var comuManager = FindAnyObjectByType<ComuStartandEndManager>();
-                comuManager?.ToggleComu();
             }
         }
 
