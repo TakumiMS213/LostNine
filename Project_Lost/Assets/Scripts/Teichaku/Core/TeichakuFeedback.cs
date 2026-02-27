@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 namespace Teichaku.Core
 {
@@ -134,6 +135,8 @@ namespace Teichaku.Core
             }
 
             Debug.Log("[TeichakuFeedback] Clear flash played.");
+
+            SceneManager.LoadScene("Main");
         }
 
         /// <summary>
