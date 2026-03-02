@@ -30,6 +30,19 @@ namespace MessageWindowSystem.Data
 
         [Tooltip("Choices to present after this line (if any).")]
         public List<ChoiceData> choices;
+
+        [Tooltip("Portrait display position (Left, Center, Right). Default = Center.")]
+        public PortraitPosition portraitPosition;
+    }
+
+    /// <summary>
+    /// Portrait display position on the message window.
+    /// </summary>
+    public enum PortraitPosition
+    {
+        Center = 0,
+        Left,
+        Right
     }
 
     [System.Serializable]

@@ -30,6 +30,7 @@ MonoBehaviour:
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
     choices: []
+    portraitPosition: 1
   - speakerName: "\u30D2\u30A4\u30E9\u30AE"
     portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
     text: "\u4ECA\u306F\u30D7\u30ED\u30ED\u30FC\u30B0\u30D5\u30A7\u30FC\u30BA\u3067\u3059\u3002\n\u3088\u304F\u3042\u308B\u6700\u521D\u306E\u4F1A\u8A71\u90E8\u5206\u3067\u3059"
@@ -38,6 +39,7 @@ MonoBehaviour:
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
     choices: []
+    portraitPosition: 2
   - speakerName: "\u30D2\u30A4\u30E9\u30AE"
     portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
     text: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u3092\u62BC\u3057\u3066\u6B21\u306E\u30D5\u30A7\u30FC\u30BA\u306B\u9032\u307F\u307E\u3059"
@@ -46,3 +48,4 @@ MonoBehaviour:
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
     choices: []
+    portraitPosition: 0

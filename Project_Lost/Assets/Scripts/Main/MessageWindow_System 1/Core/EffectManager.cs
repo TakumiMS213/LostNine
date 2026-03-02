@@ -42,6 +42,14 @@ namespace MessageWindowSystem.Core
 
         #endregion
 
+        #region Private Fields
+
+        private Coroutine _shakeCoroutine;
+        private Coroutine _flashCoroutine;
+        private Coroutine _fadeCoroutine;
+
+        #endregion
+
         #region Unity Lifecycle
 
         private void Awake()
@@ -69,17 +77,19 @@ namespace MessageWindowSystem.Core
         {
             switch (data.effectType)
             {
+                case EffectType.None:
+                    break;
                 case EffectType.Shake:
-                    StartCoroutine(ShakeCamera(data.floatParam > 0 ? data.floatParam : 0.5f, 0.2f));
+                    PlayShake(data.floatParam > 0 ? data.floatParam : 0.5f, 0.2f);
                     break;
                 case EffectType.Flash:
-                    StartCoroutine(FlashEffect(data.colorParam));
+                    PlayFlash(data.colorParam);
                     break;
                 case EffectType.FadeIn:
-                    StartCoroutine(FadeEffect(data.floatParam, data.colorParam, fadeIn: true));
+                    PlayFade(data.floatParam, data.colorParam, fadeIn: true);
                     break;
                 case EffectType.FadeOut:
-                    StartCoroutine(FadeEffect(data.floatParam, data.colorParam, fadeIn: false));
+                    PlayFade(data.floatParam, data.colorParam, fadeIn: false);
                     break;
                 case EffectType.PlaySE:
                     PlaySE(data.stringParam);
@@ -117,10 +127,11 @@ namespace MessageWindowSystem.Core
 
         public void PlayDevelopmentEffect(Action onComplete = null)
         {
-            seAudioSource?.PlayOneShot(developCompleteSE);
+            if (developCompleteSE != null)
+                seAudioSource?.PlayOneShot(developCompleteSE);
 
             var seq = DOTween.Sequence();
-            seq.AppendCallback(() => StartCoroutine(ShakeCamera(developShakeDuration, developShakeStrength)));
+            seq.AppendCallback(() => PlayShake(developShakeDuration, developShakeStrength));
 
             if (flashOverlay != null)
             {
@@ -141,13 +152,19 @@ namespace MessageWindowSystem.Core
             if (seAudioSource == null || string.IsNullOrEmpty(clipName)) return;
             var clip = Resources.Load<AudioClip>($"Audio/SE/{clipName}");
             if (clip != null) seAudioSource.PlayOneShot(clip);
+            else Debug.LogWarning($"[EffectManager] SE not found: Audio/SE/{clipName}");
         }
 
         private void PlayBGM(string clipName)
         {
             if (bgmAudioSource == null || string.IsNullOrEmpty(clipName)) return;
             var clip = Resources.Load<AudioClip>($"Audio/BGM/{clipName}");
-            if (clip == null || (bgmAudioSource.clip == clip && bgmAudioSource.isPlaying)) return;
+            if (clip == null)
+            {
+                Debug.LogWarning($"[EffectManager] BGM not found: Audio/BGM/{clipName}");
+                return;
+            }
+            if (bgmAudioSource.clip == clip && bgmAudioSource.isPlaying) return;
 
             bgmAudioSource.clip = clip;
             bgmAudioSource.loop = true;
@@ -165,7 +182,11 @@ namespace MessageWindowSystem.Core
             if (centerImage == null) return;
 
             Sprite sprite = directSprite ?? Resources.Load<Sprite>($"Images/{imageName}");
-            if (sprite == null) return;
+            if (sprite == null)
+            {
+                Debug.LogWarning($"[EffectManager] Image not found: {imageName}");
+                return;
+            }
 
             centerImage.sprite = sprite;
             centerImage.color = tint.a > 0 ? tint : Color.white;
@@ -177,7 +198,25 @@ namespace MessageWindowSystem.Core
 
         #endregion
 
-        #region Visual Effect Coroutines
+        #region Visual Effect Methods
+
+        private void PlayShake(float duration, float magnitude)
+        {
+            if (_shakeCoroutine != null) StopCoroutine(_shakeCoroutine);
+            _shakeCoroutine = StartCoroutine(ShakeCamera(duration, magnitude));
+        }
+
+        private void PlayFlash(Color color)
+        {
+            if (_flashCoroutine != null) StopCoroutine(_flashCoroutine);
+            _flashCoroutine = StartCoroutine(FlashEffect(color));
+        }
+
+        private void PlayFade(float duration, Color color, bool fadeIn)
+        {
+            if (_fadeCoroutine != null) StopCoroutine(_fadeCoroutine);
+            _fadeCoroutine = StartCoroutine(FadeEffect(duration, color, fadeIn));
+        }
 
         private IEnumerator FlashEffect(Color color)
         {
@@ -204,6 +243,12 @@ namespace MessageWindowSystem.Core
 
         private static IEnumerator LerpAlpha(Image img, Color baseColor, float from, float to, float duration)
         {
+            if (duration <= 0f)
+            {
+                img.color = new Color(baseColor.r, baseColor.g, baseColor.b, to);
+                yield break;
+            }
+
             float t = 0f;
             while (t < duration)
             {
@@ -216,22 +261,27 @@ namespace MessageWindowSystem.Core
 
         private static IEnumerator ShakeCamera(float duration, float magnitude)
         {
-            if (Camera.main == null) yield break;
+            var cam = Camera.main;
+            if (cam == null) yield break;
 
-            var cam = Camera.main.transform;
-            Vector3 originalPos = cam.localPosition;
+            var camTransform = cam.transform;
+            Vector3 originalPos = camTransform.localPosition;
             float elapsed = 0f;
 
             while (elapsed < duration)
             {
+                // Re-check camera validity each frame
+                if (camTransform == null) yield break;
+
                 float x = UnityEngine.Random.Range(-1f, 1f) * magnitude;
                 float y = UnityEngine.Random.Range(-1f, 1f) * magnitude;
-                cam.localPosition = originalPos + new Vector3(x, y, 0f);
+                camTransform.localPosition = originalPos + new Vector3(x, y, 0f);
                 elapsed += Time.deltaTime;
                 yield return null;
             }
 
-            cam.localPosition = originalPos;
+            if (camTransform != null)
+                camTransform.localPosition = originalPos;
         }
 
         #endregion

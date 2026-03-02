@@ -39,8 +39,11 @@ public class ClueManager : MonoBehaviour
         if (string.IsNullOrEmpty(id) || _discovered.Contains(id) || _clicked.Contains(id)) return;
 
         _discovered.Add(id);
-        MessageWindowManager.Instance?.SetLinkColor(id, "#FFFF00");
-        MessageWindowManager.Instance?.ShakeLinkVisual(id);
+
+        // Use KeywordHandler for visual feedback
+        var handler = FindKeywordHandler();
+        handler?.SetLinkColor(id, "#FFFF00");
+        handler?.ShakeLinkVisual(id);
     }
 
     /// <summary>
@@ -62,10 +65,10 @@ public class ClueManager : MonoBehaviour
         {
             _clicked.Add(id);
             AddNoteAutomatically(id);
-            MessageWindowManager.Instance?.SetLinkColor(id, "#888888");
+            // NOTE: Color persistence is disabled. No greying out of clicked keywords.
         }
 
-        MessageWindowManager.Instance?.StartKeywordConversation(id);
+        // Keyword conversation is now handled via OnKeywordScenarioRequested event in KeywordHandler
     }
 
     public bool IsClicked(string id) => _clicked.Contains(id);
@@ -79,5 +82,14 @@ public class ClueManager : MonoBehaviour
     private void AddNoteAutomatically(string id)
     {
         // TODO: Integrate with NotebookManager when available
+    }
+
+    /// <summary>
+    /// Finds the KeywordHandler in the scene.
+    /// </summary>
+    private static KeywordHandler FindKeywordHandler()
+    {
+        // Prefer getting it through the manager if available
+        return FindObjectOfType<KeywordHandler>();
     }
 }
