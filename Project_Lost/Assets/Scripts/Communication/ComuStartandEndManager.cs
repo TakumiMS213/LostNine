@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
+using MessageWindowSystem.Core;
 using MessageWindowSystem.Testing;
 using TMPro;
 
 /// <summary>
 /// Manages communication start/end UI transitions.
+/// Portrait click behavior is differentiated by current GamePhase.
 /// </summary>
 public class ComuStartandEndManager : MonoBehaviour
 {
@@ -19,10 +21,13 @@ public class ComuStartandEndManager : MonoBehaviour
     [SerializeField] private Image fadeFrame;
     [SerializeField] private GameObject Memorizer;
     [SerializeField] private GameObject LostNote;
-    [SerializeField] private GameObject ObjectiveDisplay; //目的表示用
-    [SerializeField] private GameObject ToggleEffect; //トグルエフェクト
+    [SerializeField] private GameObject ToggleEffect;
 
     [SerializeField] private GameObject Portrait;
+    [Tooltip("Overlay displayed when portrait is unclickable in scenario")]
+    [SerializeField] private GameObject unclickableOverlay;
+    [Tooltip("SE played when clicking portrait while it's unclickable")]
+    [SerializeField] private AudioClip unclickableSE;
     
     [SerializeField] private MessageWindowIndexStarter messageWindowIndexStarter;
 
@@ -34,108 +39,105 @@ public class ComuStartandEndManager : MonoBehaviour
     [Tooltip("Manual end ID (used if useProgressBasedId is false).")]
     [SerializeField] private string endScenarioId;
 
-    private bool _isInCommunication = false;
     private bool _isAnimating = false;
+    private bool _isPortraitInteractable = true;
+
+    public bool IsInCommunication => _isInCommunication;
 
     public void ComuStart(string scenarioId) => StartComuFlow(scenarioId).Forget();
     public void ComuEnd(string scenarioId) => EndComuFlow(scenarioId).Forget();
 
     /// <summary>
-    /// Toggles between Start and End communication flows.
-    /// Uses Progress-based or Inspector-configured IDs. Can be called from Button.onClick.
-    /// When called, plays the Dialogue scenario for the current chapter (Ch{N}_Dialogue).
+    /// Wrapper for ToggleComuforPortrait. Can be called from Button.onClick.
     /// </summary>
     public void ToggleComu()
     {
-        if (_isAnimating) return;
-
-        if (_isInCommunication)
-        {
-            Portrait.GetComponent<Button>().onClick.Invoke();
-            _isInCommunication = false;
-        }
-        else
-        {
-            Portrait.GetComponent<Button>().onClick.Invoke();
-            _isInCommunication = true;
-
-            // Generate Dialogue ID based on current chapter
-            string dialogueId = startScenarioId; // Fallback
-            if (ProgressManager.Instance != null)
-            {
-                // Ensure phase is set to Dialogue
-                ProgressManager.Instance.SetProgress(ProgressManager.Instance.CurrentChapter, GamePhase.Dialogue);
-                dialogueId = $"Ch{ProgressManager.Instance.CurrentChapter}_Dialogue";
-                Debug.Log($"[ComuManager] ToggleComu: Starting Dialogue scenario: {dialogueId}");
-            }
-            
-            // Pass the generated ID to ComuStart so it plays after animation
-            // Note: Currently ToggleComu calls Portrait click which might trigger ComuStart indirectly via another script?
-            // If Portrait button calls ToggleComuforPortrait, then this method is redundant or conflicting.
-            // Assuming this method IS the entry point:
-            
-            // However, looking at the code, Portrait.onClick.Invoke() is called. 
-            // If Portrait has a button that calls ToggleComuforPortrait, we should coordinate.
-            // But based on request, we want to ensure ComuStart plays the Dialogue scenario.
-            
-            // If Portrait click handles the flow, we shouldn't call ComuStart here to avoid double play.
-            // Wait, the user code previously called Portrait.GetComponent<Button>().onClick.Invoke();
-            // Let's assume the user wants this method to drive the logic.
-            // But if ToggleComu IS the button listener, calling Invoke() on itself causes a loop.
-            // Let's assume Portrait button has a DIFFERENT listener (maybe visuals only?) or this method IS the listener.
-            
-            // Reverting to the previous simpler logic but fixing the ID passing:
-            // Actually, usually ToggleComuforPortrait is the main one used by the Portrait button.
-            // ToggleComu seems to be a wrapper or alternative.
-            
-            // Let's look at ToggleComuforPortrait logic below.
-        }
+        ToggleComuforPortrait();
     }
 
+    /// <summary>
+    /// Portrait クリック時のメイン処理。
+    /// 現在の GamePhase に応じてシナリオIDを生成し、適切な処理を分岐する。
+    /// 
+    /// - Dialogue:     Ch{N}_Dialogue を再生
+    /// - Extraction:   Ch{N}_Extraction を再生（キーワード有効、繰り返し閲覧可）
+    /// - Presentation: Ch{N}_Presentation を再生
+    /// - その他:       GetScenarioKey() で汎用対応
+    /// </summary>
     public void ToggleComuforPortrait()
     {
         if (_isAnimating) return;
 
-        // Use standard logic for End, but force Dialogue logic for Start
-        string endId = GetEndScenarioId();
+        // もしPortraitがクリック不可状態ならSEを鳴らして処理を中断
+        if (!_isPortraitInteractable)
+        {
+            if (unclickableSE != null)
+            {
+                // EffectManagerへの依存があるため、Sceneに存在すれば鳴らす
+                if (EffectManager.Instance != null)
+                {
+                    EffectManager.Instance.PlaySE(unclickableSE);
+                }
+            }
+            return;
+        }
 
         if (_isInCommunication)
         {
+            // 対話終了 → 探索モードへ戻る
+            string endId = GetEndScenarioId();
             ComuEnd(endId);
             _isInCommunication = false;
+            return;
         }
-        else
+
+        // ---- 対話開始: フェーズに応じた処理 ----
+        var pm = ProgressManager.Instance;
+        if (pm == null)
         {
-            // FORCE Update progress to Dialogue
-            string startId = startScenarioId;
-            if (ProgressManager.Instance != null)
-            {
-                ProgressManager.Instance.SetProgress(ProgressManager.Instance.CurrentChapter, GamePhase.Dialogue);
-                startId = $"Ch{ProgressManager.Instance.CurrentChapter}_Dialogue";
-            }
-
-            Debug.Log($"[ComuManager] ToggleComuforPortrait: Starting Dialogue scenario {startId}");
-            
-            // Pass this ID to ComuStart. 
-            // ComuStart will play the visual animation and THEN play the scenario with this ID.
-            ComuStart(startId);
-            
+            Debug.LogWarning("[ComuManager] ProgressManager not found. Using fallback ID.");
+            ComuStart(startScenarioId);
             _isInCommunication = true;
+            return;
         }
-    }
 
-    private string GetStartScenarioId()
-    {
-        if (useProgressBasedId && ProgressManager.Instance != null)
-            return ProgressManager.Instance.GetScenarioKey();
-        return startScenarioId;
-    }
+        int chapter = pm.CurrentChapter;
+        GamePhase phase = pm.CurrentPhase;
+        string scenarioId;
+        bool enableKeywords = false;
 
-    private string GetEndScenarioId()
-    {
-        if (useProgressBasedId && ProgressManager.Instance != null)
-            return $"Ch{ProgressManager.Instance.CurrentChapter}_loop";
-        return endScenarioId;
+        switch (phase)
+        {
+            case GamePhase.Dialogue:
+                scenarioId = $"Ch{chapter}_Dialogue";
+                break;
+
+            case GamePhase.Extraction:
+                scenarioId = $"Ch{chapter}_Extraction";
+                enableKeywords = true;
+                break;
+
+            case GamePhase.Presentation:
+                scenarioId = $"Ch{chapter}_Presentation";
+                break;
+
+            default:
+                // 汎用: 現在のフェーズ名でシナリオIDを生成
+                scenarioId = pm.GetScenarioKey();
+                break;
+        }
+
+        Debug.Log($"[ComuManager] ToggleComuforPortrait: Phase={phase}, Scenario={scenarioId}, Keywords={enableKeywords}");
+
+        // キーワード設定を反映
+        if (MessageWindowManager.Instance != null)
+        {
+            // KeywordHandler will be initialized when StartScenario is called
+            // but we can pre-set keyword enablement
+        }
+
+        ComuStart(scenarioId);
+        _isInCommunication = true;
     }
 
     /// <summary>
@@ -152,21 +154,19 @@ public class ComuStartandEndManager : MonoBehaviour
         }
         else
         {
-            // Even if arguments are provided, if we want to enforce Dialogue logic:
-            // But this overload implies explicit control. 
-            // However, purely to support the user request "When communication starts...", 
-            // we might want to override startId if it's a "Start" action.
-            
-            // For now, respect the arguments but update progress if needed.
-             if (ProgressManager.Instance != null)
-            {
-                 ProgressManager.Instance.SetProgress(ProgressManager.Instance.CurrentChapter, GamePhase.Dialogue);
-            }
-            
             ComuStart(startId);
             _isInCommunication = true;
         }
     }
+
+    private string GetEndScenarioId()
+    {
+        if (useProgressBasedId && ProgressManager.Instance != null)
+            return $"Ch{ProgressManager.Instance.CurrentChapter}_loop";
+        return endScenarioId;
+    }
+
+    #region UniTask API (for FlowSteps)
 
     public async UniTask ComuStartTask(string scenarioId, bool allowAnimation = true)
     {
@@ -176,8 +176,8 @@ public class ComuStartandEndManager : MonoBehaviour
         }
         else
         {
-            // Instant Setup
             SetPortraitInteractable(false);
+            if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
             
             fadeFrame.gameObject.SetActive(false);
             NamePlate.SetActive(true);
@@ -188,25 +188,12 @@ public class ComuStartandEndManager : MonoBehaviour
             Memorizer.SetActive(false); 
             LostNote.SetActive(false);
             ToggleEffect.SetActive(false);
-            
-            // Ensure UI panels are in correct state (Open)
-            if (comuStartUI.TryGetComponent<MoveOnClickandReturn>(out var startMove)) 
-            {
-                // Force open state without animation logic if possible, or just play instantly?
-                // For MoveOnClickandReturn, "Play()" usually toggles. 
-                // If we want to skip animation, we might need to set positions manually.
-                // For now, let's assume setting Active is enough for the main window, 
-                // but comuStartUI is the "Chapter Title" overlay. We might want to skip showing it entirely?
-                // Usually "No Animation" means "Resume conversation state instantly".
-                // So we don't show the Title Card.
-            }
+            if (Portrait != null) Portrait.SetActive(true);
             
             SetPortraitInteractable(true);
 
             if (!string.IsNullOrEmpty(scenarioId))
-            {
                 messageWindowIndexStarter.StartScenarioById(scenarioId);
-            }
         }
     }
 
@@ -218,16 +205,17 @@ public class ComuStartandEndManager : MonoBehaviour
         }
         else
         {
-            // Instant Teardown
             SetPortraitInteractable(false);
+            if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
             
             NamePlate.SetActive(false);
             messageWindow.SetActive(false);
             messageWindowBackGround.SetActive(false);
             NamePlateBackGround.SetActive(false);
-            ObjectiveDisplay.SetActive(true); // Keep objective visible in exploration?
+            ObjectiveDisplay.SetActive(true);
             fadeFrame.gameObject.SetActive(false);
             ToggleEffect.SetActive(false);
+            if (Portrait != null) Portrait.SetActive(true);
             
             Memorizer.SetActive(true);
             LostNote.SetActive(true);
@@ -235,16 +223,19 @@ public class ComuStartandEndManager : MonoBehaviour
             SetPortraitInteractable(true);
 
             if (!string.IsNullOrEmpty(scenarioId))
-            {
                 messageWindowIndexStarter.StartScenarioById(scenarioId);
-            }
         }
     }
+
+    #endregion
+
+    #region Animation Flows
 
     private async UniTask StartComuFlow(string Startid)
     {
         _isAnimating = true;
         SetPortraitInteractable(false);
+        if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
 
         var fadeAnim = fadeFrame.GetComponent<MoveOnClickandReturn>();
         fadeFrame.gameObject.SetActive(true);
@@ -278,24 +269,22 @@ public class ComuStartandEndManager : MonoBehaviour
         NamePlateBackGround.SetActive(true);
         ObjectiveDisplay.SetActive(true);
         ToggleEffect.SetActive(false);
+        if (Portrait != null) Portrait.SetActive(true);
 
         fadeFrame.gameObject.SetActive(false);
 
         _isAnimating = false;
         SetPortraitInteractable(true);
 
-        // Note: New flow system might handle message starting separately.
-        // For backward compatibility, we keep this, but if scenarioId is null/empty, we skip.
         if (!string.IsNullOrEmpty(Startid))
-        {
             messageWindowIndexStarter.StartScenarioById(Startid);
-        }
     }
 
     private async UniTask EndComuFlow(string Endid)
     {
         _isAnimating = true;
         SetPortraitInteractable(false);
+        if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
 
         var endPanel = comuEndUI.GetComponent<MoveOnClickandReturn>();
         var fadeAnim = fadeFrame.GetComponent<MoveOnClickandReturn>();
@@ -324,15 +313,18 @@ public class ComuStartandEndManager : MonoBehaviour
         Memorizer.SetActive(true);
         LostNote.SetActive(true);
         ToggleEffect.SetActive(false);
+        if (Portrait != null) Portrait.SetActive(true);
 
         _isAnimating = false;
         SetPortraitInteractable(true);
 
         if (!string.IsNullOrEmpty(Endid))
-        {
             messageWindowIndexStarter.StartScenarioById(Endid);
-        }
     }
+
+    #endregion
+
+    #region Utility
 
     private void PlayDeskAnimation()
     {
@@ -340,9 +332,19 @@ public class ComuStartandEndManager : MonoBehaviour
         else if (desk.TryGetComponent<FirstMove>(out var first)) first.Play();
     }
 
-    private void SetPortraitInteractable(bool interactable)
+    public void SetPortraitInteractable(bool interactable, bool updateOverlay = false)
     {
+        _isPortraitInteractable = interactable;
+
+        // Button自体は常にinteractableにしてクリック入力を受け付ける。ToggleComuforPortrait内で弾く。
         if (Portrait != null && Portrait.TryGetComponent<Button>(out var btn))
-            btn.interactable = interactable;
+            btn.interactable = true;
+
+        if (updateOverlay && unclickableOverlay != null)
+        {
+            unclickableOverlay.SetActive(!interactable);
+        }
     }
+
+    #endregion
 }

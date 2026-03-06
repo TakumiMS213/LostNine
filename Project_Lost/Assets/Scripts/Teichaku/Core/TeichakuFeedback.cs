@@ -136,7 +136,11 @@ namespace Teichaku.Core
 
             Debug.Log("[TeichakuFeedback] Clear flash played.");
 
-            SceneManager.LoadScene("Main");
+            // フェード付きでMainシーンへ戻る
+            if (SceneTransition.Instance != null)
+                SceneTransition.Instance.TransitionTo("Main");
+            else
+                SceneManager.LoadScene("Main");
         }
 
         /// <summary>

@@ -254,7 +254,14 @@ namespace Tuning.Core
             // 次のステップへの遷移演出（successMoveVisualとは独立して実行）
             DOVirtual.DelayedCall(3f, () => 
             {
-                SceneManager.LoadScene("Memorize_2");
+                // フェーズを Fixation に更新
+                if (ProgressManager.Instance != null)
+                    ProgressManager.Instance.SetProgress(ProgressManager.Instance.CurrentChapter, GamePhase.Fixation);
+
+                if (SceneTransition.Instance != null)
+                    SceneTransition.Instance.TransitionTo("Memorize_2");
+                else
+                    SceneManager.LoadScene("Memorize_2");
             }).SetLink(gameObject);
         }
 

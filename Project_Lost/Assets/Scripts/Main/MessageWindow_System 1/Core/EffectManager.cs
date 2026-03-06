@@ -155,6 +155,12 @@ namespace MessageWindowSystem.Core
             else Debug.LogWarning($"[EffectManager] SE not found: Audio/SE/{clipName}");
         }
 
+        public void PlaySE(AudioClip clip)
+        {
+            if (seAudioSource == null || clip == null) return;
+            seAudioSource.PlayOneShot(clip);
+        }
+
         private void PlayBGM(string clipName)
         {
             if (bgmAudioSource == null || string.IsNullOrEmpty(clipName)) return;

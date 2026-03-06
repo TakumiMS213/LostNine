@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Singleton that manages game progress (chapter and phase).
@@ -19,10 +20,29 @@ public class ProgressManager : MonoBehaviour
     [Tooltip("シークエンス起動に必要なキーワード数")]
     [SerializeField] private int _keywordThreshold = 3;
 
+    [Header("Chapter Settings")]
+    [Tooltip("最大チャプター数")]
+    [SerializeField] private int _maxChapter = 9;
+
+    [Header("Scene Settings")]
+    [Tooltip("メインゲームシーンの名前")]
+    [SerializeField] private string mainSceneName = "Main";
+
+    [Tooltip("チャプター選択シーンの名前")]
+    [SerializeField] private string chapterSelectSceneName = "ChapterSelect";
+
+    [Tooltip("タイトルシーンの名前")]
+    [SerializeField] private string titleSceneName = "Title";
+
     public int CurrentChapter => _currentChapter;
     public GamePhase CurrentPhase => _currentPhase;
     public int CurrentKeywordProgress => _currentKeywordProgress;
     public int KeywordThreshold => _keywordThreshold;
+    public int MaxChapter => _maxChapter;
+    public bool IsLastChapter => _currentChapter >= _maxChapter;
+    public bool AllKeywordsCollected => _currentKeywordProgress >= _keywordThreshold;
+    public string MainSceneName => mainSceneName;
+    public string TitleSceneName => titleSceneName;
 
     public event Action OnProgressChanged;
 
@@ -71,8 +91,6 @@ public class ProgressManager : MonoBehaviour
             _currentChapter++;
         }
         
-        // Debug.Log($"[ProgressManager] AdvancePhase: {_currentPhase} -> {(GamePhase)nextPhase} (Chapter {_currentChapter})");
-        
         _currentPhase = (GamePhase)nextPhase;
         ResetKeywordProgress();
         OnProgressChanged?.Invoke();
@@ -87,6 +105,34 @@ public class ProgressManager : MonoBehaviour
         _currentPhase = GamePhase.Prologue;
         ResetKeywordProgress();
         OnProgressChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// 指定したチャプターのプロローグから開始する。
+    /// Progressを強制的にオーバーライドし、メインシーンをロードする。
+    /// タイトル画面のチャプター選択ボタンから呼び出す想定。
+    /// </summary>
+    /// <param name="chapter">開始するチャプター番号</param>
+    public void StartFromChapter(int chapter)
+    {
+        Debug.Log($"[ProgressManager] StartFromChapter: Overriding progress to Chapter {chapter}, Prologue");
+        _currentChapter = Mathf.Clamp(chapter, 1, _maxChapter);
+        _currentPhase = GamePhase.Prologue;
+        _currentKeywordProgress = 0;
+        OnProgressChanged?.Invoke();
+
+        if (SceneTransition.Instance != null)
+            SceneTransition.Instance.TransitionTo(mainSceneName);
+        else
+            SceneManager.LoadScene(mainSceneName);
+    }
+
+    /// <summary>
+    /// ニューゲーム。チャプター1のプロローグから開始する。
+    /// </summary>
+    public void NewGame()
+    {
+        StartFromChapter(1);
     }
 
     /// <summary>
@@ -116,6 +162,30 @@ public class ProgressManager : MonoBehaviour
     /// Returns a string key for scenario lookup (e.g., "Ch1_Dialogue").
     /// </summary>
     public string GetScenarioKey() => $"Ch{_currentChapter}_{_currentPhase}";
+
+    /// <summary>
+    /// チャプター選択シーンへ遷移する。
+    /// Epilogue終了後に呼び出す想定。
+    /// </summary>
+    public void GoToChapterSelect()
+    {
+        Debug.Log($"[ProgressManager] GoToChapterSelect: Chapter {_currentChapter} complete.");
+        if (SceneTransition.Instance != null)
+            SceneTransition.Instance.TransitionTo(chapterSelectSceneName);
+        else
+            SceneManager.LoadScene(chapterSelectSceneName);
+    }
+
+    /// <summary>
+    /// タイトルシーンへ遷移する。
+    /// </summary>
+    public void GoToTitle()
+    {
+        if (SceneTransition.Instance != null)
+            SceneTransition.Instance.TransitionTo(titleSceneName);
+        else
+            SceneManager.LoadScene(titleSceneName);
+    }
 }
 
 /// <summary>

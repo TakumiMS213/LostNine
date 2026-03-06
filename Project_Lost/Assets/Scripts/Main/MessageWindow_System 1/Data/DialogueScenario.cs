@@ -15,6 +15,9 @@ namespace MessageWindowSystem.Data
         [Tooltip("Whether keywords are interactive in this scenario.")]
         public bool enableKeywords = true;
 
+        [Tooltip("Whether the portrait can be clicked to toggle communication in this scenario.")]
+        public bool enablePortraitClick = true;
+
         [Tooltip("If true, this scenario will restart from the beginning when it ends.")]
         public bool loopScenario = false;
 

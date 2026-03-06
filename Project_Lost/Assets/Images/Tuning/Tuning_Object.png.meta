@@ -1,0 +1,663 @@
+fileFormatVersion: 2
+guid: 7d359c27e9c78384a9742cf991e93e90
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -9046594307352138437
+    second: Tuning_Object_0
+  - first:
+      213: -8870080692766193966
+    second: Tuning_Object_1
+  - first:
+      213: 2403852916018835324
+    second: Tuning_Object_2
+  - first:
+      213: 5313246418410800959
+    second: Tuning_Object_3
+  - first:
+      213: -8784385019815518268
+    second: Tuning_Object_4
+  - first:
+      213: 4937980311921625050
+    second: Tuning_Object_5
+  - first:
+      213: 7277923464099660322
+    second: Tuning_Object_6
+  - first:
+      213: -8924977803312801833
+    second: Tuning_Object_7
+  - first:
+      213: 5118384289833772289
+    second: Tuning_Object_8
+  - first:
+      213: -2416692700995723304
+    second: Tuning_Object_9
+  - first:
+      213: -7806719275920881841
+    second: Tuning_Object_10
+  - first:
+      213: 6930469776549503214
+    second: Tuning_Object_11
+  - first:
+      213: -3891008907020684879
+    second: Tuning_Object_12
+  - first:
+      213: 7782582470395424912
+    second: Tuning_Object_13
+  - first:
+      213: 4465284195976021638
+    second: Tuning_Object_14
+  - first:
+      213: -6663996424010097478
+    second: Tuning_Object_15
+  - first:
+      213: -8895898038445054050
+    second: Tuning_Object_16
+  - first:
+      213: -8917634898670706783
+    second: Tuning_Object_17
+  - first:
+      213: 3000667337864883554
+    second: Tuning_Object_18
+  - first:
+      213: -2380228485947303887
+    second: Tuning_Object_19
+  - first:
+      213: 669132118242747585
+    second: Tuning_Object_20
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Tuning_Object_0
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 124
+        width: 31
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3d643b886a047280800000000000000
+      internalID: -9046594307352138437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_1
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 51
+        width: 46
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d6ce9a0b9427e480800000000000000
+      internalID: -8870080692766193966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_2
+      rect:
+        serializedVersion: 2
+        x: 165
+        y: 51
+        width: 68
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7fe69fad733c5120800000000000000
+      internalID: 2403852916018835324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_3
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 109
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f370e7d77717cb940800000000000000
+      internalID: 5313246418410800959
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_4
+      rect:
+        serializedVersion: 2
+        x: 346
+        y: 51
+        width: 61
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4cf12abbd58971680800000000000000
+      internalID: -8784385019815518268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_5
+      rect:
+        serializedVersion: 2
+        x: 412
+        y: 51
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad706ff5eea378440800000000000000
+      internalID: 4937980311921625050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_6
+      rect:
+        serializedVersion: 2
+        x: 513
+        y: 58
+        width: 61
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 222042c94d0600560800000000000000
+      internalID: 7277923464099660322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_7
+      rect:
+        serializedVersion: 2
+        x: 586
+        y: 51
+        width: 82
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d75b4579fb142480800000000000000
+      internalID: -8924977803312801833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_8
+      rect:
+        serializedVersion: 2
+        x: 702
+        y: 108
+        width: 31
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1056b7ba467280740800000000000000
+      internalID: 5118384289833772289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_9
+      rect:
+        serializedVersion: 2
+        x: 774
+        y: 58
+        width: 61
+        height: 67
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8dfded9eace267ed0800000000000000
+      internalID: -2416692700995723304
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_10
+      rect:
+        serializedVersion: 2
+        x: 876
+        y: 109
+        width: 31
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f478a892e26f8a390800000000000000
+      internalID: -7806719275920881841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_11
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 109
+        width: 31
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee060d5ea89fd2060800000000000000
+      internalID: 6930469776549503214
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_12
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 73
+        width: 10
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b1b627b30c500ac0800000000000000
+      internalID: -3891008907020684879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_13
+      rect:
+        serializedVersion: 2
+        x: 245
+        y: 65
+        width: 61
+        height: 53
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 090f91fd589410c60800000000000000
+      internalID: 7782582470395424912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_14
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 95
+        width: 31
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68601527150e7fd30800000000000000
+      internalID: 4465284195976021638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_15
+      rect:
+        serializedVersion: 2
+        x: 281
+        y: 58
+        width: 32
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: abc976a4f8ab483a0800000000000000
+      internalID: -6663996424010097478
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_16
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 87
+        width: 17
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e976364dddb6b8480800000000000000
+      internalID: -8895898038445054050
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_17
+      rect:
+        serializedVersion: 2
+        x: 680
+        y: 58
+        width: 68
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1af1b1cae423e3480800000000000000
+      internalID: -8917634898670706783
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_18
+      rect:
+        serializedVersion: 2
+        x: 861
+        y: 58
+        width: 54
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26dad8aab0384a920800000000000000
+      internalID: 3000667337864883554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_19
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 51
+        width: 31
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13858d29dcab7fed0800000000000000
+      internalID: -2380228485947303887
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Tuning_Object_20
+      rect:
+        serializedVersion: 2
+        x: 325
+        y: 51
+        width: 17
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c4e9a7cd1c394900800000000000000
+      internalID: 669132118242747585
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Tuning_Object_0: -9046594307352138437
+      Tuning_Object_1: -8870080692766193966
+      Tuning_Object_10: -7806719275920881841
+      Tuning_Object_11: 6930469776549503214
+      Tuning_Object_12: -3891008907020684879
+      Tuning_Object_13: 7782582470395424912
+      Tuning_Object_14: 4465284195976021638
+      Tuning_Object_15: -6663996424010097478
+      Tuning_Object_16: -8895898038445054050
+      Tuning_Object_17: -8917634898670706783
+      Tuning_Object_18: 3000667337864883554
+      Tuning_Object_19: -2380228485947303887
+      Tuning_Object_2: 2403852916018835324
+      Tuning_Object_20: 669132118242747585
+      Tuning_Object_3: 5313246418410800959
+      Tuning_Object_4: -8784385019815518268
+      Tuning_Object_5: 4937980311921625050
+      Tuning_Object_6: 7277923464099660322
+      Tuning_Object_7: -8924977803312801833
+      Tuning_Object_8: 5118384289833772289
+      Tuning_Object_9: -2416692700995723304
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

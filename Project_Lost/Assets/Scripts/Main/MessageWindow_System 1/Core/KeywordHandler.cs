@@ -52,6 +52,15 @@ namespace MessageWindowSystem.Core
         private string _chargingLinkID;
         private Coroutine _chargeCoroutine;
 
+        private const string DummyPrefix = "dummy_";
+
+        #endregion
+
+        #region Public Utility
+
+        /// <summary>指定IDがダミーキーワードかどうかを判定する。</summary>
+        public static bool IsDummyKeyword(string id) => !string.IsNullOrEmpty(id) && id.StartsWith(DummyPrefix);
+
         #endregion
 
         #region Public API
@@ -71,7 +80,7 @@ namespace MessageWindowSystem.Core
         public bool HasKeywordsInText(string text)
         {
             if (string.IsNullOrEmpty(text)) return false;
-            return Regex.IsMatch(text, @"<a\s+href\s*=\s*"".*?""\s*>", RegexOptions.Singleline);
+            return Regex.IsMatch(text, @"<(?:a\s+href|link)\s*=\s*"".*?""\s*>", RegexOptions.Singleline);
         }
 
         /// <summary>Sets the color of a keyword link across all lines in the scenario.</summary>
@@ -90,7 +99,7 @@ namespace MessageWindowSystem.Core
             string newText = Regex.Replace(currentLine.text, pattern, m =>
             {
                 string stripped = StripColorTags(m.Groups[1].Value);
-                return $"<a href=\"{id}\"><color={colorHex}>{stripped}</color></a>";
+                return $"<link=\"{id}\"><color={colorHex}>{stripped}</color></link>";
             }, RegexOptions.Singleline);
 
             if (currentLine.text != newText)
@@ -119,7 +128,7 @@ namespace MessageWindowSystem.Core
             string newText = Regex.Replace(currentLine.text, pattern, m =>
             {
                 string stripped = StripColorTags(m.Groups[1].Value);
-                return $"<a href=\"{id}\">{stripped}</a>";
+                return $"<link=\"{id}\">{stripped}</link>";
             }, RegexOptions.Singleline);
 
             if (currentLine.text != newText)
@@ -157,7 +166,7 @@ namespace MessageWindowSystem.Core
             if (linkIndex == -1) return;
 
             _shouldBlockNext = true;
-            _chargingLinkID = dialogueText.textInfo.linkInfo[linkIndex].GetLinkID();
+            _chargingLinkID = dialogueText.textInfo.linkInfo[linkIndex].GetLinkID().Trim('"');
             _isCharging = true;
             _chargeCoroutine = StartCoroutine(ChargeRoutine(dialogueText, linkIndex, _chargingLinkID));
         }
@@ -231,10 +240,34 @@ namespace MessageWindowSystem.Core
             // Fire events
             OnKeywordClicked?.Invoke(linkID);
             ClueManager.Instance?.ProcessKeywordClick(linkID);
-            ProgressManager.Instance?.AddKeyword();
 
-            // Request scenario playback through event
-            OnKeywordScenarioRequested?.Invoke(linkID);
+            bool thresholdReachedThisTime = false;
+            if (!IsDummyKeyword(linkID))
+            {
+                var pm = ProgressManager.Instance;
+                if (pm != null)
+                {
+                    int beforeProgress = pm.CurrentKeywordProgress;
+                    pm.AddKeyword();
+                    
+                    // If the progress just hit the threshold, GameFlowDirector will take over the sequence.
+                    // We must NOT play the individual keyword scenario, otherwise they collide.
+                    if (pm.CurrentKeywordProgress >= pm.KeywordThreshold && beforeProgress < pm.KeywordThreshold)
+                    {
+                        thresholdReachedThisTime = true;
+                    }
+                }
+            }
+            else
+            {
+                Debug.Log($"[KeywordHandler] Dummy keyword '{linkID}' — Progress not incremented.");
+            }
+
+            // Only request individual scenario if the main sequence override didn't trigger
+            if (!thresholdReachedThisTime)
+            {
+                OnKeywordScenarioRequested?.Invoke(linkID);
+            }
         }
 
         #endregion
@@ -303,7 +336,7 @@ namespace MessageWindowSystem.Core
             return canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera ? canvas.worldCamera : null;
         }
 
-        private static string BuildLinkPattern(string id) => $@"<a\s+href\s*=\s*""{Regex.Escape(id)}""\s*>(.*?)</a>";
+        private static string BuildLinkPattern(string id) => $@"<(?:a\s+href|link)\s*=\s*""{Regex.Escape(id)}""\s*>(.*?)</(?:a|link)>";
         private static string StripColorTags(string content) => Regex.Replace(content, "</?color[^>]*>", "");
 
         #endregion

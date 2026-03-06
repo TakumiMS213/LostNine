@@ -11,11 +11,12 @@ using MessageWindowSystem.Data;
 namespace MessageWindowSystem.Core
 {
     /// <summary>
-    /// Core dialogue window manager. Handles scenario playback, typing, choices,
-    /// portrait display (with position & ghost), and Progress integration.
-    /// Keyword logic is delegated to <see cref="KeywordHandler"/>.
+    /// Independent message window manager for playing overlay/interrupt scenarios 
+    /// (e.g., tutorials, inner thoughts). 
+    /// Blocks clicks to the main MessageWindow automatically while active.
+    /// Does not integrate with ProgressManager or ComuStartandEndManager.
     /// </summary>
-    public class MessageWindowManager : MonoBehaviour
+    public class OverlayMessageWindowManager : MonoBehaviour
     {
         #region Serialized Fields
 
@@ -24,6 +25,10 @@ namespace MessageWindowSystem.Core
         [SerializeField] private TMP_Text dialogueText;
         [SerializeField] private GameObject windowRoot;
 
+        [Header("Click Blocker")]
+        [Tooltip("An invisible or tinted UI Image spanning the entire screen to block clicks from reaching the main window.")]
+        [SerializeField] private GameObject clickBlockerRoot;
+
         [Header("Portrait")]
         [SerializeField] private Image portraitImage;
         [SerializeField] private RectTransform portraitLeftAnchor;
@@ -31,7 +36,6 @@ namespace MessageWindowSystem.Core
         [SerializeField] private RectTransform portraitRightAnchor;
 
         [Header("Ghost Portrait")]
-        [Tooltip("Image component for displaying the previous speaker's portrait as a ghost.")]
         [SerializeField] private Image ghostPortraitImage;
         [SerializeField] private bool enableGhostPortrait = true;
         [SerializeField, Range(0f, 1f)] private float ghostPortraitAlpha = 0.3f;
@@ -56,48 +60,23 @@ namespace MessageWindowSystem.Core
         [SerializeField] private float portraitJumpDuration = 0.3f;
         [SerializeField] private Ease portraitJumpEase = Ease.OutBounce;
 
-        [Header("Choice Buttons")]
+        [Header("Choice Buttons (Optional for Overlay)")]
         [SerializeField] private Button[] choiceButtons;
         [SerializeField] private TMP_Text[] choiceButtonTexts;
-
-        [Header("Database")]
-        [SerializeField] private ScenarioDatabase scenarioDatabase;
-
-        [Header("Keyword")]
-        [SerializeField] private KeywordHandler keywordHandler;
-
-        [Header("Debug")]
-        [SerializeField] private bool showDebugGUI = false;
 
         #endregion
 
         #region Public Properties
 
-        public static MessageWindowManager Instance { get; private set; }
+        public static OverlayMessageWindowManager Instance { get; private set; }
 
-        /// <summary>Current dialogue TMP_Text component (read by KeywordHandler).</summary>
-        public TMP_Text DialogueText => dialogueText;
-
-        /// <summary>Current scenario database.</summary>
-        public ScenarioDatabase ScenarioDatabase => scenarioDatabase;
-
-        /// <summary>Whether the window is currently active and showing dialogue.</summary>
         public bool IsWindowActive => _isWindowActive;
-
-        /// <summary>Whether text is currently being typed out.</summary>
         public bool IsTyping => _isTyping;
-
-        /// <summary>Currently displayed line.</summary>
-        public DialogueLine CurrentLine => _currentLine;
-
-        /// <summary>Whether we are on the last line (no more in queue).</summary>
-        public bool IsLastLine => _linesQueue.Count == 0;
 
         #endregion
 
         #region Private Fields
 
-        private readonly List<(string speaker, string text)> _log = new();
         private readonly Queue<DialogueLine> _linesQueue = new();
 
         private DialogueScenario _currentScenarioData;
@@ -114,7 +93,6 @@ namespace MessageWindowSystem.Core
         private bool _isWindowActive;
         private bool _isWaitingForChoice;
         private bool _nameOriginalCaptured;
-        private bool _isWaitingForOverlay;
 
         private Action _onScenarioComplete;
 
@@ -128,6 +106,7 @@ namespace MessageWindowSystem.Core
             else { Destroy(gameObject); return; }
 
             if (windowRoot) windowRoot.SetActive(false);
+            if (clickBlockerRoot) clickBlockerRoot.SetActive(false);
 
             if (speakerNameText != null)
             {
@@ -137,54 +116,13 @@ namespace MessageWindowSystem.Core
 
             HideAllChoices();
             HideGhostPortrait();
-
-            // Subscribe to keyword events
-            if (keywordHandler != null)
-            {
-                keywordHandler.OnKeywordScenarioRequested += OnKeywordScenarioRequested;
-                keywordHandler.OnKeywordInteractionComplete += OnKeywordInteractionComplete;
-            }
-        }
-
-        private void OnDestroy()
-        {
-            if (keywordHandler != null)
-            {
-                keywordHandler.OnKeywordScenarioRequested -= OnKeywordScenarioRequested;
-                keywordHandler.OnKeywordInteractionComplete -= OnKeywordInteractionComplete;
-            }
-        }
-
-        private void OnGUI()
-        {
-            if (!showDebugGUI) return;
-
-            GUI.color = Color.black;
-            GUILayout.BeginArea(new Rect(10, 10, 400, 200), GUI.skin.box);
-            GUI.color = Color.white;
-
-            GUILayout.Label("<b>[Debug Info]</b>");
-            if (ProgressManager.Instance != null)
-                GUILayout.Label($"Chapter: {ProgressManager.Instance.CurrentChapter} | Phase: {ProgressManager.Instance.CurrentPhase}");
-            else
-                GUILayout.Label("ProgressManager: NULL");
-
-            if (_currentScenarioData != null)
-            {
-                GUILayout.Label($"Scenario: {_currentScenarioData.name} ({_currentScenarioData.scenarioId})");
-                GUILayout.Label($"UpdateProgress: {_currentScenarioData.updateProgressOnEnd} | Action: {_currentScenarioData.progressAction}");
-            }
-            else
-                GUILayout.Label("Scenario: None");
-
-            GUILayout.EndArea();
         }
 
         #endregion
 
         #region Public API
 
-        /// <summary>Starts playing a dialogue scenario.</summary>
+        /// <summary>Starts playing an overlay scenario.</summary>
         public void StartScenario(DialogueScenario scenario, Action onComplete = null)
         {
             if (scenario == null)
@@ -204,44 +142,22 @@ namespace MessageWindowSystem.Core
             _currentScenarioData = scenario;
             _onScenarioComplete = onComplete;
 
+            if (clickBlockerRoot) clickBlockerRoot.SetActive(true);
             if (windowRoot) windowRoot.SetActive(true);
             _isWindowActive = true;
 
-            // Initialize keyword handler for this scenario
-            if (keywordHandler != null)
-            {
-                keywordHandler.Initialize(scenario.enableKeywords);
-            }
-
-            var comuManager = FindObjectOfType<ComuStartandEndManager>();
-            if (comuManager != null)
-            {
-                comuManager.SetPortraitInteractable(scenario.enablePortraitClick, true);
-            }
-
-            Debug.Log($"[MWM] StartScenario: {scenario.name} (ID: {scenario.scenarioId})");
+            Debug.Log($"[OverlayMWM] StartScenario: {scenario.name} (ID: {scenario.scenarioId})");
             DisplayNextLine();
         }
 
-        /// <summary>Starts playing a dialogue scenario with explicit keyword setting.</summary>
-        public void StartScenario(DialogueScenario scenario, bool enableKeywords, Action onComplete = null)
-        {
-            StartScenario(scenario, onComplete);
-            if (keywordHandler != null)
-                keywordHandler.Initialize(enableKeywords);
-        }
-
-        /// <summary>Advances to the next line or completes typing.</summary>
+        /// <summary>Advances to the next line or completes typing. Call this from an invisible screen-sized button on the Overlay Canvas.</summary>
         public void Next()
         {
+            if (!_isWindowActive) return;
             if (_isWaitingForChoice) return;
 
             SkipOrInteract();
         }
-
-        /// <summary>Returns the conversation log.</summary>
-        public IReadOnlyList<(string speaker, string text)> GetLog() => _log;
-
 
         #endregion
 
@@ -249,9 +165,6 @@ namespace MessageWindowSystem.Core
 
         private void SkipOrInteract()
         {
-            if (keywordHandler != null && keywordHandler.IsCharging) return;
-            if (_isWaitingForOverlay) return;
-
             if (_isTyping)
             {
                 if (_typingCoroutine != null) StopCoroutine(_typingCoroutine);
@@ -259,7 +172,8 @@ namespace MessageWindowSystem.Core
                 dialogueText.text = _currentLine.text;
                 dialogueText.maxVisibleCharacters = _currentLine.text.Length;
 
-                CheckAndPlayInterruptScenario();
+                if (_currentLine?.choices != null && _currentLine.choices.Count > 0)
+                    ShowChoices(_currentLine.choices);
                 return;
             }
 
@@ -270,7 +184,6 @@ namespace MessageWindowSystem.Core
         {
             if (_linesQueue.Count == 0)
             {
-                // Loop check
                 if (_currentScenarioData != null && _currentScenarioData.loopScenario)
                 {
                     StartScenario(_currentScenarioData, _onScenarioComplete);
@@ -285,7 +198,6 @@ namespace MessageWindowSystem.Core
             string speakerName = _currentLine.speakerName ?? string.Empty;
 
             if (speakerNameText) speakerNameText.text = speakerName;
-            _log.Add((speakerName, _currentLine.text));
 
             UpdatePortrait();
             PlayEffects();
@@ -302,29 +214,21 @@ namespace MessageWindowSystem.Core
 
         private void EndScenario()
         {
-            // 1. Execute completion actions (progress update etc.)
-            HandleScenarioCompletionActions();
-
-            // 2. Chain to next scenario if set
+            // Chain to next scenario if set
             if (_currentScenarioData?.nextScenario != null)
             {
-                Debug.Log($"[MWM] Chaining to next scenario: {_currentScenarioData.nextScenario.name}");
+                Debug.Log($"[OverlayMWM] Chaining to next scenario: {_currentScenarioData.nextScenario.name}");
                 StartScenario(_currentScenarioData.nextScenario, _onScenarioComplete);
                 return;
             }
 
-            // 3. Close window (no chain, no loop)
-            var comuManager = FindObjectOfType<ComuStartandEndManager>();
-            if (comuManager != null)
-            {
-                comuManager.SetPortraitInteractable(true, true);
-            }
-
+            // Close window
             _isWindowActive = false;
             if (windowRoot) windowRoot.SetActive(false);
+            if (clickBlockerRoot) clickBlockerRoot.SetActive(false);
             HideGhostPortrait();
 
-            // 4. Fire completion callback
+            // Fire completion callback
             _onScenarioComplete?.Invoke();
             _onScenarioComplete = null;
         }
@@ -350,37 +254,6 @@ namespace MessageWindowSystem.Core
 
             _isTyping = false;
 
-            CheckAndPlayInterruptScenario();
-        }
-
-        private void CheckAndPlayInterruptScenario()
-        {
-            if (_currentLine != null && _currentLine.interruptScenario != null)
-            {
-                _isWaitingForOverlay = true;
-                if (OverlayMessageWindowManager.Instance != null)
-                {
-                    OverlayMessageWindowManager.Instance.StartScenario(_currentLine.interruptScenario, () => 
-                    {
-                        _isWaitingForOverlay = false;
-                        CheckAndShowChoices();
-                    });
-                }
-                else
-                {
-                    Debug.LogWarning("[MWM] interruptScenario set but OverlayMessageWindowManager.Instance is null!");
-                    _isWaitingForOverlay = false;
-                    CheckAndShowChoices();
-                }
-            }
-            else
-            {
-                CheckAndShowChoices();
-            }
-        }
-
-        private void CheckAndShowChoices()
-        {
             if (_currentLine?.choices != null && _currentLine.choices.Count > 0)
             {
                 ShowChoices(_currentLine.choices);
@@ -393,6 +266,8 @@ namespace MessageWindowSystem.Core
 
         private void ShowChoices(List<ChoiceData> choices)
         {
+            if (choiceButtons == null || choiceButtons.Length == 0) return;
+
             _isWaitingForChoice = true;
 
             for (int i = 0; i < choiceButtons.Length; i++)
@@ -423,8 +298,6 @@ namespace MessageWindowSystem.Core
             _isWaitingForChoice = false;
             HideAllChoices();
 
-            HandleScenarioCompletionActions();
-
             if (choice.nextScenario != null)
             {
                 StartScenario(choice.nextScenario, _onScenarioComplete);
@@ -445,55 +318,12 @@ namespace MessageWindowSystem.Core
 
         #endregion
 
-        #region Progress Integration
-
-        private void HandleScenarioCompletionActions()
-        {
-            if (_currentScenarioData == null) return;
-
-            // Communication toggle
-            if (_currentScenarioData.toggleComuOnEnd)
-            {
-                var comuManager = FindObjectOfType<ComuStartandEndManager>();
-                if (comuManager != null)
-                {
-                    Debug.Log("[MWM] toggleComuOnEnd: Calling ToggleComu().");
-                    comuManager.ToggleComu();
-                }
-                else
-                {
-                    Debug.LogWarning("[MWM] toggleComuOnEnd is set but ComuStartandEndManager not found.");
-                }
-            }
-
-            // Progress update
-            if (_currentScenarioData.updateProgressOnEnd && ProgressManager.Instance != null)
-            {
-                Debug.Log($"[MWM] updateProgressOnEnd: Executing {_currentScenarioData.progressAction}");
-                switch (_currentScenarioData.progressAction)
-                {
-                    case ProgressActionType.AdvancePhase:
-                        ProgressManager.Instance.AdvancePhase();
-                        break;
-                    case ProgressActionType.AdvanceChapter:
-                        ProgressManager.Instance.AdvanceChapter();
-                        break;
-                    case ProgressActionType.SetDirectly:
-                        ProgressManager.Instance.SetProgress(_currentScenarioData.targetChapter, _currentScenarioData.targetPhase);
-                        break;
-                }
-            }
-        }
-
-        #endregion
-
         #region Portrait
 
         private void UpdatePortrait()
         {
             if (portraitImage == null) return;
 
-            // Ghost portrait: show previous speaker behind current if speaker/position changed
             UpdateGhostPortrait();
 
             if (_currentLine.portrait != null)
@@ -503,6 +333,10 @@ namespace MessageWindowSystem.Core
                 SetPortraitPosition(portraitImage.rectTransform, _currentLine.portraitPosition);
 
                 if (portraitJumpOnText) PlayPortraitJump();
+            }
+            else
+            {
+                portraitImage.gameObject.SetActive(false);
             }
         }
 
@@ -529,7 +363,6 @@ namespace MessageWindowSystem.Core
                 return;
             }
 
-            // Show ghost only if previous portrait exists AND either speaker or position changed
             bool hasPreviousPortrait = _previousPortrait != null;
             bool speakerChanged = !string.Equals(_currentLine.speakerName, _previousSpeakerName, StringComparison.Ordinal);
             bool positionChanged = _currentLine.portraitPosition != _previousPortraitPosition;
@@ -605,36 +438,6 @@ namespace MessageWindowSystem.Core
             if (_currentLine.effects == null || EffectManager.Instance == null) return;
             foreach (var effect in _currentLine.effects)
                 EffectManager.Instance.PlayEffect(effect);
-        }
-
-        #endregion
-
-        #region Keyword Event Handlers
-
-        private void OnKeywordScenarioRequested(string keywordId)
-        {
-            if (scenarioDatabase == null) return;
-            var scenario = scenarioDatabase.GetScenarioById(keywordId);
-            if (scenario != null)
-            {
-                Debug.Log($"[MWM] Playing keyword scenario: {keywordId}");
-                StartScenario(scenario);
-            }
-        }
-
-        private void OnKeywordInteractionComplete()
-        {
-            // キーワード操作完了時の処理（必要に応じて拡張可能）
-        }
-
-        #endregion
-
-        #region Utility
-
-        private Camera GetUICamera()
-        {
-            var canvas = dialogueText.GetComponentInParent<Canvas>();
-            return canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera ? canvas.worldCamera : null;
         }
 
         #endregion

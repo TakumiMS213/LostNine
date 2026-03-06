@@ -205,10 +205,6 @@ namespace MessageWindowSystem.Core
                 if (anchor != null)
                     portraitImage.rectTransform.anchoredPosition = anchor.anchoredPosition;
             }
-            else
-            {
-                portraitImage.gameObject.SetActive(false);
-            }
         }
 
         private void CloseWindow()

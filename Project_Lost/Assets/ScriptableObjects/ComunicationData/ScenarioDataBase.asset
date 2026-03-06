@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   allScenarios:
   - {fileID: 11400000, guid: 23f22adf723b6284abf0394c5c604461, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 06479354aa429aa45aead19ab5301dc7, type: 2}
+  - {fileID: 11400000, guid: d3df080c4aa3ac842a3bf25ca5e186f9, type: 2}
+  - {fileID: 11400000, guid: b6b38db2073cdb14599570f270b1d0ba, type: 2}
+  - {fileID: 11400000, guid: df34de1ed1ff36b488b7328f15b1588c, type: 2}
+  - {fileID: 11400000, guid: 691a39c559972eb4c9a06854c6c08e36, type: 2}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}

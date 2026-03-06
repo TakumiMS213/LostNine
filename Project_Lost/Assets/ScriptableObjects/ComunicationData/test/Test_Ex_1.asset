@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6a52df638d8d2543ae417551adce791, type: 3}
   m_Name: Test_Ex_1
   m_EditorClassIdentifier: 
-  scenarioId: 
+  scenarioId: Ch1_Extraction
   nextScenario: {fileID: 0}
   enableKeywords: 1
-  loopScenario: 0
+  loopScenario: 1
   toggleComuOnEnd: 0
   updateProgressOnEnd: 0
   progressAction: 2
@@ -30,14 +30,36 @@ MonoBehaviour:
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
     choices: []
+    portraitPosition: 0
   - speakerName: "\u30D2\u30A4\u30E9\u30AE"
     portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
-    text: "\uFF13\u56DE\u30AD\u30FC\u30EF\u30FC\u30C9\u3092\u3010\u62BD\u51FA\u3011\u3059\u308B\u3068\u3001\u6B21\u306E\u30D5\u30A7\u30FC\u30BA\u306B\u9032\u307F\u307E\u3059\r\n\u300C<a
-      href=\"Test_1\"><color=#888888>\u30AD\u30FC\u30EF\u30FC\u30C9\uFF11</color></a>\u300D\u300C<a
-      href=\"Test_2\"><color=#888888>\u30AD\u30FC\u30EF\u30FC\u30C9\uFF12</color></a>\u300D\u300C<a
-      href=\"Test_3\"><color=#888888>\u30AD\u30FC\u30EF\u30FC\u30C9\uFF13</color></a>\u300D"
+    text: "\uFF13\u56DE\u30AD\u30FC\u30EF\u30FC\u30C9\u3092\u3010\u62BD\u51FA\u3011\u3059\u308B\u3068\u3001\u6B21\u306E\u30D5\u30A7\u30FC\u30BA\u306B\u9032\u307F\u307E\u3059\r\n\u300C<link=\"Test_1\">\u30AD\u30FC\u30EF\u30FC\u30C9\uFF11</link>\u300D\u300C<link=\"Test_2\">\u30AD\u30FC\u30EF\u30FC\u30C9\uFF12</link>\u300D\u300C<link=\"Test_3\">\u30AD\u30FC\u30EF\u30FC\u30C9\uFF13</link>\u300D"
     effects: []
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
     choices: []
+    portraitPosition: 0
+  - speakerName: "\u30D2\u30A4\u30E9\u30AE"
+    portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
+    text: "\u30AD\u30FC\u30EF\u30FC\u30C9\u304C\u898B\u3064\u304B\u3089\u306A\u304B\u3063\u305F\u5834\u5408\u306F\u3082\u3046\u4E00\u5EA6\u4F1A\u8A71\u3092\u7E70\u308A\u8FD4\u3057\u307E\u3059"
+    effects:
+    - effectType: 2
+      floatParam: 0
+      stringParam: 
+      spriteParam: {fileID: 0}
+      colorParam: {r: 1, g: 1, b: 1, a: 0}
+    typingSpeed: 0
+    nameSlideDirection: 1
+    voiceClip: {fileID: 0}
+    choices: []
+    portraitPosition: 0
+  - speakerName: "\u30D2\u30A4\u30E9\u30AE"
+    portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
+    text: "\u3082\u3057\u30CE\u30FC\u30C8\u3084\u30AB\u30E1\u30E9\u306B\u89E6\u308A\u305F\u304F\u306A\u3063\u305F\u3089\u3082\u3046\u4E00\u5EA6\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u3092\u62BC\u305B\u3070\u5143\u306E\u753B\u9762\u306B\u623B\u308A\u307E\u3059"
+    effects: []
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    choices: []
+    portraitPosition: 0

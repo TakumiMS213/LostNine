@@ -33,6 +33,10 @@ namespace MessageWindowSystem.Data
 
         [Tooltip("Portrait display position (Left, Center, Right). Default = Center.")]
         public PortraitPosition portraitPosition;
+
+        [Header("Interrupt Scenario")]
+        [Tooltip("Scenario to play as an overlay (Tutorial/Inner Thoughts) during this line.")]
+        public DialogueScenario interruptScenario;
     }
 
     /// <summary>
