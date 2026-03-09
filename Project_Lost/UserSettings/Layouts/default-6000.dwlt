@@ -119,7 +119,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 103
+  controlID: 39
   draggingID: 0
 --- !u!114 &6
 MonoBehaviour:
@@ -236,7 +236,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 1
   m_Script: {fileID: 12006, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: ProjectBrowser
+  m_Name: ConsoleWindow
   m_EditorClassIdentifier: 
   m_Children: []
   m_Position:
@@ -245,16 +245,16 @@ MonoBehaviour:
     y: 585
     width: 1315
     height: 348
-  m_MinSize: {x: 231, y: 276}
-  m_MaxSize: {x: 10001, y: 10026}
-  m_ActualView: {fileID: 15}
+  m_MinSize: {x: 101, y: 126}
+  m_MaxSize: {x: 4001, y: 4026}
+  m_ActualView: {fileID: 16}
   m_Panes:
   - {fileID: 15}
   - {fileID: 16}
   - {fileID: 17}
   - {fileID: 18}
-  m_Selected: 0
-  m_LastSelected: 1
+  m_Selected: 1
+  m_LastSelected: 0
 --- !u!114 &11
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -274,8 +274,8 @@ MonoBehaviour:
     y: 0
     width: 605
     height: 933
-  m_MinSize: {x: 276, y: 76}
-  m_MaxSize: {x: 4001, y: 4026}
+  m_MinSize: {x: 275, y: 50}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 19}
   m_Panes:
   - {fileID: 19}
@@ -404,7 +404,7 @@ MonoBehaviour:
   m_Pos:
     serializedVersion: 2
     x: 0
-    y: 24
+    y: 79
     width: 296
     height: 559
   m_SerializedDataModeController:
@@ -421,9 +421,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 
+      m_SelectedIDs: 98bb0000
       m_LastClickedID: 0
-      m_ExpandedIDs: 5476ffff487bffff127dffffa081ffff3285ffffac89ffffd48affff508fffffd690ffffd491ffffac92ffff9c98ffff6c9bffff809cfffff0a0ffff5ca2ffffd4a4ffffa8a7ffff1cacffff14c4ffff16c4ffff22c4ffff24c4ffff6ccaffff3ecbffff52d5ffffaed9ffffb0edffff9ef4ffff0afbffff4cbd0000c8bd00002cd80000d0e300004ce400003cf5000004f800004cf800000410010070100100ce100100481101006611010046150100be2201003a30010082300100be3d0100063e0100ee3e0100
+      m_ExpandedIDs: 7cafffff36b5ffff92baffffc6bbffff86c1ffff56c7ffffe4d4ffff4ed6ffff76d8ffff34deffff0ae1ffff4ae7ffffc2ebffff1ef3ffff0afbffffe2bd000070be0000e6c9000056ca000074ca00007eca000058d50000cada0000a0dd00009cf00000c4f00000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -469,8 +469,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Scene\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 298
-    y: 24
+    x: 297
+    y: 79
     width: 1016
     height: 559
   m_SerializedDataModeController:
@@ -1025,7 +1025,7 @@ MonoBehaviour:
   m_Pos:
     serializedVersion: 2
     x: 0
-    y: 609
+    y: 664
     width: 1314
     height: 322
   m_SerializedDataModeController:
@@ -1050,7 +1050,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 2
     m_Folders:
-    - Assets/Scenes
+    - Assets/Scripts/Tuning/Core
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -1060,17 +1060,17 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 96
   m_LastFolders:
-  - Assets/Scenes
+  - Assets/Scripts/Tuning/Core
   m_LastFoldersGridSize: 96
   m_LastProjectPath: C:\Users\owner\Desktop\Unity\LostNine\Project_Lost
   m_LockTracker:
     m_IsLocked: 0
   m_LastLocalAssetsSearchArea: 2
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 117}
-    m_SelectedIDs: 40bb0000
-    m_LastClickedID: 47936
-    m_ExpandedIDs: 00000000dcba0000
+    scrollPos: {x: 0, y: 370}
+    m_SelectedIDs: f0130100
+    m_LastClickedID: 70640
+    m_ExpandedIDs: 00000000dcba00003cbb000040bb000048bb00004abb0000a0bb0000a8bb000030bf0000d8ca000000ca9a3bffffff7f
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1125,8 +1125,8 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 
-    m_LastClickedInstanceID: 0
+    m_SelectedInstanceIDs: 98bb0000
+    m_LastClickedInstanceID: 48024
     m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: c6230000a2b000009a42ffff7cd3000030d300005adc00003cc7000094cd00009ecd0000
     m_RenameOverlay:
@@ -1231,7 +1231,7 @@ MonoBehaviour:
     m_OverlaysVisible: 1
   m_LockTracker:
     m_IsLocked: 0
-  m_LastSelectedObjectID: 54864
+  m_LastSelectedObjectID: 51558
 --- !u!114 &18
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -1306,8 +1306,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Inspector\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1316
-    y: 24
+    x: 1315
+    y: 79
     width: 604
     height: 907
   m_SerializedDataModeController:
