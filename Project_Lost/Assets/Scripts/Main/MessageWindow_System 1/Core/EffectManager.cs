@@ -177,7 +177,7 @@ namespace MessageWindowSystem.Core
             bgmAudioSource.Play();
         }
 
-        private void StopBGM() => bgmAudioSource?.Stop();
+        public void StopBGM() => bgmAudioSource?.Stop();
 
         #endregion
 

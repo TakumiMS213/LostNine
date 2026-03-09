@@ -1,19 +1,19 @@
 fileFormatVersion: 2
-guid: ce8e01604ed825c4ba609c63165cff9e
+guid: bccf8588eab16cf4fad3ec814eedfad2
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1128721223907128946
-    second: aaaaaaaaaaaaaa 1_0
+      213: 4162833945990464321
+    second: main_Panel_DialogueStart_0
   - first:
-      213: 6720371252843233146
-    second: aaaaaaaaaaaaaa 1_1
+      213: 9195954040928512681
+    second: main_Panel_DialogueStart_1
   - first:
-      213: 5365435809810840998
-    second: aaaaaaaaaaaaaa 1_2
+      213: -5103143753694708189
+    second: main_Panel_DialogueStart_2
   - first:
-      213: 1295347972013998790
-    second: aaaaaaaaaaaaaa 1_3
+      213: -2286013125856614083
+    second: main_Panel_DialogueStart_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -55,7 +55,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -109,7 +109,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: aaaaaaaaaaaaaa 1_0
+      name: main_Panel_DialogueStart_0
       rect:
         serializedVersion: 2
         x: 0
@@ -124,14 +124,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e89429ee60af550f0800000000000000
-      internalID: -1128721223907128946
+      spriteID: 14303b11b6b55c930800000000000000
+      internalID: 4162833945990464321
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: aaaaaaaaaaaaaa 1_1
+      name: main_Panel_DialogueStart_1
       rect:
         serializedVersion: 2
         x: 671
@@ -146,14 +146,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a7fb7746c0e834d50800000000000000
-      internalID: 6720371252843233146
+      spriteID: 9aaac5c5a779e9f70800000000000000
+      internalID: 9195954040928512681
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: aaaaaaaaaaaaaa 1_2
+      name: main_Panel_DialogueStart_2
       rect:
         serializedVersion: 2
         x: 643
@@ -168,14 +168,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6ad7fe4117bd57a40800000000000000
-      internalID: 5365435809810840998
+      spriteID: 32ef54b2bcdfd29b0800000000000000
+      internalID: -5103143753694708189
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: aaaaaaaaaaaaaa 1_3
+      name: main_Panel_DialogueStart_3
       rect:
         serializedVersion: 2
         x: 698
@@ -190,8 +190,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6c2ca641e100af110800000000000000
-      internalID: 1295347972013998790
+      spriteID: d39af618c237640e0800000000000000
+      internalID: -2286013125856614083
       vertices: []
       indices: 
       edges: []
@@ -200,7 +200,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -210,10 +210,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      aaaaaaaaaaaaaa 1_0: -1128721223907128946
-      aaaaaaaaaaaaaa 1_1: 6720371252843233146
-      aaaaaaaaaaaaaa 1_2: 5365435809810840998
-      aaaaaaaaaaaaaa 1_3: 1295347972013998790
+      main_Panel_DialogueStart_0: 4162833945990464321
+      main_Panel_DialogueStart_1: 9195954040928512681
+      main_Panel_DialogueStart_2: -5103143753694708189
+      main_Panel_DialogueStart_3: -2286013125856614083
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

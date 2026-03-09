@@ -22,6 +22,7 @@ public class ComuStartandEndManager : MonoBehaviour
     [SerializeField] private GameObject Memorizer;
     [SerializeField] private GameObject LostNote;
     [SerializeField] private GameObject ToggleEffect;
+    [SerializeField] private GameObject ObjectiveDisplay;
 
     [SerializeField] private GameObject Portrait;
     [Tooltip("Overlay displayed when portrait is unclickable in scenario")]
@@ -41,6 +42,7 @@ public class ComuStartandEndManager : MonoBehaviour
 
     private bool _isAnimating = false;
     private bool _isPortraitInteractable = true;
+    private bool _isInCommunication = false;
 
     public bool IsInCommunication => _isInCommunication;
 

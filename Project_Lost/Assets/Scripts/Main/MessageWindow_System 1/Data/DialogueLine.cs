@@ -37,6 +37,10 @@ namespace MessageWindowSystem.Data
         [Header("Interrupt Scenario")]
         [Tooltip("Scenario to play as an overlay (Tutorial/Inner Thoughts) during this line.")]
         public DialogueScenario interruptScenario;
+
+        [Header("Background Still Image")]
+        [Tooltip("Optional background still (CG) to display behind the message window for this line.")]
+        public Sprite backgroundImage;
     }
 
     /// <summary>

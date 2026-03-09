@@ -215,6 +215,16 @@ namespace Tuning.Core
             if (seSource != null && successSE != null)
                 seSource.PlayOneShot(successSE);
 
+            if (bgmSource != null)
+            {
+                bgmSource.DOFade(0f, 0.5f).OnComplete(() => bgmSource.Stop());
+            }
+
+            if (MessageWindowSystem.Core.EffectManager.Instance != null)
+            {
+                MessageWindowSystem.Core.EffectManager.Instance.StopBGM();
+            }
+
             if (lowPassFilter != null)
                 lowPassFilter.cutoffFrequency = maxCutoff;
 

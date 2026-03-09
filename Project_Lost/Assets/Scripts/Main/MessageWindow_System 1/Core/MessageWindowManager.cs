@@ -24,6 +24,12 @@ namespace MessageWindowSystem.Core
         [SerializeField] private TMP_Text dialogueText;
         [SerializeField] private GameObject windowRoot;
 
+        [Header("Background Still")]
+        [Tooltip("Image component behind the message window for displaying CGs/stills.")]
+        [SerializeField] private Image backgroundStillImage;
+        [Tooltip("Objects to disable when a background still is active (e.g., text box, speaker name bg).")]
+        [SerializeField] private GameObject[] objectsToHideOnStill;
+
         [Header("Portrait")]
         [SerializeField] private Image portraitImage;
         [SerializeField] private RectTransform portraitLeftAnchor;
@@ -287,6 +293,29 @@ namespace MessageWindowSystem.Core
             if (speakerNameText) speakerNameText.text = speakerName;
             _log.Add((speakerName, _currentLine.text));
 
+            // Update Background Still Image & Toggle Objects
+            if (backgroundStillImage != null)
+            {
+                bool hasStill = _currentLine.backgroundImage != null;
+                if (hasStill)
+                {
+                    backgroundStillImage.sprite = _currentLine.backgroundImage;
+                    backgroundStillImage.gameObject.SetActive(true);
+                }
+                else
+                {
+                    backgroundStillImage.gameObject.SetActive(false);
+                }
+
+                if (objectsToHideOnStill != null)
+                {
+                    foreach (var obj in objectsToHideOnStill)
+                    {
+                        if (obj != null) obj.SetActive(!hasStill);
+                    }
+                }
+            }
+
             UpdatePortrait();
             PlayEffects();
             AnimateSpeakerName(speakerName);
@@ -322,6 +351,17 @@ namespace MessageWindowSystem.Core
 
             _isWindowActive = false;
             if (windowRoot) windowRoot.SetActive(false);
+            if (backgroundStillImage) backgroundStillImage.gameObject.SetActive(false);
+            
+            // Re-enable hidden objects when scenario ends
+            if (objectsToHideOnStill != null)
+            {
+                foreach (var obj in objectsToHideOnStill)
+                {
+                    if (obj != null) obj.SetActive(true);
+                }
+            }
+
             HideGhostPortrait();
 
             // 4. Fire completion callback
