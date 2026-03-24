@@ -261,17 +261,26 @@ namespace Tuning.Core
                 });
             }
 
-            // 次のステップへの遷移演出（successMoveVisualとは独立して実行）
+            // 次のステップへの遷移ボタンを表示（直接シーン遷移せず、ボタンで遷移させる）
             DOVirtual.DelayedCall(3f, () => 
             {
-                // フェーズを Fixation に更新
-                if (ProgressManager.Instance != null)
-                    ProgressManager.Instance.SetProgress(ProgressManager.Instance.CurrentChapter, GamePhase.Fixation);
-
-                if (SceneTransition.Instance != null)
-                    SceneTransition.Instance.TransitionTo("Memorize_2");
+                if (ToNextStepVisual != null)
+                {
+                    ToNextStepVisual.Play();
+                    Debug.Log("[TuningFeedback] Scene transition button displayed.");
+                }
                 else
-                    SceneManager.LoadScene("Memorize_2");
+                {
+                    Debug.LogWarning("[TuningFeedback] ToNextStepVisual is not assigned. Falling back to direct transition.");
+                    // フォールバック: ボタンが未設定の場合は直接遷移
+                    if (ProgressManager.Instance != null)
+                        ProgressManager.Instance.SetProgress(ProgressManager.Instance.CurrentChapter, GamePhase.Fixation);
+
+                    if (SceneTransition.Instance != null)
+                        SceneTransition.Instance.TransitionTo("Memorize_2");
+                    else
+                        SceneManager.LoadScene("Memorize_2");
+                }
             }).SetLink(gameObject);
         }
 

@@ -65,6 +65,19 @@ namespace Teichaku.Core
         [Tooltip("失敗時のSE")]
         [SerializeField] private AudioClip failSE;
 
+        [Header("クリア演出画像")]
+        [Tooltip("クリア時に表示する演出画像（UI Image）")]
+        [SerializeField] private Image clearImage;
+
+        [Tooltip("クリア画像の表示時間（秒）")]
+        [SerializeField] private float clearImageDisplayDuration = 2f;
+
+        [Tooltip("クリア画像のフェードイン時間（秒）")]
+        [SerializeField] private float clearImageFadeInDuration = 0.3f;
+
+        [Tooltip("クリア画像のフェードアウト時間（秒）")]
+        [SerializeField] private float clearImageFadeOutDuration = 0.3f;
+
         private Vector2 _gridInitialPos;
 
         private void Awake()
@@ -81,6 +94,14 @@ namespace Teichaku.Core
             if (gridContainer != null)
             {
                 _gridInitialPos = gridContainer.anchoredPosition;
+            }
+
+            // クリア演出画像の初期化（非表示）
+            if (clearImage != null)
+            {
+                var ci = clearImage.color;
+                ci.a = 0f;
+                clearImage.color = ci;
             }
         }
 
@@ -135,6 +156,37 @@ namespace Teichaku.Core
             }
 
             Debug.Log("[TeichakuFeedback] Clear flash played.");
+
+            // クリア演出画像の表示→シーン遷移
+            StartCoroutine(ClearSequence());
+        }
+
+        /// <summary>
+        /// クリア演出シーケンス：画像表示 → シーン遷移
+        /// </summary>
+        private IEnumerator ClearSequence()
+        {
+            // クリア演出画像が設定されている場合、表示する
+            if (clearImage != null)
+            {
+                // フェードイン
+                clearImage.DOFade(1f, clearImageFadeInDuration);
+                yield return new WaitForSeconds(clearImageFadeInDuration);
+
+                // 一定時間表示
+                yield return new WaitForSeconds(clearImageDisplayDuration);
+
+                // フェードアウト
+                clearImage.DOFade(0f, clearImageFadeOutDuration);
+                yield return new WaitForSeconds(clearImageFadeOutDuration);
+
+                Debug.Log("[TeichakuFeedback] Clear image sequence completed.");
+            }
+
+            // ProgressをPresentationフェーズに変換
+            if (ProgressManager.Instance != null)
+                ProgressManager.Instance.SetProgress(
+                    ProgressManager.Instance.CurrentChapter, GamePhase.Presentation);
 
             // フェード付きでMainシーンへ戻る
             if (SceneTransition.Instance != null)

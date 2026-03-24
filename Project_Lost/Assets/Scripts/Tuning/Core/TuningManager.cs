@@ -106,8 +106,6 @@ namespace Tuning.Core
             UpdatePenalty();
             UpdateStability();
 
-            UpdateStability();
-
             feedback?.OnSyncUpdate(_leftSync, _rightSync, _totalSync, _stabilityGauge, _leftInTarget, _rightInTarget);
         }
 

@@ -40,14 +40,11 @@ public class LostThingsManager : MonoBehaviour
 
     private void Start()
     {
-        // Fixationフェーズであれば、Teichakuクリア後にMain復帰したということ
+        // Presentationフェーズであれば、Teichakuクリア後にMain復帰したということ
         if (ProgressManager.Instance != null &&
-            ProgressManager.Instance.CurrentPhase == GamePhase.Fixation)
+            ProgressManager.Instance.CurrentPhase == GamePhase.Presentation)
         {
             ActivateForCurrentChapter();
-            // Fixation→Presentationフェーズへ移行
-            ProgressManager.Instance.SetProgress(
-                ProgressManager.Instance.CurrentChapter, GamePhase.Presentation);
         }
     }
 

@@ -3,10 +3,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using DG.Tweening;
+using Main.UIMoves;
 
 /// <summary>
 /// フェードイン・アウト付きシーン遷移ユーティリティ。
 /// DontDestroyOnLoad で保持される。
+/// フェード演出はシーン内の MultiEasing（ラベル "FadeOut" / "FadeIn"）を検索して実行する。
+/// MultiEasing が見つからない場合はフォールバックとして直接 DOFade を使用する。
 /// </summary>
 public class SceneTransition : MonoBehaviour
 {
@@ -16,6 +19,12 @@ public class SceneTransition : MonoBehaviour
     [SerializeField] private Image fadeOverlay;
     [SerializeField] private float fadeDuration = 0.5f;
     [SerializeField] private Color fadeColor = Color.black;
+
+    [Header("MultiEasing Labels")]
+    [Tooltip("フェードアウト用 MultiEasing のラベル")]
+    [SerializeField] private string fadeOutLabel = "FadeOut";
+    [Tooltip("フェードイン用 MultiEasing のラベル")]
+    [SerializeField] private string fadeInLabel = "FadeIn";
 
     private bool _isTransitioning;
 
@@ -62,27 +71,42 @@ public class SceneTransition : MonoBehaviour
     /// </summary>
     public void FadeIn()
     {
-        if (fadeOverlay == null) return;
-        fadeOverlay.raycastTarget = true;
-        fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 1f);
-        fadeOverlay.DOFade(0f, fadeDuration).OnComplete(() =>
+        var fadeInEasing = MultiEasing.FindByLabel(fadeInLabel);
+        if (fadeInEasing != null)
         {
-            fadeOverlay.raycastTarget = false;
-        });
+            if (fadeOverlay != null) fadeOverlay.raycastTarget = true;
+            fadeInEasing.Play();
+            StartCoroutine(WaitAndDisableRaycast(fadeInEasing));
+        }
+        else
+        {
+            // フォールバック: 直接 DOFade
+            FadeInFallback();
+        }
+    }
+
+    private IEnumerator WaitAndDisableRaycast(MultiEasing easing)
+    {
+        yield return new WaitWhile(() => easing != null && easing.IsPlaying);
+        if (fadeOverlay != null) fadeOverlay.raycastTarget = false;
     }
 
     private IEnumerator TransitionCoroutine(string sceneName, System.Action onSceneLoaded = null)
     {
         _isTransitioning = true;
 
-        // フェードアウト
-        if (fadeOverlay != null)
+        // フェードアウト（MultiEasing 経由）
+        var fadeOutEasing = MultiEasing.FindByLabel(fadeOutLabel);
+        if (fadeOutEasing != null)
         {
-            fadeOverlay.raycastTarget = true;
-            fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 0f);
-
-            var tween = fadeOverlay.DOFade(1f, fadeDuration);
-            yield return tween.WaitForCompletion();
+            if (fadeOverlay != null) fadeOverlay.raycastTarget = true;
+            fadeOutEasing.Play();
+            yield return new WaitWhile(() => fadeOutEasing != null && fadeOutEasing.IsPlaying);
+        }
+        else
+        {
+            // フォールバック: 直接 DOFade
+            yield return FadeOutFallbackCoroutine();
         }
 
         // シーンロード
@@ -95,15 +119,53 @@ public class SceneTransition : MonoBehaviour
         // 1フレーム待って新シーンの初期化を待つ
         yield return null;
 
-        // フェードイン
-        if (fadeOverlay != null)
+        // フェードイン（新シーン内の MultiEasing を検索）
+        var fadeInEasing = MultiEasing.FindByLabel(fadeInLabel);
+        if (fadeInEasing != null)
         {
-            fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 1f);
-            var tween = fadeOverlay.DOFade(0f, fadeDuration);
-            yield return tween.WaitForCompletion();
-            fadeOverlay.raycastTarget = false;
+            fadeInEasing.Play();
+            yield return new WaitWhile(() => fadeInEasing != null && fadeInEasing.IsPlaying);
+            if (fadeOverlay != null) fadeOverlay.raycastTarget = false;
+        }
+        else
+        {
+            // フォールバック: 直接 DOFade
+            yield return FadeInFallbackCoroutine();
         }
 
         _isTransitioning = false;
     }
+
+    #region Fallback (MultiEasing が見つからない場合)
+
+    private void FadeInFallback()
+    {
+        if (fadeOverlay == null) return;
+        fadeOverlay.raycastTarget = true;
+        fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 1f);
+        fadeOverlay.DOFade(0f, fadeDuration).OnComplete(() =>
+        {
+            fadeOverlay.raycastTarget = false;
+        });
+    }
+
+    private IEnumerator FadeOutFallbackCoroutine()
+    {
+        if (fadeOverlay == null) yield break;
+        fadeOverlay.raycastTarget = true;
+        fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 0f);
+        var tween = fadeOverlay.DOFade(1f, fadeDuration);
+        yield return tween.WaitForCompletion();
+    }
+
+    private IEnumerator FadeInFallbackCoroutine()
+    {
+        if (fadeOverlay == null) yield break;
+        fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 1f);
+        var tween = fadeOverlay.DOFade(0f, fadeDuration);
+        yield return tween.WaitForCompletion();
+        fadeOverlay.raycastTarget = false;
+    }
+
+    #endregion
 }
