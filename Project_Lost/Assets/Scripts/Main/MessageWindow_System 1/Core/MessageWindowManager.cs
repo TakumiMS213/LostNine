@@ -342,7 +342,18 @@ namespace MessageWindowSystem.Core
                 return;
             }
 
-            // 3. Close window (no chain, no loop)
+            // 3. If toggleComuOnEnd was set, EndComuFlow handles the window transition.
+            //    Do NOT close the window here — EndComuFlow is running asynchronously and
+            //    needs the UI objects to remain active for its animation sequence.
+            if (_currentScenarioData != null && _currentScenarioData.toggleComuOnEnd)
+            {
+                Debug.Log("[MWM] EndScenario: toggleComuOnEnd is set. Skipping window close (EndComuFlow handles it).");
+                _onScenarioComplete?.Invoke();
+                _onScenarioComplete = null;
+                return;
+            }
+
+            // 4. Close window (no chain, no loop, no toggleComu)
             var comuManager = FindObjectOfType<ComuStartandEndManager>();
             if (comuManager != null)
             {
@@ -364,7 +375,7 @@ namespace MessageWindowSystem.Core
 
             HideGhostPortrait();
 
-            // 4. Fire completion callback
+            // 5. Fire completion callback
             _onScenarioComplete?.Invoke();
             _onScenarioComplete = null;
         }

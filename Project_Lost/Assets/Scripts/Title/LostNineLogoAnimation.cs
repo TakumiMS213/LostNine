@@ -4,26 +4,28 @@ using DG.Tweening;
 public class LostNineLogoAnimation : MonoBehaviour
 {
     [Header("🔸基本揺れ設定")]
-    public float shakeRange = 4f;         // 揺れ幅（UIなら3～8 / Spriteなら0.03〜0.12）
-    public float shakeDuration = 0.04f;   // 揺れ1回の長さ
-    public float interval = 0.15f;        // 揺れの基本発生間隔
+    public float shakeRange = 4f;
+    public float shakeDuration = 0.04f;
+    public float interval = 0.15f;
 
     [Header("🔸揺れタイミングのランダム性")]
-    public float intervalRandom = 0.08f;  // +−ランダム追加（0で毎回一定）
+    public float intervalRandom = 0.08f;
 
     [Header("🔸回転ノイズ")]
     public bool enableRotation = true;
-    public float rotationRange = 3f;      // 回転角度（Z軸）
+    public float rotationRange = 3f;
 
     [Header("🔸バーストモード（連続グリッチ）")]
     public bool enableBurst = true;
     public int burstCountMin = 2;
     public int burstCountMax = 5;
-    public float burstChance = 0.18f;     // 発生確率
+    public float burstChance = 0.18f;
 
     Vector3 originalPos;
     Quaternion originalRot;
-    Sequence seq;
+
+    // 現在動いているシーケンスの参照（Kill用）
+    Sequence _activeSeq;
 
     void Start()
     {
@@ -34,60 +36,74 @@ public class LostNineLogoAnimation : MonoBehaviour
 
     void StartGlitchLoop()
     {
-        seq = DOTween.Sequence();
+        // 前のシーケンスをクリア
+        _activeSeq?.Kill();
+
+        var seq = DOTween.Sequence().SetLink(gameObject);
+        _activeSeq = seq;
+
+        // 1. 揺らす
         seq.AppendCallback(() =>
         {
-            // ランダムに揺らす
             Vector3 offset = new Vector3(
                 Random.Range(-shakeRange, shakeRange),
                 Random.Range(-shakeRange, shakeRange),
                 0
             );
-
-            transform.DOLocalMove(originalPos + offset, shakeDuration).SetEase(Ease.OutQuad);
+            transform.DOLocalMove(originalPos + offset, shakeDuration).SetEase(Ease.OutQuad).SetLink(gameObject);
 
             if (enableRotation)
             {
                 float rot = Random.Range(-rotationRange, rotationRange);
-                transform.DOLocalRotate(new Vector3(0, 0, rot), shakeDuration);
+                transform.DOLocalRotate(new Vector3(0, 0, rot), shakeDuration).SetLink(gameObject);
             }
         });
 
         seq.AppendInterval(shakeDuration);
 
+        // 2. 戻す
         seq.AppendCallback(() =>
         {
-            // 戻す
-            transform.DOLocalMove(originalPos, 0.02f);
-            if (enableRotation) transform.DOLocalRotateQuaternion(originalRot, 0.02f);
+            transform.DOLocalMove(originalPos, 0.02f).SetLink(gameObject);
+            if (enableRotation) transform.DOLocalRotateQuaternion(originalRot, 0.02f).SetLink(gameObject);
         });
 
         seq.AppendInterval(GetInterval());
 
+        // 3. バースト抽選 → バーストが出たら StartBurst が次のループも責任を持つ
         seq.AppendCallback(() =>
         {
-            // バーストの抽選
             if (enableBurst && Random.value < burstChance)
+            {
+                // ── FIX: バースト用に独立したシーケンスを起動し、
+                //         既存の seq（ロック済み）には一切触らない ──
                 StartBurst();
+                return; // StartBurst 内で次ループを呼ぶ
+            }
+            // バーストなし → そのまま次ループ
+            StartGlitchLoop();
         });
-
-        seq.AppendCallback(StartGlitchLoop);
     }
 
     void StartBurst()
     {
+        // ── FIX: 実行中の seq には追記せず、完全に新しいシーケンスを作る ──
+        _activeSeq?.Kill();
+
         int burstCount = Random.Range(burstCountMin, burstCountMax + 1);
+        var burst = DOTween.Sequence().SetLink(gameObject);
+        _activeSeq = burst;
 
         for (int i = 0; i < burstCount; i++)
         {
-            seq.AppendCallback(() =>
+            // ループ変数をキャプチャするためローカルにコピー不要（ラムダ内は値を直接使う）
+            burst.AppendCallback(() =>
             {
                 Vector3 offset = new Vector3(
                     Random.Range(-shakeRange, shakeRange),
                     Random.Range(-shakeRange, shakeRange),
                     0
                 );
-
                 transform.localPosition = originalPos + offset;
 
                 if (enableRotation)
@@ -97,14 +113,18 @@ public class LostNineLogoAnimation : MonoBehaviour
                 }
             });
 
-            seq.AppendInterval(shakeDuration * Random.Range(0.6f, 1.2f));
+            burst.AppendInterval(shakeDuration * Random.Range(0.6f, 1.2f));
         }
 
-        seq.AppendCallback(() =>
+        // バースト後に元位置へ戻す
+        burst.AppendCallback(() =>
         {
             transform.localPosition = originalPos;
             if (enableRotation) transform.localRotation = originalRot;
         });
+
+        // バースト完了 → 通常ループを再開
+        burst.OnComplete(StartGlitchLoop);
     }
 
     float GetInterval()
@@ -114,7 +134,8 @@ public class LostNineLogoAnimation : MonoBehaviour
 
     void OnDisable()
     {
-        if (seq != null) seq.Kill();
+        _activeSeq?.Kill();
+        _activeSeq = null;
         transform.localPosition = originalPos;
         transform.localRotation = originalRot;
     }

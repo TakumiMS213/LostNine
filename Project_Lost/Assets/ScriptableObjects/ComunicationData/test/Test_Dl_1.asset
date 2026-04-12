@@ -17,7 +17,7 @@ MonoBehaviour:
   enableKeywords: 0
   enablePortraitClick: 1
   loopScenario: 0
-  toggleComuOnEnd: 0
+  toggleComuOnEnd: 1
   updateProgressOnEnd: 1
   progressAction: 2
   targetChapter: 1

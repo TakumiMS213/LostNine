@@ -188,7 +188,9 @@ namespace Teichaku.Core
                 ProgressManager.Instance.SetProgress(
                     ProgressManager.Instance.CurrentChapter, GamePhase.Presentation);
 
-            // フェード付きでMainシーンへ戻る
+            // SceneTransition経由でMainシーンへ遷移
+            // SceneTransitionが自動的にシーン内のMultiEasing（"FadeOut"/"FadeIn"ラベル）を
+            // 検索して実行する（タイトル→Mainと同じ構造）
             if (SceneTransition.Instance != null)
                 SceneTransition.Instance.TransitionTo("Main");
             else
