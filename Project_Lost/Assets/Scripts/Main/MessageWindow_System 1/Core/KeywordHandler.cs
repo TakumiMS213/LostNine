@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using TMPro;
 using DG.Tweening;
 using MessageWindowSystem.Data;
@@ -21,6 +22,13 @@ namespace MessageWindowSystem.Core
 
         [Header("Charge Settings")]
         [SerializeField] private float chargeDuration = 1.0f;
+
+        [Header("Keyword Hover Cursor")]
+        [Tooltip("キーワード上にカーソルが重なったときに表示するカーソル画像。")]
+        [SerializeField] private Texture2D keywordHoverCursor;
+
+        [Tooltip("ホバーカーソルのクリック位置オフセット（左上からのピクセル数）。")]
+        [SerializeField] private Vector2 keywordHoverHotspot = Vector2.zero;
 
         #endregion
 
@@ -53,6 +61,7 @@ namespace MessageWindowSystem.Core
         private Coroutine _chargeCoroutine;
 
         private const string DummyPrefix = "dummy_";
+        private bool _isHoveringLink;
 
         #endregion
 
@@ -75,6 +84,25 @@ namespace MessageWindowSystem.Core
 
         /// <summary>Sets keyword enabled state at runtime.</summary>
         public void SetKeywordEnabled(bool enable) => _isKeywordEnabled = enable;
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        private void Update()
+        {
+            UpdateCursorHover();
+        }
+
+        private void OnDisable()
+        {
+            // Restore default cursor when handler is disabled
+            if (_isHoveringLink)
+            {
+                _isHoveringLink = false;
+                CursorManager.Instance?.ResetToDefault();
+            }
+        }
 
         /// <summary>Checks if the text contains any TMP link tags.</summary>
         public bool HasKeywordsInText(string text)
@@ -324,6 +352,65 @@ namespace MessageWindowSystem.Core
                     mesh.vertices[vi + v] = origVerts[i][v];
             }
             text.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
+        }
+
+        #endregion
+
+        #region Cursor Hover
+
+        /// <summary>
+        /// 毎フレーム、マウスが TMP リンクタグ上にあるかチェックし、
+        /// CursorManager 経由でカーソル画像を切り替える。
+        /// 当たり／ハズレ／ダミーに関係なく全リンクに反応する。
+        /// </summary>
+        private void UpdateCursorHover()
+        {
+            if (CursorManager.Instance == null || keywordHoverCursor == null) return;
+
+            var manager = MessageWindowManager.Instance;
+            if (manager == null || !manager.IsWindowActive || manager.IsTyping)
+            {
+                if (_isHoveringLink)
+                {
+                    _isHoveringLink = false;
+                    CursorManager.Instance.ResetToDefault();
+                }
+                return;
+            }
+
+            var dialogueText = manager.DialogueText;
+            if (dialogueText == null)
+            {
+                if (_isHoveringLink)
+                {
+                    _isHoveringLink = false;
+                    CursorManager.Instance.ResetToDefault();
+                }
+                return;
+            }
+
+            // Input System 経由でマウス位置を取得
+            Vector2 mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : Input.mousePosition;
+
+            Camera uiCamera = GetUICamera(dialogueText);
+            int linkIndex = TMP_TextUtilities.FindIntersectingLink(dialogueText, mousePos, uiCamera);
+
+            if (linkIndex != -1)
+            {
+                if (!_isHoveringLink)
+                {
+                    _isHoveringLink = true;
+                    CursorManager.Instance.SetCursor(keywordHoverCursor, keywordHoverHotspot);
+                }
+            }
+            else
+            {
+                if (_isHoveringLink)
+                {
+                    _isHoveringLink = false;
+                    CursorManager.Instance.ResetToDefault();
+                }
+            }
         }
 
         #endregion
