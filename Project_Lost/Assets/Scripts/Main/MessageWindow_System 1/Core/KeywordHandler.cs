@@ -8,6 +8,7 @@ using UnityEngine.InputSystem;
 using TMPro;
 using DG.Tweening;
 using MessageWindowSystem.Data;
+using ScenarioSystem.Adapter;
 
 namespace MessageWindowSystem.Core
 {
@@ -19,6 +20,10 @@ namespace MessageWindowSystem.Core
     public class KeywordHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
         #region Serialized Fields
+
+        [Header("Dialogue Provider")]
+        [Tooltip("IDialogueProvider 実装。未設定時は旧 MessageWindowManager.Instance にフォールバック。")]
+        [SerializeField] private MonoBehaviour dialogueProviderSource;
 
         [Header("Charge Settings")]
         [SerializeField] private float chargeDuration = 1.0f;
@@ -54,6 +59,7 @@ namespace MessageWindowSystem.Core
 
         #region Private Fields
 
+        private IDialogueProvider _provider;
         private bool _isKeywordEnabled;
         private bool _isCharging;
         private bool _shouldBlockNext;
@@ -89,6 +95,11 @@ namespace MessageWindowSystem.Core
 
         #region Unity Lifecycle
 
+        private void Awake()
+        {
+            ResolveProvider();
+        }
+
         private void Update()
         {
             UpdateCursorHover();
@@ -114,27 +125,24 @@ namespace MessageWindowSystem.Core
         /// <summary>Sets the color of a keyword link across all lines in the scenario.</summary>
         public void SetLinkColor(string id, string colorHex)
         {
-            var manager = MessageWindowManager.Instance;
-            if (manager == null || manager.DialogueText == null || string.IsNullOrEmpty(id)) return;
+            var provider = GetProvider();
+            if (provider == null || provider.DialogueText == null || string.IsNullOrEmpty(id)) return;
 
-            // Only modify the currently displayed line's visual
-            var currentLine = manager.CurrentLine;
-            if (currentLine == null || string.IsNullOrEmpty(currentLine.text)) return;
+            string currentText = provider.CurrentText;
+            if (string.IsNullOrEmpty(currentText)) return;
 
             string pattern = BuildLinkPattern(id);
-            if (!Regex.IsMatch(currentLine.text, pattern)) return;
+            if (!Regex.IsMatch(currentText, pattern)) return;
 
-            string newText = Regex.Replace(currentLine.text, pattern, m =>
+            string newText = Regex.Replace(currentText, pattern, m =>
             {
                 string stripped = StripColorTags(m.Groups[1].Value);
                 return $"<link=\"{id}\"><color={colorHex}>{stripped}</color></link>";
             }, RegexOptions.Singleline);
 
-            if (currentLine.text != newText)
+            if (currentText != newText)
             {
-                currentLine.text = newText;
-                manager.DialogueText.text = currentLine.text;
-                manager.DialogueText.ForceMeshUpdate();
+                provider.UpdateCurrentText(newText);
             }
         }
 
@@ -144,34 +152,32 @@ namespace MessageWindowSystem.Core
             if (string.IsNullOrEmpty(id)) return;
             ClueManager.Instance?.ResetKeywordStatus(id);
 
-            var manager = MessageWindowManager.Instance;
-            if (manager == null) return;
+            var provider = GetProvider();
+            if (provider == null) return;
 
-            var currentLine = manager.CurrentLine;
-            if (currentLine == null || string.IsNullOrEmpty(currentLine.text)) return;
+            string currentText = provider.CurrentText;
+            if (string.IsNullOrEmpty(currentText)) return;
 
             string pattern = BuildLinkPattern(id);
-            if (!Regex.IsMatch(currentLine.text, pattern)) return;
+            if (!Regex.IsMatch(currentText, pattern)) return;
 
-            string newText = Regex.Replace(currentLine.text, pattern, m =>
+            string newText = Regex.Replace(currentText, pattern, m =>
             {
                 string stripped = StripColorTags(m.Groups[1].Value);
                 return $"<link=\"{id}\">{stripped}</link>";
             }, RegexOptions.Singleline);
 
-            if (currentLine.text != newText)
+            if (currentText != newText)
             {
-                currentLine.text = newText;
-                manager.DialogueText.text = currentLine.text;
-                manager.DialogueText.ForceMeshUpdate();
+                provider.UpdateCurrentText(newText);
             }
         }
 
         /// <summary>Triggers a shake effect on the dialogue text.</summary>
         public void ShakeLinkVisual(string id)
         {
-            var manager = MessageWindowManager.Instance;
-            manager?.DialogueText?.GetComponent<RectTransform>()?.DOShakeAnchorPos(0.35f, new Vector2(8f, 0f), 10, 90f);
+            var provider = GetProvider();
+            provider?.DialogueText?.GetComponent<RectTransform>()?.DOShakeAnchorPos(0.35f, new Vector2(8f, 0f), 10, 90f);
         }
 
         #endregion
@@ -182,11 +188,11 @@ namespace MessageWindowSystem.Core
         {
             _shouldBlockNext = false;
 
-            var manager = MessageWindowManager.Instance;
-            if (manager == null || !manager.IsWindowActive || manager.IsTyping || !_isKeywordEnabled)
+            var provider = GetProvider();
+            if (provider == null || !provider.IsWindowActive || provider.IsTyping || !_isKeywordEnabled)
                 return;
 
-            var dialogueText = manager.DialogueText;
+            var dialogueText = provider.DialogueText;
             if (dialogueText == null) return;
 
             Camera uiCamera = GetUICamera(dialogueText);
@@ -226,8 +232,8 @@ namespace MessageWindowSystem.Core
 
             if (!string.IsNullOrEmpty(_chargingLinkID))
             {
-                var manager = MessageWindowManager.Instance;
-                manager?.DialogueText?.ForceMeshUpdate();
+                var provider = GetProvider();
+                provider?.DialogueText?.ForceMeshUpdate();
             }
 
             EffectManager.Instance?.StopChargeSE();
@@ -367,8 +373,8 @@ namespace MessageWindowSystem.Core
         {
             if (CursorManager.Instance == null || keywordHoverCursor == null) return;
 
-            var manager = MessageWindowManager.Instance;
-            if (manager == null || !manager.IsWindowActive || manager.IsTyping)
+            var provider = GetProvider();
+            if (provider == null || !provider.IsWindowActive || provider.IsTyping)
             {
                 if (_isHoveringLink)
                 {
@@ -378,7 +384,7 @@ namespace MessageWindowSystem.Core
                 return;
             }
 
-            var dialogueText = manager.DialogueText;
+            var dialogueText = provider.DialogueText;
             if (dialogueText == null)
             {
                 if (_isHoveringLink)
@@ -417,6 +423,43 @@ namespace MessageWindowSystem.Core
 
         #region Utility
 
+        /// <summary>
+        /// IDialogueProvider を解決する。
+        /// SerializedField から注入されていればそれを使い、
+        /// なければ旧 MessageWindowManager.Instance にフォールバック。
+        /// </summary>
+        private IDialogueProvider GetProvider()
+        {
+            if (_provider != null) return _provider;
+            ResolveProvider();
+            return _provider;
+        }
+
+        private void ResolveProvider()
+        {
+            // 1. Inspector から注入された MonoBehaviour
+            if (dialogueProviderSource != null && dialogueProviderSource is IDialogueProvider injected)
+            {
+                _provider = injected;
+                return;
+            }
+
+            // 2. シーン内の DialogueProviderAdapter を検索
+            var adapter = FindObjectOfType<DialogueProviderAdapter>();
+            if (adapter != null)
+            {
+                _provider = adapter;
+                return;
+            }
+
+            // 3. フォールバック: 旧 MWM をラップ
+            var mwm = MessageWindowManager.Instance;
+            if (mwm != null)
+            {
+                _provider = new LegacyMWMProvider(mwm);
+            }
+        }
+
         private static Camera GetUICamera(TMP_Text text)
         {
             var canvas = text.GetComponentInParent<Canvas>();
@@ -425,6 +468,39 @@ namespace MessageWindowSystem.Core
 
         private static string BuildLinkPattern(string id) => $@"<(?:a\s+href|link)\s*=\s*""{Regex.Escape(id)}""\s*>(.*?)</(?:a|link)>";
         private static string StripColorTags(string content) => Regex.Replace(content, "</?color[^>]*>", "");
+
+        #endregion
+
+        #region Legacy Wrapper
+
+        /// <summary>
+        /// 旧 MessageWindowManager を IDialogueProvider としてラップする内部クラス。
+        /// 完全移行後は削除する。
+        /// </summary>
+        private class LegacyMWMProvider : IDialogueProvider
+        {
+            private readonly MessageWindowManager _mwm;
+
+            public LegacyMWMProvider(MessageWindowManager mwm) => _mwm = mwm;
+
+            public TMP_Text DialogueText => _mwm?.DialogueText;
+            public string CurrentText => _mwm?.CurrentLine?.text ?? "";
+            public bool IsWindowActive => _mwm != null && _mwm.IsWindowActive;
+            public bool IsTyping => _mwm != null && _mwm.IsTyping;
+
+            public void UpdateCurrentText(string newText)
+            {
+                if (_mwm?.CurrentLine != null)
+                {
+                    _mwm.CurrentLine.text = newText;
+                    if (_mwm.DialogueText != null)
+                    {
+                        _mwm.DialogueText.text = newText;
+                        _mwm.DialogueText.ForceMeshUpdate();
+                    }
+                }
+            }
+        }
 
         #endregion
     }

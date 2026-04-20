@@ -30,8 +30,12 @@ namespace ScenarioSystem.Adapter
         [Header("New System")]
         [SerializeField] private ScenarioPresenter presenter;
 
+        [Header("New Database (ScenarioData)")]
+        [Tooltip("新 ScenarioData 用データベース。ID 検索に使用。")]
+        [SerializeField] private ScenarioDataDatabase scenarioDataDatabase;
+
         [Header("Legacy References")]
-        [Tooltip("旧 ScenarioDatabase（ID でのシナリオ検索用）。")]
+        [Tooltip("旧 ScenarioDatabase（ID でのシナリオ検索用のフォールバック）。")]
         [SerializeField] private MessageWindowSystem.Data.ScenarioDatabase legacyDatabase;
 
         [Header("UI References (read-only exposure)")]
@@ -62,6 +66,9 @@ namespace ScenarioSystem.Adapter
         /// <summary>タイピング中か。</summary>
         public bool IsTyping => _isTyping;
 
+        /// <summary>シナリオ再生中か。</summary>
+        public bool IsPlaying => presenter != null && presenter.IsPlaying;
+
         #endregion
 
         #region Unity Lifecycle
@@ -76,8 +83,6 @@ namespace ScenarioSystem.Adapter
         {
             ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibility;
             ScenarioEventBus.OnDialogueRequested += HandleDialogueForLog;
-
-            // Typing state tracking
             ScenarioEventBus.OnDialogueRequested += _ => _isTyping = true;
             ScenarioEventBus.OnTypingCompleted += () => _isTyping = false;
         }
@@ -108,8 +113,46 @@ namespace ScenarioSystem.Adapter
         }
 
         /// <summary>
+        /// シナリオ ID で検索して再生する。
+        /// 新 DB → 旧 DB の順で検索し、見つかったものを再生する。
+        /// </summary>
+        public void StartScenarioById(string scenarioId, Action onComplete = null)
+        {
+            if (string.IsNullOrEmpty(scenarioId))
+            {
+                Debug.LogWarning("[MessageWindowFacade] Empty scenario ID.");
+                onComplete?.Invoke();
+                return;
+            }
+
+            // 1. 新 ScenarioDataDatabase で検索
+            if (scenarioDataDatabase != null)
+            {
+                var newScenario = scenarioDataDatabase.GetById(scenarioId);
+                if (newScenario != null)
+                {
+                    StartScenario(newScenario, onComplete);
+                    return;
+                }
+            }
+
+            // 2. 旧 ScenarioDatabase で検索 → レガシーフォールバック
+            if (legacyDatabase != null)
+            {
+                var legacyScenario = legacyDatabase.GetScenarioById(scenarioId);
+                if (legacyScenario != null)
+                {
+                    StartScenario(legacyScenario, onComplete);
+                    return;
+                }
+            }
+
+            Debug.LogWarning($"[MessageWindowFacade] Scenario '{scenarioId}' not found in any database.");
+            onComplete?.Invoke();
+        }
+
+        /// <summary>
         /// 旧 DialogueScenario を変換せずにそのまま再生する（レガシー互換）。
-        /// 旧 SO が渡された場合はログを出して警告する。
         /// 完全移行後はこのオーバーロードを削除する。
         /// </summary>
         public void StartScenario(DialogueScenario legacyScenario, Action onComplete = null)
@@ -156,3 +199,4 @@ namespace ScenarioSystem.Adapter
         #endregion
     }
 }
+

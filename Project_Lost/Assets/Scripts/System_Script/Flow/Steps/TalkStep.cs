@@ -15,21 +15,17 @@ namespace System_Script.Flow
 
         public override void Execute(GameFlowDirector director)
         {
-            if (MessageWindowManager.Instance != null && scenario != null)
+            var facade = ScenarioSystem.Adapter.MessageWindowFacade.Instance;
+            if (facade != null && scenario != null)
             {
-                // Note: implementing Action callback in MessageWindowManager is required for this to work perfectly.
-                // For now, we assume StartScenario will be modified to accept a callback.
-                
-                // Existing StartScenario doesn't have a callback yet. 
-                // We will add it in the next step.
-                MessageWindowManager.Instance.StartScenario(scenario, () => 
+                facade.StartScenario(scenario, () => 
                 {
                     director.NextStep();
                 });
             }
             else
             {
-                Debug.LogWarning("[TalkStep] MessageWindowManager or Scenario is missing. Skipping.");
+                Debug.LogWarning("[TalkStep] MessageWindowFacade or Scenario is missing. Skipping.");
                 director.NextStep();
             }
         }

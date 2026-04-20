@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8ccf6022d6c841119aa8041b6c7abd6, type: 3}
+  m_Name: ScenarioTalkStep
+  m_EditorClassIdentifier: 
+  scenario: {fileID: 11400000, guid: 84e8262e2a6914bdaa942a028603b4fe, type: 2}

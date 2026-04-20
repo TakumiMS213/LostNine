@@ -33,22 +33,29 @@ public class ProgressBasedScenarioStarter : MonoBehaviour
 
     private void OnClick()
     {
-        DialogueScenario scenario = overrideScenario;
-
-        // If no override, look up by progress
-        if (scenario == null && scenarioDatabase != null && ProgressManager.Instance != null)
+        var facade = ScenarioSystem.Adapter.MessageWindowFacade.Instance;
+        if (facade == null)
         {
-            string key = ProgressManager.Instance.GetScenarioKey();
-            scenario = scenarioDatabase.GetScenarioById(key);
+            Debug.LogError("[ProgressBasedScenarioStarter] MessageWindowFacade not found!");
+            return;
         }
 
-        if (scenario != null)
+        // 1. Override が指定されている場合はそのまま再生（レガシー互換）
+        if (overrideScenario != null)
         {
-            MessageWindowManager.Instance?.StartScenario(scenario);
+            facade.StartScenario(overrideScenario);
+            return;
+        }
+
+        // 2. ProgressManager から現在の状態に応じた ID を取得して再生
+        if (ProgressManager.Instance != null)
+        {
+            string key = ProgressManager.Instance.GetScenarioKey();
+            facade.StartScenarioById(key);
         }
         else
         {
-            Debug.LogWarning($"[ProgressBasedScenarioStarter] No scenario found for current progress.");
+            Debug.LogWarning("[ProgressBasedScenarioStarter] ProgressManager not found.");
         }
     }
 }

@@ -131,13 +131,6 @@ public class ComuStartandEndManager : MonoBehaviour
 
         Debug.Log($"[ComuManager] ToggleComuforPortrait: Phase={phase}, Scenario={scenarioId}, Keywords={enableKeywords}");
 
-        // キーワード設定を反映
-        if (MessageWindowManager.Instance != null)
-        {
-            // KeywordHandler will be initialized when StartScenario is called
-            // but we can pre-set keyword enablement
-        }
-
         ComuStart(scenarioId);
         _isInCommunication = true;
     }
