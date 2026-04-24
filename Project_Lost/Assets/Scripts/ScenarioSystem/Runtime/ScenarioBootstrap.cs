@@ -62,6 +62,7 @@ namespace ScenarioSystem.Runtime
             presenter.RegisterExecutor(new ProgressScenarioActionExecutor(presenter, scenarioDatabase));
             presenter.RegisterExecutor(new CenterPortraitActionExecutor());
             presenter.RegisterExecutor(new SceneTransitionActionExecutor());
+            presenter.RegisterExecutor(new PortraitInteractableActionExecutor());
 
             Debug.Log("[ScenarioBootstrap] All executors registered.");
         }

@@ -15,6 +15,7 @@ MonoBehaviour:
   scenarioId: Ch1_Extraction
   showMainWindow: 1
   actions:
+  - {fileID: 11400000, guid: f146ef37397974dce8fe39bb05bc5d0a, type: 2}
   - {fileID: 11400000, guid: 96f300603b9634d519eb523a12a3649f, type: 2}
   - {fileID: 11400000, guid: 9431637e3796f433bba2398629e9cffa, type: 2}
   nextScenario: {fileID: 0}

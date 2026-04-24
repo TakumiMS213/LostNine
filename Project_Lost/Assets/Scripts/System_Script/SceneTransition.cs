@@ -149,7 +149,11 @@ public class SceneTransition : MonoBehaviour
     {
         _isTransitioning = true;
 
+        // 遷移直前に fadeOverlay が消失していないか確認・再生成
+        EnsureFadeOverlay();
+
         // フェードアウト
+
         if (!_useSimpleFade)
         {
             var fadeOutEasing = MultiEasing.FindByLabel(fadeOutLabel);
@@ -185,9 +189,16 @@ public class SceneTransition : MonoBehaviour
             var fadeInEasing = MultiEasing.FindByLabel(fadeInLabel);
             if (fadeInEasing != null)
             {
+                // Fallback用フェード画像が残っている場合は、MultiEasingと被らないよう即座に隠す
+                if (fadeOverlay != null)
+                {
+                    fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 0f);
+                    fadeOverlay.raycastTarget = false;
+                    fadeOverlay.gameObject.SetActive(false);
+                }
+
                 fadeInEasing.Play();
                 yield return new WaitWhile(() => fadeInEasing != null && fadeInEasing.IsPlaying);
-                if (fadeOverlay != null) fadeOverlay.raycastTarget = false;
             }
             else
             {
@@ -218,17 +229,27 @@ public class SceneTransition : MonoBehaviour
     private IEnumerator FadeOutFallbackCoroutine()
     {
         if (fadeOverlay == null) yield break;
+
+        fadeOverlay.gameObject.SetActive(true);
+        var canvas = fadeOverlay.canvas;
+        if (canvas != null) canvas.gameObject.SetActive(true);
+
         fadeOverlay.raycastTarget = true;
         fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 0f);
-        var tween = fadeOverlay.DOFade(1f, fadeDuration);
+        var tween = fadeOverlay.DOFade(1f, fadeDuration).SetUpdate(true);
         yield return tween.WaitForCompletion();
     }
 
     private IEnumerator FadeInFallbackCoroutine()
     {
         if (fadeOverlay == null) yield break;
+
+        fadeOverlay.gameObject.SetActive(true);
+        var canvas = fadeOverlay.canvas;
+        if (canvas != null) canvas.gameObject.SetActive(true);
+
         fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 1f);
-        var tween = fadeOverlay.DOFade(0f, fadeDuration);
+        var tween = fadeOverlay.DOFade(0f, fadeDuration).SetUpdate(true);
         yield return tween.WaitForCompletion();
         fadeOverlay.raycastTarget = false;
     }

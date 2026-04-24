@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -19,6 +20,8 @@ public class ProgressManager : MonoBehaviour
 
     [Tooltip("シークエンス起動に必要なキーワード数")]
     [SerializeField] private int _keywordThreshold = 3;
+
+    private HashSet<string> _extractedKeywords = new HashSet<string>();
 
     [Header("Chapter Settings")]
     [Tooltip("最大チャプター数")]
@@ -138,16 +141,24 @@ public class ProgressManager : MonoBehaviour
     /// <summary>
     /// キーワードを1つ追加する。しきい値に達したらイベントを発火する。
     /// </summary>
-    public void AddKeyword()
+    public bool AddKeyword(string keywordId)
     {
+        if (_extractedKeywords.Contains(keywordId))
+        {
+            Debug.Log($"[ProgressManager] Keyword '{keywordId}' already extracted. Ignored.");
+            return false;
+        }
+
+        _extractedKeywords.Add(keywordId);
         _currentKeywordProgress++;
-        Debug.Log($"[ProgressManager] Keyword added. Progress: {_currentKeywordProgress}/{_keywordThreshold}");
+        Debug.Log($"[ProgressManager] Keyword '{keywordId}' added. Progress: {_currentKeywordProgress}/{_keywordThreshold}");
 
         if (_currentKeywordProgress >= _keywordThreshold)
         {
             Debug.Log($"[ProgressManager] Keyword threshold reached! ({_currentKeywordProgress}/{_keywordThreshold})");
             OnKeywordThresholdReached?.Invoke();
         }
+        return true;
     }
 
     /// <summary>
@@ -156,6 +167,7 @@ public class ProgressManager : MonoBehaviour
     public void ResetKeywordProgress()
     {
         _currentKeywordProgress = 0;
+        _extractedKeywords.Clear();
     }
 
     /// <summary>

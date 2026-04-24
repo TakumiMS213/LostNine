@@ -13,26 +13,50 @@ MonoBehaviour:
   m_Name: TestDialogue_01
   m_EditorClassIdentifier: 
   entries:
-  - speakerName: Speaker
-    text: "\u30B7\u30CA\u30EA\u30AA\u30C6\u30B9\u30C8"
-    portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
+  - speakerName: "\uFF1F\uFF1F\uFF1F"
+    text: "...\u6765\u305F\u304B\u3044\u3002"
+    portrait: {fileID: 21300000, guid: 3e9209ca9223746229eb325d4a7984f9, type: 3}
     portraitPosition: 0
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
     backgroundImage: {fileID: 0}
-  - speakerName: Speaker
-    text: "\u5DE6\u53F3\u306B"
-    portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
-    portraitPosition: 2
+  - speakerName: "\uFF1F\uFF1F\uFF1F"
+    text: "\u672C\u6765\u306F\u3082\u3063\u3068\u9577\u3044\u904E\u7A0B\u304C\u3042\u308B\u3093\u3060\u304C\u306A\u3002\n\u3066\u3059\u3068\u3077\u308C\u3044\u3068\u3084\u3089\u306B\u306F\u5FC5\u8981\u306A\u3044\u3089\u3057\u3044\u3002"
+    portrait: {fileID: 21300000, guid: 13979ae4426a346a99d92c1682e2c956, type: 3}
+    portraitPosition: 0
+    typingSpeed: 0.03
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "\u30AB\u30C1\u30E7\u30A6"
+    text: "\u30A2\u30BF\u30B7\u306F<color=#ff7b00>\u30AB\u30C1\u30E7\u30A6</color>\u3002\n\u3066\u3059\u3068\u3077\u308C\u3044\u306E\u9032\u884C\u5F79\u3092\u4EFB\u3055\u308C\u3066\u308B\u5E74\u5BC4\u308A\u3060\u3002"
+    portrait: {fileID: 21300000, guid: 13979ae4426a346a99d92c1682e2c956, type: 3}
+    portraitPosition: 0
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
     backgroundImage: {fileID: 0}
-  - speakerName: Speaker
-    text: "\u63FA\u308C\u307E\u3059"
-    portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
-    portraitPosition: 1
+  - speakerName: "\u30AB\u30C1\u30E7\u30A6"
+    text: "\u30B2\u30FC\u30E0\u306E\u6982\u8981\u306F\u3055\u3063\u304D\u8AAC\u660E\u3055\u308C\u3066\u308B\u7B48\u3060\u304B\u3089\u306D\u3002\n...\u624B\u7B48\u901A\u308A\u306A\u3089\u3002"
+    portrait: {fileID: 21300000, guid: 3e9209ca9223746229eb325d4a7984f9, type: 3}
+    portraitPosition: 0
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "\u30AB\u30C1\u30E7\u30A6"
+    text: "\u307B\u3093\u3067\u4ECA\u306F\u30D7\u30ED\u30ED\u30FC\u30B0\u30D5\u30A7\u30FC\u30BA\u3001\u524D\u7F6E\u304D\u3060\u3002"
+    portrait: {fileID: 21300000, guid: 13979ae4426a346a99d92c1682e2c956, type: 3}
+    portraitPosition: 0
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "\u30AB\u30C1\u30E7\u30A6"
+    text: "\u3053\u306E\u30E1\u30C3\u30BB\u30FC\u30B8\u30A6\u30A3\u30F3\u30C9\u30A6\u304C\u9589\u3058\u305F\u5F8C\u306B<color=#ff7b00>\u30A2\u30BF\u30B7\u3092\u30AF\u30EA\u30C3\u30AF</color>\u3059\u308C\u3070\u3001\u6B21\u306B\u9032\u3081\u308B\u3002\u3084\u3063\u3066\u307F\u306A\u3002"
+    portrait: {fileID: 21300000, guid: 13979ae4426a346a99d92c1682e2c956, type: 3}
+    portraitPosition: 0
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}

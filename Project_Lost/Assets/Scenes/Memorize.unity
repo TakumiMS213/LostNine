@@ -3496,14 +3496,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_Color: {r: 0.48572817, g: 0.28537735, b: 0.5, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -498388656052177999, guid: abdbc8e4a39b7ee4287fa408fa02c083, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4107,7 +4107,7 @@ MonoBehaviour:
   targetSceneName: Memorize_2
   fadeOverlay: {fileID: 982307519}
   fadeOutDuration: 0.5
-  fadeInDuration: 0.5
+  fadeOutLabel: FadeOut
 --- !u!1 &1912411278
 GameObject:
   m_ObjectHideFlags: 0

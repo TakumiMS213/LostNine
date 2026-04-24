@@ -15,4 +15,4 @@ MonoBehaviour:
   text: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u3092\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u4F1A\u8A71\u3092\u59CB\u3081\u3088\u3046"
   portrait: {fileID: 0}
   portraitPosition: 0
-  displayDuration: 0
+  displayDuration: 2

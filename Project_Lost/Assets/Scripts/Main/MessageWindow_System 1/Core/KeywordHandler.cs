@@ -285,13 +285,16 @@ namespace MessageWindowSystem.Core
                 if (pm != null)
                 {
                     int beforeProgress = pm.CurrentKeywordProgress;
-                    pm.AddKeyword();
+                    bool added = pm.AddKeyword(linkID);
                     
-                    // If the progress just hit the threshold, GameFlowDirector will take over the sequence.
-                    // We must NOT play the individual keyword scenario, otherwise they collide.
-                    if (pm.CurrentKeywordProgress >= pm.KeywordThreshold && beforeProgress < pm.KeywordThreshold)
+                    if (added)
                     {
-                        thresholdReachedThisTime = true;
+                        // If the progress just hit the threshold, GameFlowDirector will take over the sequence.
+                        // We must NOT play the individual keyword scenario, otherwise they collide.
+                        if (pm.CurrentKeywordProgress >= pm.KeywordThreshold && beforeProgress < pm.KeywordThreshold)
+                        {
+                            thresholdReachedThisTime = true;
+                        }
                     }
                 }
             }
