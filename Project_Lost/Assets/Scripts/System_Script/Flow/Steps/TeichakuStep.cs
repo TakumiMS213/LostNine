@@ -12,7 +12,7 @@ namespace System_Script.Flow
     {
         public override async void Execute(GameFlowDirector director)
         {
-            var manager = FindObjectOfType<TeichakuManager>();
+            var manager = FindFirstObjectByType<TeichakuManager>();
             if (manager != null)
             {
                 bool cleared = false;

@@ -50,8 +50,8 @@ namespace Main.UIMoves
         /// </summary>
         public static MultiEasing FindByLabel(string searchLabel)
         {
-            var all = FindObjectsOfType<MultiEasing>();
-            foreach (var me in all)
+            MultiEasing[] existingInstances = FindObjectsByType<MultiEasing>(FindObjectsSortMode.None);
+            foreach (var me in existingInstances)
             {
                 if (me.label == searchLabel) return me;
             }

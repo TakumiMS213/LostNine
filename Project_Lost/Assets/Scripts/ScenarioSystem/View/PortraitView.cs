@@ -49,12 +49,14 @@ namespace ScenarioSystem.View
         {
             ScenarioEventBus.OnDialogueRequested += HandleDialogue;
             ScenarioEventBus.OnScenarioEnded += HandleScenarioEnded;
+            ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibilityChanged;
         }
 
         private void OnDisable()
         {
             ScenarioEventBus.OnDialogueRequested -= HandleDialogue;
             ScenarioEventBus.OnScenarioEnded -= HandleScenarioEnded;
+            ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibilityChanged;
         }
 
         #endregion
@@ -76,6 +78,18 @@ namespace ScenarioSystem.View
             HideGhostPortrait();
             _previousSpeakerName = null;
             _previousPortrait = null;
+        }
+
+        private void HandleWindowVisibilityChanged(bool visible)
+        {
+            if (!visible)
+            {
+                // メッセージウィンドウが閉じた時、ポートレートを Center に移動する
+                if (portraitImage != null && portraitImage.gameObject.activeSelf)
+                {
+                    SetPortraitPosition(portraitImage.rectTransform, PortraitPosition.Center);
+                }
+            }
         }
 
         #endregion

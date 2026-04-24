@@ -14,6 +14,9 @@ namespace ScenarioSystem.Model
         [Tooltip("一意のシナリオID（検索・参照用）")]
         public string scenarioId;
 
+        [Tooltip("メインウィンドウを表示するか（オーバーレイ専用の場合は false にする）")]
+        public bool showMainWindow = true;
+
         [Tooltip("実行するアクションの順序リスト")]
         public List<ScenarioAction> actions = new();
 

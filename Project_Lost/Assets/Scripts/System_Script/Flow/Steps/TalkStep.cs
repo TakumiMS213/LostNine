@@ -1,6 +1,5 @@
 using UnityEngine;
-using MessageWindowSystem.Data;
-using MessageWindowSystem.Core;
+using ScenarioSystem.Model;
 
 namespace System_Script.Flow
 {
@@ -10,8 +9,7 @@ namespace System_Script.Flow
     [CreateAssetMenu(fileName = "TalkStep", menuName = "Flow/Steps/Talk Step")]
     public class TalkStep : FlowStep
     {
-        [Tooltip("The scenario to play.")]
-        public DialogueScenario scenario;
+        public ScenarioData scenario;
 
         public override void Execute(GameFlowDirector director)
         {

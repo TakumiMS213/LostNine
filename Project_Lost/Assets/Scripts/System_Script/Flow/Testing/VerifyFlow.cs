@@ -1,6 +1,6 @@
 using UnityEngine;
 using System_Script.Flow;
-using MessageWindowSystem.Data;
+using ScenarioSystem.Model;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -9,7 +9,7 @@ namespace System_Script.Flow.Testing
     public class VerifyFlow : MonoBehaviour
     {
         [Header("Test Assets")]
-        [SerializeField] private DialogueScenario testScenario;
+        [SerializeField] private ScenarioData testScenario;
         
         private void Start()
         {

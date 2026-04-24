@@ -1,7 +1,5 @@
 using UnityEngine;
-using MessageWindowSystem.Data;
-using MessageWindowSystem.Core;
-using System.Collections.Generic;
+using ScenarioSystem.Adapter;
 
 namespace MessageWindowSystem.Testing
 {
@@ -10,9 +8,7 @@ namespace MessageWindowSystem.Testing
         [Header("Settings")]
         public bool playOnStart = true;
         
-        [Header("Scenario Data")]
-        [Tooltip("Database containing all scenarios")]
-        public ScenarioDatabase scenarioDatabase;
+        // Legacy scenarioDatabase removed
 
         [Tooltip("ID of the scenario to start (if Play On Start is true)")]
         public string startScenarioId;
@@ -29,22 +25,14 @@ namespace MessageWindowSystem.Testing
 
         public void StartScenarioById(string scenarioId)
         {
-            if (scenarioDatabase != null)
+            var facade = MessageWindowFacade.Instance;
+            if (facade != null)
             {
-                var scenario = scenarioDatabase.GetScenarioById(scenarioId);
-                if (scenario != null)
-                {
-                    // Always use default (keywords enabled)
-                    MessageWindowManager.Instance.StartScenario(scenario);
-                }
-                else
-                {
-                    Debug.LogWarning($"Scenario ID '{scenarioId}' not found in database.");
-                }
+                facade.StartScenarioById(scenarioId);
             }
             else
             {
-                Debug.LogError("Scenario Database is not assigned in MessageWindowIndexStarter.");
+                Debug.LogWarning("[MessageWindowIndexStarter] MessageWindowFacade.Instance not found.");
             }
         }
 

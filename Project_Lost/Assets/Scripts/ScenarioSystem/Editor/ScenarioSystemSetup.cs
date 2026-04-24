@@ -7,11 +7,11 @@ using ScenarioSystem.Presenter;
 using ScenarioSystem.Runtime;
 using ScenarioSystem.View;
 using ScenarioSystem.Adapter;
-using MessageWindowSystem.Core;
+using ScenarioSystem.Adapter;
 
 /// <summary>
-/// メニューからワンクリックで Main シーンにシナリオシステムのヒエラルキーを自動構築するエディタースクリプト。
-/// 既存の MessageWindowManager / EffectManager の SerializedField を読み取り、
+/// メニューからワンクリックで Main シーンにテスト用シナリオシステムを自動構築するエディタースクリプト。
+/// 新システムの各 View に自動結線する。
 /// 新システムの各 View に自動結線する。
 /// 
 /// 使い方:
@@ -23,58 +23,7 @@ public static class ScenarioSystemSetup
     //  Menu Commands
     // ═══════════════════════════════════════════
 
-    [MenuItem("Scenario System/Setup Main Scene", false, 0)]
-    public static void SetupMainScene()
-    {
-        // ── 前提チェック ──
-        var existingMWM = Object.FindObjectOfType<MessageWindowManager>();
-        if (existingMWM == null)
-        {
-            EditorUtility.DisplayDialog("Error",
-                "MessageWindowManager が見つかりません。\nMain シーンを開いた状態で実行してください。",
-                "OK");
-            return;
-        }
-
-        if (GameObject.Find("ScenarioSystem") != null || GameObject.Find("Views") != null)
-        {
-            if (!EditorUtility.DisplayDialog("確認",
-                "ScenarioSystem / Views が既に存在します。削除して再作成しますか？",
-                "再作成", "キャンセル"))
-                return;
-
-            DestroyImmediate("ScenarioSystem");
-            DestroyImmediate("Views");
-            DestroyImmediate("ScenarioAudio");
-        }
-
-        // ── 構築開始 ──
-        Undo.SetCurrentGroupName("Setup Scenario System");
-        int undoGroup = Undo.GetCurrentGroup();
-
-        var systemRoot = BuildScenarioSystem(existingMWM);
-        var audioRoot = BuildScenarioAudio();
-        var viewsRoot = BuildViews();
-
-        AutoWireAll(systemRoot, viewsRoot, audioRoot, existingMWM);
-
-        Undo.CollapseUndoOperations(undoGroup);
-
-        // ── 結果レポート ──
-        var report = GenerateReport(systemRoot, viewsRoot);
-        Debug.Log($"[ScenarioSystemSetup] ✅ Main シーンセットアップ完了\n{report}");
-
-        EditorUtility.DisplayDialog("セットアップ完了",
-            "ScenarioSystem・Views・ScenarioAudio を作成し、既存 UI への結線が完了しました。\n\n" +
-            "【手動確認が必要な項目】\n" +
-            "1. ClickArea の Button → OnClick に DialogueView.OnUserInput を設定\n" +
-            "2. Inspector で各 View の結線を目視確認\n" +
-            "3. ScenarioBootstrap の autoPlay = false を確認（本番用）\n\n" +
-            "Console に詳細レポートを出力しました。",
-            "OK");
-    }
-
-    [MenuItem("Scenario System/Setup Test Scene (Minimal)", false, 1)]
+    [MenuItem("Scenario System/Setup Minimal Scene", false, 1)]
     public static void SetupTestScene()
     {
         if (GameObject.Find("ScenarioSystem") != null)
@@ -92,7 +41,7 @@ public static class ScenarioSystemSetup
         int undoGroup = Undo.GetCurrentGroup();
 
         // ── Canvas ──
-        var canvas = Object.FindObjectOfType<Canvas>();
+        var canvas = Object.FindFirstObjectByType<Canvas>();
         if (canvas == null)
         {
             var canvasObj = CreateAndRegister("Canvas");
@@ -103,7 +52,7 @@ public static class ScenarioSystemSetup
         }
 
         // ── EventSystem ──
-        if (Object.FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
+        if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
         {
             var esObj = CreateAndRegister("EventSystem");
             esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
@@ -220,7 +169,7 @@ public static class ScenarioSystemSetup
         int warnings = 0;
         foreach (var viewType in views)
         {
-            var obj = Object.FindObjectOfType(viewType) as Component;
+            var obj = Object.FindFirstObjectByType(viewType) as Component;
             if (obj == null)
             {
                 Debug.LogWarning($"[Validate] ❌ {viewType.Name} がシーン内に見つかりません");
@@ -243,7 +192,7 @@ public static class ScenarioSystemSetup
             }
         }
 
-        var presenter = Object.FindObjectOfType<ScenarioPresenter>();
+        var presenter = Object.FindFirstObjectByType<ScenarioPresenter>();
         if (presenter == null)
         {
             Debug.LogWarning("[Validate] ❌ ScenarioPresenter がシーン内に見つかりません");
@@ -256,177 +205,7 @@ public static class ScenarioSystemSetup
             Debug.LogWarning($"[Validate] {warnings} 件の警告があります。Inspector で確認してください。");
     }
 
-    // ═══════════════════════════════════════════
-    //  Build: ScenarioSystem
-    // ═══════════════════════════════════════════
-
-    private static GameObject BuildScenarioSystem(MessageWindowManager existingMWM)
-    {
-        var root = CreateAndRegister("ScenarioSystem");
-
-        // Core
-        var presenter = root.AddComponent<ScenarioPresenter>();
-        var bootstrap = root.AddComponent<ScenarioBootstrap>();
-        SetField(bootstrap, "presenter", presenter);
-        SetField(bootstrap, "autoPlay", false); // 本番は false
-
-        // Adapters
-        root.AddComponent<ProgressAdapter>();
-        root.AddComponent<ClueAdapter>();
-
-        // ComuAdapterExtended → 既存 ComuManager
-        var existingComu = Object.FindObjectOfType<ComuStartandEndManager>();
-        var comuAdapter = root.AddComponent<ComuAdapterExtended>();
-        if (existingComu != null)
-            SetField(comuAdapter, "comuManager", existingComu);
-
-        // MessageWindowFacade
-        var facade = root.AddComponent<MessageWindowFacade>();
-        SetField(facade, "presenter", presenter);
-
-        // Facade に旧 MWM の参照をコピー
-        var mwmSO = new SerializedObject(existingMWM);
-        CopyField(mwmSO, "dialogueText", facade, "dialogueText");
-        CopyField(mwmSO, "windowRoot", facade, "windowRoot");
-        CopyField(mwmSO, "scenarioDatabase", facade, "legacyDatabase");
-
-        return root;
-    }
-
-    // ═══════════════════════════════════════════
-    //  Build: ScenarioAudio
-    // ═══════════════════════════════════════════
-
-    private static GameObject BuildScenarioAudio()
-    {
-        // 既存の EffectManager の AudioSource を確認
-        var existingEM = Object.FindObjectOfType<EffectManager>();
-        if (existingEM != null)
-        {
-            var emSO = new SerializedObject(existingEM);
-            var existingSE = emSO.FindProperty("seAudioSource").objectReferenceValue;
-            var existingBGM = emSO.FindProperty("bgmAudioSource").objectReferenceValue;
-
-            // 既存の AudioSource がある場合は新規作成しない
-            if (existingSE != null && existingBGM != null)
-                return null;
-        }
-
-        var root = CreateAndRegister("ScenarioAudio");
-
-        var seObj = CreateChild("AudioSource_SE", root);
-        seObj.AddComponent<AudioSource>();
-
-        var bgmObj = CreateChild("AudioSource_BGM", root);
-        var bgmSource = bgmObj.AddComponent<AudioSource>();
-        bgmSource.loop = true;
-
-        return root;
-    }
-
-    // ═══════════════════════════════════════════
-    //  Build: Views
-    // ═══════════════════════════════════════════
-
-    private static GameObject BuildViews()
-    {
-        var root = CreateAndRegister("Views");
-
-        CreateChild("DialogueViewObj", root).AddComponent<DialogueView>();
-        CreateChild("SpeakerNameViewObj", root).AddComponent<SpeakerNameView>();
-        CreateChild("PortraitViewObj", root).AddComponent<PortraitView>();
-        CreateChild("ChoiceViewObj", root).AddComponent<ChoiceView>();
-        CreateChild("EffectViewObj", root).AddComponent<EffectView>();
-        CreateChild("BackgroundStillViewObj", root).AddComponent<BackgroundStillView>();
-        CreateChild("KeywordViewObj", root).AddComponent<KeywordView>();
-        CreateChild("DialogueLogViewObj", root).AddComponent<DialogueLogView>();
-
-        return root;
-    }
-
-    // ═══════════════════════════════════════════
-    //  Auto-Wire All
-    // ═══════════════════════════════════════════
-
-    private static void AutoWireAll(
-        GameObject systemRoot, GameObject viewsRoot,
-        GameObject audioRoot, MessageWindowManager existingMWM)
-    {
-        var mwmSO = new SerializedObject(existingMWM);
-
-        // ── DialogueView ──
-        var dialogueView = viewsRoot.GetComponentInChildren<DialogueView>();
-        CopyField(mwmSO, "dialogueText", dialogueView, "dialogueText");
-        CopyField(mwmSO, "windowRoot", dialogueView, "windowRoot");
-        // typingSpeed 等のパラメータもコピー
-        CopyFloatField(mwmSO, "typingSpeed", dialogueView, "defaultTypingSpeed");
-
-        // ── SpeakerNameView ──
-        var speakerNameView = viewsRoot.GetComponentInChildren<SpeakerNameView>();
-        CopyField(mwmSO, "speakerNameText", speakerNameView, "speakerNameText");
-        CopyFloatField(mwmSO, "nameSlideDistance", speakerNameView, "slideDistance");
-        CopyFloatField(mwmSO, "nameSlideDuration", speakerNameView, "slideDuration");
-
-        // ── PortraitView ──
-        var portraitView = viewsRoot.GetComponentInChildren<PortraitView>();
-        CopyField(mwmSO, "portraitImage", portraitView, "portraitImage");
-        CopyField(mwmSO, "ghostPortraitImage", portraitView, "ghostPortraitImage");
-        CopyField(mwmSO, "portraitLeftAnchor", portraitView, "portraitLeftAnchor");
-        CopyField(mwmSO, "portraitCenterAnchor", portraitView, "portraitCenterAnchor");
-        CopyField(mwmSO, "portraitRightAnchor", portraitView, "portraitRightAnchor");
-        CopyFloatField(mwmSO, "portraitJumpHeight", portraitView, "jumpHeight");
-        CopyFloatField(mwmSO, "portraitJumpDuration", portraitView, "jumpDuration");
-
-        // ── ChoiceView ──
-        var choiceView = viewsRoot.GetComponentInChildren<ChoiceView>();
-        CopyArrayField(mwmSO, "choiceButtons", choiceView, "choiceButtons");
-        CopyArrayField(mwmSO, "choiceButtonTexts", choiceView, "choiceButtonTexts");
-
-        // ── EffectView ──
-        var effectView = viewsRoot.GetComponentInChildren<EffectView>();
-        var existingEM = Object.FindObjectOfType<EffectManager>();
-        if (existingEM != null)
-        {
-            var emSO = new SerializedObject(existingEM);
-            CopyField(emSO, "flashOverlay", effectView, "flashOverlay");
-            CopyField(emSO, "fadeOverlay", effectView, "fadeOverlay");
-            CopyField(emSO, "centerImage", effectView, "centerImage");
-
-            // AudioSource: 既存があれば既存を、なければ新規を使用
-            var existingSE = emSO.FindProperty("seAudioSource").objectReferenceValue;
-            var existingBGM = emSO.FindProperty("bgmAudioSource").objectReferenceValue;
-
-            if (existingSE != null)
-                SetField(effectView, "seAudioSource", existingSE);
-            else if (audioRoot != null)
-                SetField(effectView, "seAudioSource",
-                    audioRoot.transform.Find("AudioSource_SE")?.GetComponent<AudioSource>());
-
-            if (existingBGM != null)
-                SetField(effectView, "bgmAudioSource", existingBGM);
-            else if (audioRoot != null)
-                SetField(effectView, "bgmAudioSource",
-                    audioRoot.transform.Find("AudioSource_BGM")?.GetComponent<AudioSource>());
-        }
-
-        // ── BackgroundStillView ──
-        var bgStillView = viewsRoot.GetComponentInChildren<BackgroundStillView>();
-        CopyField(mwmSO, "backgroundStillImage", bgStillView, "backgroundStillImage");
-        CopyArrayField(mwmSO, "objectsToHideOnStill", bgStillView, "objectsToHideOnStill");
-
-        // ── KeywordView ──
-        var existingKH = Object.FindObjectOfType<KeywordHandler>();
-        if (existingKH != null)
-        {
-            var keywordView = viewsRoot.GetComponentInChildren<KeywordView>();
-            SetField(keywordView, "keywordHandler", existingKH);
-        }
-
-        // ── DialogueLogView ──
-        // フィールドなし、結線不要
-
-        Debug.Log("[ScenarioSystemSetup] Auto-wire: 全結線完了");
-    }
+    // Removed BuildScenarioSystem, BuildScenarioAudio, and AutoWireAll to clean up legacy dependencies
 
     // ═══════════════════════════════════════════
     //  Report

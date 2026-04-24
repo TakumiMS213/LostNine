@@ -102,7 +102,8 @@ namespace ScenarioSystem.Presenter
             Debug.Log($"[ScenarioPresenter] StartScenario: {scenario.name} (ID: {scenario.scenarioId})");
 
             ScenarioEventBus.RaiseScenarioStarted(scenario);
-            ScenarioEventBus.RaiseWindowVisibilityChanged(true);
+            if (scenario.showMainWindow)
+                ScenarioEventBus.RaiseWindowVisibilityChanged(true);
 
             ExecuteCurrentAction();
         }
@@ -170,6 +171,20 @@ namespace ScenarioSystem.Presenter
 
         private void AdvanceToNextAction()
         {
+            if (_state.CurrentAction is Model.IMultiStepAction multiStep 
+                && _state.CurrentSubActionIndex < multiStep.StepCount - 1)
+            {
+                _state.CurrentSubActionIndex++;
+                ExecuteCurrentAction();
+                return;
+            }
+
+            if (_state.CurrentAction is Model.Actions.OverlayAction)
+            {
+                ScenarioEventBus.RaiseOverlayDismissed();
+            }
+
+            _state.CurrentSubActionIndex = 0;
             _state.CurrentActionIndex++;
             ExecuteCurrentAction();
         }
@@ -197,7 +212,11 @@ namespace ScenarioSystem.Presenter
             // 完全終了
             var onComplete = _state.OnComplete;
 
-            ScenarioEventBus.RaiseWindowVisibilityChanged(false);
+            if (completedScenario?.showMainWindow == true)
+            {
+                ScenarioEventBus.RaiseWindowVisibilityChanged(false);
+            }
+            
             ScenarioEventBus.RaiseScenarioEnded(completedScenario);
 
             _state.Reset();

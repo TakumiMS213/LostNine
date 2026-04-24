@@ -19,7 +19,7 @@ namespace System_Script.Flow
 
         public override async void Execute(GameFlowDirector director)
         {
-            var manager = FindObjectOfType<ComuStartandEndManager>();
+            var manager = FindFirstObjectByType<ComuStartandEndManager>();
             if (manager != null)
             {
                 await manager.ComuStartTask(scenarioId, allowAnimation); 
@@ -44,7 +44,7 @@ namespace System_Script.Flow
 
         public override async void Execute(GameFlowDirector director)
         {
-            var manager = FindObjectOfType<ComuStartandEndManager>();
+            var manager = FindFirstObjectByType<ComuStartandEndManager>();
             if (manager != null)
             {
                 await manager.ComuEndTask(scenarioId, allowAnimation);

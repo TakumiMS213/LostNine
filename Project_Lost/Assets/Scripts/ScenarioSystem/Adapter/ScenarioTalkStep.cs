@@ -17,7 +17,7 @@ namespace System_Script.Flow
 
         public override void Execute(GameFlowDirector director)
         {
-            var presenter = FindObjectOfType<ScenarioPresenter>();
+            var presenter = FindFirstObjectByType<ScenarioPresenter>();
 
             if (presenter != null && scenario != null)
             {

@@ -1,5 +1,6 @@
 using UnityEngine;
 using ScenarioSystem.Model;
+using ScenarioSystem.Adapter;
 using ScenarioSystem.Presenter;
 using ScenarioSystem.Presenter.Executors;
 
@@ -14,6 +15,9 @@ namespace ScenarioSystem.Runtime
         [Header("References")]
         [Tooltip("同じ GameObject または子にある ScenarioPresenter。")]
         [SerializeField] private ScenarioPresenter presenter;
+
+        [Tooltip("ProgressScenarioAction で使用するシナリオデータベース。")]
+        [SerializeField] private ScenarioDataDatabase scenarioDatabase;
 
         [Header("Auto Play")]
         [Tooltip("Play モード開始時に自動再生するシナリオ（テスト用）。")]
@@ -54,6 +58,10 @@ namespace ScenarioSystem.Runtime
             presenter.RegisterExecutor(new ProgressUpdateActionExecutor());
             presenter.RegisterExecutor(new ComuToggleActionExecutor());
             presenter.RegisterExecutor(new KeywordEnableActionExecutor());
+            presenter.RegisterExecutor(new OverlayActionExecutor(presenter));
+            presenter.RegisterExecutor(new ProgressScenarioActionExecutor(presenter, scenarioDatabase));
+            presenter.RegisterExecutor(new CenterPortraitActionExecutor());
+            presenter.RegisterExecutor(new SceneTransitionActionExecutor());
 
             Debug.Log("[ScenarioBootstrap] All executors registered.");
         }

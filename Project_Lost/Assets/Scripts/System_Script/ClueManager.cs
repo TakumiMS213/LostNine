@@ -90,6 +90,6 @@ public class ClueManager : MonoBehaviour
     private static KeywordHandler FindKeywordHandler()
     {
         // Prefer getting it through the manager if available
-        return FindObjectOfType<KeywordHandler>();
+        return FindFirstObjectByType<KeywordHandler>();
     }
 }

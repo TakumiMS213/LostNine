@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
-using MessageWindowSystem.Core;
-using MessageWindowSystem.Data;
+using ScenarioSystem.Model;
 
 /// <summary>
 /// Starts a scenario based on current game progress when button is clicked.
@@ -11,12 +10,11 @@ using MessageWindowSystem.Data;
 public class ProgressBasedScenarioStarter : MonoBehaviour
 {
     [Header("Scenario Lookup")]
-    [Tooltip("Database containing all scenarios.")]
-    [SerializeField] private ScenarioDatabase scenarioDatabase;
+    // Legacy scenarioDatabase removed
 
     [Header("Optional Override")]
     [Tooltip("If set, uses this scenario instead of progress-based lookup.")]
-    [SerializeField] private DialogueScenario overrideScenario;
+    [SerializeField] private ScenarioData overrideScenario;
 
     private Button _button;
 

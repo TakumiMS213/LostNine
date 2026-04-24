@@ -5,9 +5,9 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
-using MessageWindowSystem.Data;
 using ScenarioSystem.Adapter;
 
 namespace MessageWindowSystem.Core
@@ -35,6 +35,10 @@ namespace MessageWindowSystem.Core
         [Tooltip("ホバーカーソルのクリック位置オフセット（左上からのピクセル数）。")]
         [SerializeField] private Vector2 keywordHoverHotspot = Vector2.zero;
 
+        [Header("Click Area")]
+        [Tooltip("キーワードホバー中に raycastTarget を無効にする ClickArea の Graphic。")]
+        [SerializeField] private Graphic clickAreaGraphic;
+
         #endregion
 
         #region Events
@@ -45,8 +49,7 @@ namespace MessageWindowSystem.Core
         /// <summary>Requests the manager to play a keyword scenario by ID.</summary>
         public event Action<string> OnKeywordScenarioRequested;
 
-        /// <summary>Fired when keyword interaction is complete (for last-line waiting).</summary>
-        public event Action OnKeywordInteractionComplete;
+        // Removed OnKeywordInteractionComplete
 
         #endregion
 
@@ -297,6 +300,10 @@ namespace MessageWindowSystem.Core
                 Debug.Log($"[KeywordHandler] Dummy keyword '{linkID}' — Progress not incremented.");
             }
 
+            // キーワード抽出完了後、ClickArea を再有効化
+            if (clickAreaGraphic != null) clickAreaGraphic.raycastTarget = true;
+            _isHoveringLink = false;
+
             // Only request individual scenario if the main sequence override didn't trigger
             if (!thresholdReachedThisTime)
             {
@@ -407,6 +414,7 @@ namespace MessageWindowSystem.Core
                 {
                     _isHoveringLink = true;
                     CursorManager.Instance.SetCursor(keywordHoverCursor, keywordHoverHotspot);
+                    if (clickAreaGraphic != null) clickAreaGraphic.raycastTarget = false;
                 }
             }
             else
@@ -415,6 +423,7 @@ namespace MessageWindowSystem.Core
                 {
                     _isHoveringLink = false;
                     CursorManager.Instance.ResetToDefault();
+                    if (clickAreaGraphic != null) clickAreaGraphic.raycastTarget = true;
                 }
             }
         }
@@ -444,20 +453,15 @@ namespace MessageWindowSystem.Core
                 return;
             }
 
-            // 2. シーン内の DialogueProviderAdapter を検索
-            var adapter = FindObjectOfType<DialogueProviderAdapter>();
+            var adapter = FindFirstObjectByType<DialogueProviderAdapter>();
             if (adapter != null)
             {
                 _provider = adapter;
                 return;
             }
 
-            // 3. フォールバック: 旧 MWM をラップ
-            var mwm = MessageWindowManager.Instance;
-            if (mwm != null)
-            {
-                _provider = new LegacyMWMProvider(mwm);
-            }
+            // 3. フォールバック廃止
+            Debug.LogError("[KeywordHandler] IDialogueProvider was not found. Legacy fallback has been removed.");
         }
 
         private static Camera GetUICamera(TMP_Text text)
@@ -473,34 +477,7 @@ namespace MessageWindowSystem.Core
 
         #region Legacy Wrapper
 
-        /// <summary>
-        /// 旧 MessageWindowManager を IDialogueProvider としてラップする内部クラス。
-        /// 完全移行後は削除する。
-        /// </summary>
-        private class LegacyMWMProvider : IDialogueProvider
-        {
-            private readonly MessageWindowManager _mwm;
-
-            public LegacyMWMProvider(MessageWindowManager mwm) => _mwm = mwm;
-
-            public TMP_Text DialogueText => _mwm?.DialogueText;
-            public string CurrentText => _mwm?.CurrentLine?.text ?? "";
-            public bool IsWindowActive => _mwm != null && _mwm.IsWindowActive;
-            public bool IsTyping => _mwm != null && _mwm.IsTyping;
-
-            public void UpdateCurrentText(string newText)
-            {
-                if (_mwm?.CurrentLine != null)
-                {
-                    _mwm.CurrentLine.text = newText;
-                    if (_mwm.DialogueText != null)
-                    {
-                        _mwm.DialogueText.text = newText;
-                        _mwm.DialogueText.ForceMeshUpdate();
-                    }
-                }
-            }
-        }
+        // Legacy wrapper removed
 
         #endregion
     }

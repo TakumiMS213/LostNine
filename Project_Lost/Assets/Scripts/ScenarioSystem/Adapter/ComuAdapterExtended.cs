@@ -84,7 +84,7 @@ namespace ScenarioSystem.Adapter
         private void ResolveManager()
         {
             if (comuManager == null)
-                comuManager = FindObjectOfType<ComuStartandEndManager>();
+                comuManager = FindFirstObjectByType<ComuStartandEndManager>();
         }
 
         #endregion

@@ -43,7 +43,7 @@ namespace ScenarioSystem.Adapter
         {
             if (comuManager == null)
             {
-                comuManager = FindObjectOfType<ComuStartandEndManager>();
+                comuManager = FindFirstObjectByType<ComuStartandEndManager>();
             }
 
             if (comuManager != null)

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 255a7499b43a740c38b9715c41cd038a, type: 3}
+  m_Name: Ch1_KeyWord_01
+  m_EditorClassIdentifier: 
+  scenarioId: Data1
+  showMainWindow: 1
+  actions:
+  - {fileID: 11400000, guid: 19e5ff1cb7b6a4d438186d78bc82f79a, type: 2}
+  nextScenario: {fileID: 11400000, guid: bf51447110716458c8a468d88229160f, type: 2}
+  loop: 0

@@ -3,7 +3,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
-using MessageWindowSystem.Data;
 
 namespace MessageWindowSystem.Core
 {
@@ -73,41 +72,7 @@ namespace MessageWindowSystem.Core
 
         #region Public Effect API
 
-        public void PlayEffect(ScreenEffectData data)
-        {
-            switch (data.effectType)
-            {
-                case EffectType.None:
-                    break;
-                case EffectType.Shake:
-                    PlayShake(data.floatParam > 0 ? data.floatParam : 0.5f, 0.2f);
-                    break;
-                case EffectType.Flash:
-                    PlayFlash(data.colorParam);
-                    break;
-                case EffectType.FadeIn:
-                    PlayFade(data.floatParam, data.colorParam, fadeIn: true);
-                    break;
-                case EffectType.FadeOut:
-                    PlayFade(data.floatParam, data.colorParam, fadeIn: false);
-                    break;
-                case EffectType.PlaySE:
-                    PlaySE(data.stringParam);
-                    break;
-                case EffectType.PlayBGM:
-                    PlayBGM(data.stringParam);
-                    break;
-                case EffectType.StopBGM:
-                    StopBGM();
-                    break;
-                case EffectType.ShowImage:
-                    ShowImage(data.stringParam, data.spriteParam, data.colorParam);
-                    break;
-                case EffectType.HideImage:
-                    HideImage();
-                    break;
-            }
-        }
+        // Removed PlayEffect(ScreenEffectData)
 
         public void PlayChargeSE()
         {

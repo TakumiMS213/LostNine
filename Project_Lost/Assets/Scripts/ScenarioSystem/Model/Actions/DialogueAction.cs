@@ -1,16 +1,15 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ScenarioSystem.Model.Actions
 {
     /// <summary>
-    /// テキスト表示アクション。話者名、セリフ、ポートレート等のデータを保持する。
-    /// 旧 DialogueLine に相当。
+    /// 1行のセリフごとのデータを保持する構造体。
     /// </summary>
-    [CreateAssetMenu(fileName = "DialogueAction", menuName = "Scenario/Actions/Dialogue")]
-    public class DialogueAction : ScenarioAction
+    [Serializable]
+    public struct DialogueEntry
     {
-        public override string ActionType => "Dialogue";
-
         [Tooltip("話者名")]
         public string speakerName;
 
@@ -22,19 +21,34 @@ namespace ScenarioSystem.Model.Actions
         public Sprite portrait;
 
         [Tooltip("ポートレートの表示位置")]
-        public PortraitPosition portraitPosition = PortraitPosition.Center;
+        public PortraitPosition portraitPosition;
 
         [Tooltip("タイピング速度（秒/文字）。0 = デフォルト使用")]
-        public float typingSpeed = 0f;
+        public float typingSpeed;
 
         [Tooltip("話者名のスライド方向")]
-        public NameSlideDirection nameSlideDirection = NameSlideDirection.Default;
+        public NameSlideDirection nameSlideDirection;
 
         [Tooltip("ボイスクリップ")]
         public AudioClip voiceClip;
 
         [Tooltip("背景スチル画像（CG等）")]
         public Sprite backgroundImage;
+    }
+
+    /// <summary>
+    /// テキスト表示アクション。
+    /// 複数のセリフ（DialogueEntry）を1つのアクションで連続表示可能。
+    /// </summary>
+    [CreateAssetMenu(fileName = "DialogueAction", menuName = "Scenario/Actions/Dialogue")]
+    public class DialogueAction : ScenarioAction, IMultiStepAction
+    {
+        public override string ActionType => "Dialogue";
+
+        [Tooltip("セリフのリスト")]
+        public List<DialogueEntry> entries = new();
+
+        public int StepCount => entries.Count;
     }
 
     /// <summary>ポートレート表示位置。</summary>

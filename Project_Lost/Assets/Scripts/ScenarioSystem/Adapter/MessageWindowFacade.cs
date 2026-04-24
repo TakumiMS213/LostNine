@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using MessageWindowSystem.Data;
 using ScenarioSystem.Model;
 using ScenarioSystem.Presenter;
 using ScenarioSystem.Events;
@@ -34,9 +33,7 @@ namespace ScenarioSystem.Adapter
         [Tooltip("新 ScenarioData 用データベース。ID 検索に使用。")]
         [SerializeField] private ScenarioDataDatabase scenarioDataDatabase;
 
-        [Header("Legacy References")]
-        [Tooltip("旧 ScenarioDatabase（ID でのシナリオ検索用のフォールバック）。")]
-        [SerializeField] private MessageWindowSystem.Data.ScenarioDatabase legacyDatabase;
+        // legacyDatabase removed
 
         [Header("UI References (read-only exposure)")]
         [SerializeField] private TMP_Text dialogueText;
@@ -57,8 +54,7 @@ namespace ScenarioSystem.Adapter
         /// <summary>DialogueText（KeywordHandler が参照）。</summary>
         public TMP_Text DialogueText => dialogueText;
 
-        /// <summary>旧 ScenarioDatabase（互換用）。</summary>
-        public MessageWindowSystem.Data.ScenarioDatabase ScenarioDatabase => legacyDatabase;
+        // ScenarioDatabase removed
 
         /// <summary>ウィンドウが表示中か。</summary>
         public bool IsWindowActive => _isWindowActive;
@@ -136,42 +132,13 @@ namespace ScenarioSystem.Adapter
                 }
             }
 
-            // 2. 旧 ScenarioDatabase で検索 → レガシーフォールバック
-            if (legacyDatabase != null)
-            {
-                var legacyScenario = legacyDatabase.GetScenarioById(scenarioId);
-                if (legacyScenario != null)
-                {
-                    StartScenario(legacyScenario, onComplete);
-                    return;
-                }
-            }
+            // Legacy fallback removed
 
             Debug.LogWarning($"[MessageWindowFacade] Scenario '{scenarioId}' not found in any database.");
             onComplete?.Invoke();
         }
 
-        /// <summary>
-        /// 旧 DialogueScenario を変換せずにそのまま再生する（レガシー互換）。
-        /// 完全移行後はこのオーバーロードを削除する。
-        /// </summary>
-        public void StartScenario(DialogueScenario legacyScenario, Action onComplete = null)
-        {
-            Debug.LogWarning($"[MessageWindowFacade] Legacy DialogueScenario '{legacyScenario?.name}' was passed. " +
-                             "Please migrate to ScenarioData. Falling back to legacy system.");
-
-            // レガシーシステムへのフォールバック
-            var legacyManager = MessageWindowSystem.Core.MessageWindowManager.Instance;
-            if (legacyManager != null)
-            {
-                legacyManager.StartScenario(legacyScenario, onComplete);
-            }
-            else
-            {
-                Debug.LogError("[MessageWindowFacade] Legacy MessageWindowManager not found for fallback.");
-                onComplete?.Invoke();
-            }
-        }
+        // Legacy DialogueScenario fallback removed
 
         /// <summary>テキスト送り（旧 Next() 互換）。</summary>
         public void Next()

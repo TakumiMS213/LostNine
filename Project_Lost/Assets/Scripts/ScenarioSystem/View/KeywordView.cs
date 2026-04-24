@@ -2,6 +2,7 @@ using UnityEngine;
 using ScenarioSystem.Events;
 using ScenarioSystem.Model;
 using ScenarioSystem.Model.Actions;
+using ScenarioSystem.Adapter;
 
 namespace ScenarioSystem.View
 {
@@ -25,11 +26,18 @@ namespace ScenarioSystem.View
         private void OnEnable()
         {
             ScenarioEventBus.OnKeywordStateChanged += HandleKeywordStateChanged;
+
+            // KeywordHandler のシナリオ再生リクエストを購読
+            if (keywordHandler != null)
+                keywordHandler.OnKeywordScenarioRequested += HandleKeywordScenarioRequested;
         }
 
         private void OnDisable()
         {
             ScenarioEventBus.OnKeywordStateChanged -= HandleKeywordStateChanged;
+
+            if (keywordHandler != null)
+                keywordHandler.OnKeywordScenarioRequested -= HandleKeywordScenarioRequested;
         }
 
         #endregion
@@ -43,6 +51,24 @@ namespace ScenarioSystem.View
                 keywordHandler.SetKeywordEnabled(enabled);
                 Debug.Log($"[KeywordView] Keywords {(enabled ? "enabled" : "disabled")}");
             }
+        }
+
+        /// <summary>
+        /// キーワード抽出後、linkID と同名のシナリオを DB から検索して再生する。
+        /// </summary>
+        private void HandleKeywordScenarioRequested(string keywordId)
+        {
+            if (string.IsNullOrEmpty(keywordId)) return;
+
+            // ダミーキーワードはシナリオを持たない
+            if (MessageWindowSystem.Core.KeywordHandler.IsDummyKeyword(keywordId))
+            {
+                Debug.Log($"[KeywordView] Dummy keyword '{keywordId}' — no scenario to play.");
+                return;
+            }
+
+            Debug.Log($"[KeywordView] Playing keyword scenario: {keywordId}");
+            MessageWindowFacade.Instance?.StartScenarioById(keywordId);
         }
 
         #endregion

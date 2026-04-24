@@ -16,6 +16,9 @@ namespace ScenarioSystem.Runtime
         /// <summary>現在実行中のアクションインデックス。</summary>
         public int CurrentActionIndex { get; set; }
 
+        /// <summary>現在のアクション内でのサブステップインデックス（マルチステップ用）。</summary>
+        public int CurrentSubActionIndex { get; set; }
+
         /// <summary>シナリオが再生中かどうか。</summary>
         public bool IsPlaying { get; set; }
 
@@ -56,6 +59,7 @@ namespace ScenarioSystem.Runtime
         {
             CurrentScenario = null;
             CurrentActionIndex = 0;
+            CurrentSubActionIndex = 0;
             IsPlaying = false;
             IsWaitingForInput = false;
             IsTyping = false;

@@ -29,6 +29,10 @@ namespace ScenarioSystem.View
         [SerializeField] private Key skipKey = Key.LeftCtrl;
         [SerializeField] private float skipTypingSpeed = 0.001f;
 
+        [Header("Keyword Integration")]
+        [Tooltip("キーワードクリック時に advance をブロックするための参照。")]
+        [SerializeField] private MessageWindowSystem.Core.KeywordHandler keywordHandler;
+
         #endregion
 
         #region Private Fields
@@ -77,6 +81,10 @@ namespace ScenarioSystem.View
             }
             else
             {
+                // キーワードクリック中なら advance をブロック
+                if (keywordHandler != null && keywordHandler.ConsumeBlockNext())
+                    return;
+
                 // タイピング完了済みなら次へ進むリクエスト
                 ScenarioEventBus.RaiseAdvanceRequested();
             }

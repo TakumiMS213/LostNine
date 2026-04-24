@@ -80,6 +80,23 @@ namespace ScenarioSystem.Events
         /// <summary>メッセージウィンドウの表示/非表示が要求された。</summary>
         public static event Action<bool> OnWindowVisibilityChanged;
 
+        // ──────────────────────────────
+        //  Overlay Control
+        // ──────────────────────────────
+
+        /// <summary>オーバーレイテキストの表示が要求された。</summary>
+        public static event Action<OverlayEventData> OnOverlayRequested;
+
+        /// <summary>オーバーレイテキストの非表示が要求された。</summary>
+        public static event Action OnOverlayDismissed;
+
+        // ──────────────────────────────
+        //  Center Portrait
+        // ──────────────────────────────
+
+        /// <summary>画面中央ポートレートのスプライト変更が要求された（null で非表示）。</summary>
+        public static event Action<Sprite> OnCenterPortraitChanged;
+
         // ══════════════════════════════
         //  Raise Methods
         // ══════════════════════════════
@@ -123,6 +140,15 @@ namespace ScenarioSystem.Events
         public static void RaiseWindowVisibilityChanged(bool visible)
             => OnWindowVisibilityChanged?.Invoke(visible);
 
+        public static void RaiseOverlayRequested(OverlayEventData data)
+            => OnOverlayRequested?.Invoke(data);
+
+        public static void RaiseOverlayDismissed()
+            => OnOverlayDismissed?.Invoke();
+
+        public static void RaiseCenterPortraitChanged(Sprite sprite)
+            => OnCenterPortraitChanged?.Invoke(sprite);
+
         // ══════════════════════════════
         //  Cleanup（テスト・シーン遷移時用）
         // ══════════════════════════════
@@ -146,6 +172,9 @@ namespace ScenarioSystem.Events
             OnScenarioStarted = null;
             OnScenarioEnded = null;
             OnWindowVisibilityChanged = null;
+            OnOverlayRequested = null;
+            OnOverlayDismissed = null;
+            OnCenterPortraitChanged = null;
         }
     }
 
@@ -188,19 +217,36 @@ namespace ScenarioSystem.Events
             BackgroundImage = backgroundImage;
         }
 
-        /// <summary>DialogueAction から DialogueEventData を生成するファクトリ。</summary>
-        public static DialogueEventData FromAction(DialogueAction action)
+        /// <summary>DialogueEntry から DialogueEventData を生成するファクトリ。</summary>
+        public static DialogueEventData FromEntry(DialogueEntry entry)
         {
             return new DialogueEventData(
-                action.speakerName,
-                action.text,
-                action.portrait,
-                action.portraitPosition,
-                action.typingSpeed,
-                action.nameSlideDirection,
-                action.voiceClip,
-                action.backgroundImage
+                entry.speakerName,
+                entry.text,
+                entry.portrait,
+                entry.portraitPosition,
+                entry.typingSpeed,
+                entry.nameSlideDirection,
+                entry.voiceClip,
+                entry.backgroundImage
             );
+        }
+    }
+
+    /// <summary>
+    /// OverlayAction の実行時に View へ渡すデータパケット。
+    /// </summary>
+    public readonly struct OverlayEventData
+    {
+        public readonly string Text;
+        public readonly Sprite Portrait;
+        public readonly PortraitPosition PortraitPosition;
+
+        public OverlayEventData(string text, Sprite portrait, PortraitPosition portraitPosition)
+        {
+            Text = text;
+            Portrait = portrait;
+            PortraitPosition = portraitPosition;
         }
     }
 }
