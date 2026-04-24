@@ -27,6 +27,7 @@ public class SceneTransition : MonoBehaviour
     [SerializeField] private string fadeInLabel = "FadeIn";
 
     private bool _isTransitioning;
+    private bool _useSimpleFade;
 
     private void Awake()
     {
@@ -35,12 +36,7 @@ public class SceneTransition : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // 初期状態: 完全に透明
-            if (fadeOverlay != null)
-            {
-                fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 0f);
-                fadeOverlay.raycastTarget = false;
-            }
+            EnsureFadeOverlay();
         }
         else
         {
@@ -49,11 +45,57 @@ public class SceneTransition : MonoBehaviour
     }
 
     /// <summary>
+    /// fadeOverlay が未設定または参照切れの場合に、
+    /// DontDestroyOnLoad 配下に Canvas + Image を自動生成する。
+    /// </summary>
+    private void EnsureFadeOverlay()
+    {
+        if (fadeOverlay != null)
+        {
+            // 既に有効な参照がある場合は初期化のみ
+            fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 0f);
+            fadeOverlay.raycastTarget = false;
+            return;
+        }
+
+        // Canvas を生成
+        var canvasObj = new GameObject("FadeOverlayCanvas");
+        canvasObj.transform.SetParent(transform);
+
+        var canvas = canvasObj.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 9999; // 最前面に表示
+
+        var scaler = canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
+        scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+
+        canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+
+        // Image を生成
+        var imageObj = new GameObject("FadeOverlay");
+        imageObj.transform.SetParent(canvasObj.transform, false);
+
+        var rect = imageObj.AddComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+
+        fadeOverlay = imageObj.AddComponent<Image>();
+        fadeOverlay.color = new Color(fadeColor.r, fadeColor.g, fadeColor.b, 0f);
+        fadeOverlay.raycastTarget = false;
+
+        Debug.Log("[SceneTransition] FadeOverlay を自動生成しました。");
+    }
+
+    /// <summary>
     /// フェードアウト → シーンロード → フェードイン
     /// </summary>
     public void TransitionTo(string sceneName)
     {
         if (_isTransitioning) return;
+        _useSimpleFade = false;
         StartCoroutine(TransitionCoroutine(sceneName));
     }
 
@@ -63,6 +105,18 @@ public class SceneTransition : MonoBehaviour
     public void TransitionTo(string sceneName, System.Action onSceneLoaded)
     {
         if (_isTransitioning) return;
+        _useSimpleFade = false;
+        StartCoroutine(TransitionCoroutine(sceneName, onSceneLoaded));
+    }
+
+    /// <summary>
+    /// シンプルな黒フェードでシーン遷移する。
+    /// MultiEasing（FilmCanvas等）を使わず、常に黒画面フェードを使用する。
+    /// </summary>
+    public void TransitionToSimple(string sceneName, System.Action onSceneLoaded = null)
+    {
+        if (_isTransitioning) return;
+        _useSimpleFade = true;
         StartCoroutine(TransitionCoroutine(sceneName, onSceneLoaded));
     }
 
@@ -95,17 +149,23 @@ public class SceneTransition : MonoBehaviour
     {
         _isTransitioning = true;
 
-        // フェードアウト（MultiEasing 経由）
-        var fadeOutEasing = MultiEasing.FindByLabel(fadeOutLabel);
-        if (fadeOutEasing != null)
+        // フェードアウト
+        if (!_useSimpleFade)
         {
-            if (fadeOverlay != null) fadeOverlay.raycastTarget = true;
-            fadeOutEasing.Play();
-            yield return new WaitWhile(() => fadeOutEasing != null && fadeOutEasing.IsPlaying);
+            var fadeOutEasing = MultiEasing.FindByLabel(fadeOutLabel);
+            if (fadeOutEasing != null)
+            {
+                if (fadeOverlay != null) fadeOverlay.raycastTarget = true;
+                fadeOutEasing.Play();
+                yield return new WaitWhile(() => fadeOutEasing != null && fadeOutEasing.IsPlaying);
+            }
+            else
+            {
+                yield return FadeOutFallbackCoroutine();
+            }
         }
         else
         {
-            // フォールバック: 直接 DOFade
             yield return FadeOutFallbackCoroutine();
         }
 
@@ -119,17 +179,23 @@ public class SceneTransition : MonoBehaviour
         // 1フレーム待って新シーンの初期化を待つ
         yield return null;
 
-        // フェードイン（新シーン内の MultiEasing を検索）
-        var fadeInEasing = MultiEasing.FindByLabel(fadeInLabel);
-        if (fadeInEasing != null)
+        // フェードイン
+        if (!_useSimpleFade)
         {
-            fadeInEasing.Play();
-            yield return new WaitWhile(() => fadeInEasing != null && fadeInEasing.IsPlaying);
-            if (fadeOverlay != null) fadeOverlay.raycastTarget = false;
+            var fadeInEasing = MultiEasing.FindByLabel(fadeInLabel);
+            if (fadeInEasing != null)
+            {
+                fadeInEasing.Play();
+                yield return new WaitWhile(() => fadeInEasing != null && fadeInEasing.IsPlaying);
+                if (fadeOverlay != null) fadeOverlay.raycastTarget = false;
+            }
+            else
+            {
+                yield return FadeInFallbackCoroutine();
+            }
         }
         else
         {
-            // フォールバック: 直接 DOFade
             yield return FadeInFallbackCoroutine();
         }
 

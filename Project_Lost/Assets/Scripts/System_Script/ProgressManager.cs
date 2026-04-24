@@ -171,7 +171,7 @@ public class ProgressManager : MonoBehaviour
     {
         Debug.Log($"[ProgressManager] GoToChapterSelect: Chapter {_currentChapter} complete.");
         if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionTo(chapterSelectSceneName);
+            SceneTransition.Instance.TransitionToSimple(chapterSelectSceneName);
         else
             SceneManager.LoadScene(chapterSelectSceneName);
     }
@@ -182,7 +182,7 @@ public class ProgressManager : MonoBehaviour
     public void GoToTitle()
     {
         if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionTo(titleSceneName);
+            SceneTransition.Instance.TransitionToSimple(titleSceneName);
         else
             SceneManager.LoadScene(titleSceneName);
     }

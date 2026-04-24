@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entries:
   - speakerName: Speaker
-    text: "\u30B7\u30FC\u30F3\u9077\u79FB\u5F8C\u306E\u30B7\u30CA\u30EA\u30AA\u81EA\u52D5\u518D\u751F\u78BA\u8A8D"
-    portrait: {fileID: 0}
+    text: "\u30B7\u30FC\u30F3\u9077\u79FB\u5F8C\u306E\u30B7\u30CA\u30EA\u30AA\u81EA\u52D5\u518D\u751F\u78BA\u8A8D\nPresentation
+      Phase"
+    portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
     portraitPosition: 0
     typingSpeed: 0
     nameSlideDirection: 0

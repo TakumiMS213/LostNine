@@ -15,6 +15,7 @@ MonoBehaviour:
   scenarioId: 
   showMainWindow: 1
   actions:
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 9144c122eae76417abc2e1131775110d, type: 2}
+  - {fileID: 11400000, guid: 5f2341f1c502946ce8f9d4cff3f346d6, type: 2}
   nextScenario: {fileID: 0}
   loop: 0

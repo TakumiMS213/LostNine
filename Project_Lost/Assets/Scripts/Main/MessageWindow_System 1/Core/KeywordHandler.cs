@@ -300,9 +300,10 @@ namespace MessageWindowSystem.Core
                 Debug.Log($"[KeywordHandler] Dummy keyword '{linkID}' — Progress not incremented.");
             }
 
-            // キーワード抽出完了後、ClickArea を再有効化
+            // キーワード抽出完了後、ClickArea を再有効化・カーソルをリセット
             if (clickAreaGraphic != null) clickAreaGraphic.raycastTarget = true;
             _isHoveringLink = false;
+            CursorManager.Instance?.ResetToDefault();
 
             // Only request individual scenario if the main sequence override didn't trigger
             if (!thresholdReachedThisTime)
