@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
+using Communication;
 using MessageWindowSystem.Core;
 using MessageWindowSystem.Testing;
 using TMPro;
@@ -8,6 +9,7 @@ using TMPro;
 /// <summary>
 /// Manages communication start/end UI transitions.
 /// Portrait click behavior is differentiated by current GamePhase.
+/// 判定ロジックは ComuLogic に委譲し、本クラスは UI 操作に専念する。
 /// </summary>
 public class ComuStartandEndManager : MonoBehaviour
 {
@@ -40,11 +42,9 @@ public class ComuStartandEndManager : MonoBehaviour
     [Tooltip("Manual end ID (used if useProgressBasedId is false).")]
     [SerializeField] private string endScenarioId;
 
-    private bool _isAnimating = false;
-    private bool _isPortraitInteractable = true;
-    private bool _isInCommunication = false;
+    private readonly ComuLogic _logic = new ComuLogic();
 
-    public bool IsInCommunication => _isInCommunication;
+    public bool IsInCommunication => _logic.IsInCommunication;
 
     public void ComuStart(string scenarioId) => StartComuFlow(scenarioId).Forget();
     public void ComuEnd(string scenarioId) => EndComuFlow(scenarioId).Forget();
@@ -59,80 +59,45 @@ public class ComuStartandEndManager : MonoBehaviour
 
     /// <summary>
     /// Portrait クリック時のメイン処理。
-    /// 現在の GamePhase に応じてシナリオIDを生成し、適切な処理を分岐する。
-    /// 
-    /// - Dialogue:     Ch{N}_Dialogue を再生
-    /// - Extraction:   Ch{N}_Extraction を再生（キーワード有効、繰り返し閲覧可）
-    /// - Presentation: Ch{N}_Presentation を再生
-    /// - その他:       GetScenarioKey() で汎用対応
+    /// ComuLogic に判定を委譲し、結果に応じた UI 操作を行う。
     /// </summary>
     public void ToggleComuforPortrait()
     {
-        if (_isAnimating) return;
+        var result = _logic.JudgeToggle();
 
-        // もしPortraitがクリック不可状態ならSEを鳴らして処理を中断
-        if (!_isPortraitInteractable)
+        switch (result)
         {
-            if (unclickableSE != null)
-            {
-                // EffectManagerへの依存があるため、Sceneに存在すれば鳴らす
-                if (EffectManager.Instance != null)
+            case ComuLogic.ToggleResult.Blocked:
+                return;
+
+            case ComuLogic.ToggleResult.PlayUnclickableSE:
+                if (unclickableSE != null)
+                    EffectManager.Instance?.PlaySE(unclickableSE);
+                return;
+
+            case ComuLogic.ToggleResult.EndCommunication:
+                string endId = GetEndScenarioId();
+                ComuEnd(endId);
+                _logic.IsInCommunication = false;
+                return;
+
+            case ComuLogic.ToggleResult.StartCommunication:
+                var pm = ProgressManager.Instance;
+                if (pm == null)
                 {
-                    EffectManager.Instance.PlaySE(unclickableSE);
+                    Debug.LogWarning("[ComuManager] ProgressManager not found. Using fallback ID.");
+                    ComuStart(startScenarioId);
+                    _logic.IsInCommunication = true;
+                    return;
                 }
-            }
-            return;
+
+                var info = ComuLogic.ResolveScenarioId(pm.CurrentChapter, pm.CurrentPhase);
+                Debug.Log($"[ComuManager] ToggleComuforPortrait: Phase={pm.CurrentPhase}, Scenario={info.ScenarioId}, Keywords={info.EnableKeywords}");
+
+                ComuStart(info.ScenarioId);
+                _logic.IsInCommunication = true;
+                return;
         }
-
-        if (_isInCommunication)
-        {
-            // 対話終了 → 探索モードへ戻る
-            string endId = GetEndScenarioId();
-            ComuEnd(endId);
-            _isInCommunication = false;
-            return;
-        }
-
-        // ---- 対話開始: フェーズに応じた処理 ----
-        var pm = ProgressManager.Instance;
-        if (pm == null)
-        {
-            Debug.LogWarning("[ComuManager] ProgressManager not found. Using fallback ID.");
-            ComuStart(startScenarioId);
-            _isInCommunication = true;
-            return;
-        }
-
-        int chapter = pm.CurrentChapter;
-        GamePhase phase = pm.CurrentPhase;
-        string scenarioId;
-        bool enableKeywords = false;
-
-        switch (phase)
-        {
-            case GamePhase.Dialogue:
-                scenarioId = $"Ch{chapter}_Dialogue";
-                break;
-
-            case GamePhase.Extraction:
-                scenarioId = $"Ch{chapter}_Extraction";
-                enableKeywords = true;
-                break;
-
-            case GamePhase.Presentation:
-                scenarioId = $"Ch{chapter}_Presentation";
-                break;
-
-            default:
-                // 汎用: 現在のフェーズ名でシナリオIDを生成
-                scenarioId = pm.GetScenarioKey();
-                break;
-        }
-
-        Debug.Log($"[ComuManager] ToggleComuforPortrait: Phase={phase}, Scenario={scenarioId}, Keywords={enableKeywords}");
-
-        ComuStart(scenarioId);
-        _isInCommunication = true;
     }
 
     /// <summary>
@@ -140,24 +105,24 @@ public class ComuStartandEndManager : MonoBehaviour
     /// </summary>
     public void ToggleComu(string startId, string endId)
     {
-        if (_isAnimating) return;
+        if (_logic.IsAnimating) return;
 
-        if (_isInCommunication)
+        if (_logic.IsInCommunication)
         {
             ComuEnd(endId);
-            _isInCommunication = false;
+            _logic.IsInCommunication = false;
         }
         else
         {
             ComuStart(startId);
-            _isInCommunication = true;
+            _logic.IsInCommunication = true;
         }
     }
 
     private string GetEndScenarioId()
     {
         if (useProgressBasedId && ProgressManager.Instance != null)
-            return $"Ch{ProgressManager.Instance.CurrentChapter}_loop";
+            return ComuLogic.ResolveEndScenarioId(ProgressManager.Instance.CurrentChapter);
         return endScenarioId;
     }
 
@@ -228,7 +193,7 @@ public class ComuStartandEndManager : MonoBehaviour
 
     private async UniTask StartComuFlow(string Startid)
     {
-        _isAnimating = true;
+        _logic.IsAnimating = true;
         SetPortraitInteractable(false);
         if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
 
@@ -268,7 +233,7 @@ public class ComuStartandEndManager : MonoBehaviour
 
         fadeFrame.gameObject.SetActive(false);
 
-        _isAnimating = false;
+        _logic.IsAnimating = false;
         SetPortraitInteractable(true);
 
         if (!string.IsNullOrEmpty(Startid))
@@ -277,7 +242,7 @@ public class ComuStartandEndManager : MonoBehaviour
 
     private async UniTask EndComuFlow(string Endid)
     {
-        _isAnimating = true;
+        _logic.IsAnimating = true;
         SetPortraitInteractable(false);
         if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
 
@@ -310,7 +275,7 @@ public class ComuStartandEndManager : MonoBehaviour
         ToggleEffect.SetActive(false);
         if (Portrait != null) Portrait.SetActive(true);
 
-        _isAnimating = false;
+        _logic.IsAnimating = false;
         SetPortraitInteractable(true);
 
         if (!string.IsNullOrEmpty(Endid))
@@ -329,7 +294,7 @@ public class ComuStartandEndManager : MonoBehaviour
 
     public void SetPortraitInteractable(bool interactable, bool updateOverlay = false)
     {
-        _isPortraitInteractable = interactable;
+        _logic.IsPortraitInteractable = interactable;
 
         // Button自体は常にinteractableにしてクリック入力を受け付ける。ToggleComuforPortrait内で弾く。
         if (Portrait != null && Portrait.TryGetComponent<Button>(out var btn))
