@@ -6,8 +6,8 @@ namespace ScenarioSystem.Adapter
 {
     /// <summary>
     /// 新シナリオシステム ↔ 既存 ComuStartandEndManager の橋渡し。
-    /// EventBus の OnComuToggleRequested を購読し、既存の ToggleComu() を呼び出す。
-    /// シナリオ開始/終了時の UI 切り替えも必要に応じて橋渡しする。
+    /// EventBus の OnComuToggleRequested / OnComuToggleInstantRequested を購読し、
+    /// 既存の ToggleComu() / ToggleComuInstant() を呼び出す。
     /// </summary>
     public class ComuAdapter : MonoBehaviour
     {
@@ -24,6 +24,7 @@ namespace ScenarioSystem.Adapter
         private void OnEnable()
         {
             ScenarioEventBus.OnComuToggleRequested += HandleComuToggle;
+            ScenarioEventBus.OnComuToggleInstantRequested += HandleComuToggleInstant;
             ScenarioEventBus.OnScenarioStarted += HandleScenarioStarted;
             ScenarioEventBus.OnScenarioEnded += HandleScenarioEnded;
         }
@@ -31,6 +32,7 @@ namespace ScenarioSystem.Adapter
         private void OnDisable()
         {
             ScenarioEventBus.OnComuToggleRequested -= HandleComuToggle;
+            ScenarioEventBus.OnComuToggleInstantRequested -= HandleComuToggleInstant;
             ScenarioEventBus.OnScenarioStarted -= HandleScenarioStarted;
             ScenarioEventBus.OnScenarioEnded -= HandleScenarioEnded;
         }
@@ -41,15 +43,31 @@ namespace ScenarioSystem.Adapter
 
         private void HandleComuToggle()
         {
-            if (comuManager == null)
-            {
-                comuManager = FindFirstObjectByType<ComuStartandEndManager>();
-            }
+            ResolveManager();
 
             if (comuManager != null)
             {
                 Debug.Log("[ComuAdapter] ToggleComu");
                 comuManager.ToggleComu();
+            }
+            else
+            {
+                Debug.LogWarning("[ComuAdapter] ComuStartandEndManager not found.");
+            }
+        }
+
+        /// <summary>
+        /// アニメーションなしでコミュニケーション状態を即座に切り替える。
+        /// ToggleComuforPortrait と同じロジック判定を行い、形状変更も即座に適用する。
+        /// </summary>
+        private void HandleComuToggleInstant()
+        {
+            ResolveManager();
+
+            if (comuManager != null)
+            {
+                Debug.Log("[ComuAdapter] ToggleComuInstant");
+                comuManager.ToggleComuInstant();
             }
             else
             {
@@ -67,6 +85,16 @@ namespace ScenarioSystem.Adapter
         {
             Debug.Log($"[ComuAdapter] Scenario ended: {scenario?.name}");
             // 必要に応じて探索モードへの復帰処理を行う
+        }
+
+        #endregion
+
+        #region Utility
+
+        private void ResolveManager()
+        {
+            if (comuManager == null)
+                comuManager = FindFirstObjectByType<ComuStartandEndManager>();
         }
 
         #endregion

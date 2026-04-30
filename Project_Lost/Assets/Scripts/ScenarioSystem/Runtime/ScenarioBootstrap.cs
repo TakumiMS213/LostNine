@@ -57,8 +57,10 @@ namespace ScenarioSystem.Runtime
             presenter.RegisterExecutor(new WaitActionExecutor(presenter));
             presenter.RegisterExecutor(new ProgressUpdateActionExecutor());
             presenter.RegisterExecutor(new ComuToggleActionExecutor());
+            presenter.RegisterExecutor(new ComuToggleInstantActionExecutor());
             presenter.RegisterExecutor(new KeywordEnableActionExecutor());
             presenter.RegisterExecutor(new OverlayActionExecutor(presenter));
+            presenter.RegisterExecutor(new TitleLogoActionExecutor(presenter));
             presenter.RegisterExecutor(new ProgressScenarioActionExecutor(presenter, scenarioDatabase));
             presenter.RegisterExecutor(new CenterPortraitActionExecutor());
             presenter.RegisterExecutor(new SceneTransitionActionExecutor());

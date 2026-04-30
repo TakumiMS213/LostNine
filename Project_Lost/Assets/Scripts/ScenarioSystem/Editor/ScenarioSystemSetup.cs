@@ -120,6 +120,9 @@ public static class ScenarioSystemSetup
         var snvObj = CreateChild("SpeakerNameViewObj", viewsRoot);
         var snv = snvObj.AddComponent<SpeakerNameView>();
 
+        var tlvObj = CreateChild("TitleLogoViewObj", viewsRoot);
+        tlvObj.AddComponent<TitleLogoView>();
+
         // ── Auto-wire ──
         SetField(dv, "dialogueText", dialogueText);
         SetField(dv, "windowRoot", messageWindow);
@@ -163,7 +166,7 @@ public static class ScenarioSystemSetup
         {
             typeof(DialogueView), typeof(SpeakerNameView), typeof(PortraitView),
             typeof(ChoiceView), typeof(EffectView), typeof(BackgroundStillView),
-            typeof(KeywordView), typeof(DialogueLogView)
+            typeof(KeywordView), typeof(DialogueLogView), typeof(TitleLogoView)
         };
 
         int warnings = 0;
@@ -186,6 +189,12 @@ public static class ScenarioSystemSetup
                     && iter.name != "m_Script"
                     && !iter.name.StartsWith("m_"))
                 {
+                    if (viewType == typeof(TitleLogoView)
+                        && (iter.name == "titleRoot" || iter.name == "backgroundImage" || iter.name == "logoImage"))
+                    {
+                        continue;
+                    }
+
                     Debug.LogWarning($"[Validate] ⚠️ {viewType.Name}.{iter.name} が未設定です");
                     warnings++;
                 }

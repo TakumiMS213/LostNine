@@ -53,6 +53,9 @@ namespace ScenarioSystem.Events
         /// <summary>コミュニケーション切り替えが要求された。</summary>
         public static event Action OnComuToggleRequested;
 
+        /// <summary>アニメーションなしのコミュニケーション切り替えが要求された。</summary>
+        public static event Action OnComuToggleInstantRequested;
+
         // ──────────────────────────────
         //  Keyword
         // ──────────────────────────────
@@ -97,6 +100,8 @@ namespace ScenarioSystem.Events
         /// <summary>画面中央ポートレートのスプライト変更が要求された（null で非表示）。</summary>
         public static event Action<Sprite> OnCenterPortraitChanged;
 
+        public static event Action<TitleLogoEventData> OnTitleLogoRequested;
+
         // ══════════════════════════════
         //  Raise Methods
         // ══════════════════════════════
@@ -125,6 +130,9 @@ namespace ScenarioSystem.Events
         public static void RaiseComuToggleRequested()
             => OnComuToggleRequested?.Invoke();
 
+        public static void RaiseComuToggleInstantRequested()
+            => OnComuToggleInstantRequested?.Invoke();
+
         public static void RaiseKeywordStateChanged(bool enabled)
             => OnKeywordStateChanged?.Invoke(enabled);
 
@@ -149,6 +157,9 @@ namespace ScenarioSystem.Events
         public static void RaiseCenterPortraitChanged(Sprite sprite)
             => OnCenterPortraitChanged?.Invoke(sprite);
 
+        public static void RaiseTitleLogoRequested(TitleLogoEventData data)
+            => OnTitleLogoRequested?.Invoke(data);
+
         // ══════════════════════════════
         //  Cleanup（テスト・シーン遷移時用）
         // ══════════════════════════════
@@ -167,6 +178,7 @@ namespace ScenarioSystem.Events
             OnEffectRequested = null;
             OnProgressUpdateRequested = null;
             OnComuToggleRequested = null;
+            OnComuToggleInstantRequested = null;
             OnKeywordStateChanged = null;
             OnKeywordClicked = null;
             OnScenarioStarted = null;
@@ -175,6 +187,7 @@ namespace ScenarioSystem.Events
             OnOverlayRequested = null;
             OnOverlayDismissed = null;
             OnCenterPortraitChanged = null;
+            OnTitleLogoRequested = null;
         }
     }
 
@@ -247,6 +260,60 @@ namespace ScenarioSystem.Events
             Text = text;
             Portrait = portrait;
             PortraitPosition = portraitPosition;
+        }
+    }
+
+    public readonly struct TitleLogoEventData
+    {
+        public readonly Sprite LogoSprite;
+        public readonly bool UseNativeLogoSize;
+        public readonly Vector2 MaxLogoSize;
+        public readonly Color BackgroundColor;
+        public readonly float BackgroundFadeInDuration;
+        public readonly float LogoFadeInDuration;
+        public readonly float LogoDisplayDuration;
+        public readonly float LogoFadeOutDuration;
+        public readonly float BackgroundHoldDuration;
+        public readonly float BackgroundFadeOutDuration;
+
+        public TitleLogoEventData(
+            Sprite logoSprite,
+            bool useNativeLogoSize,
+            Vector2 maxLogoSize,
+            Color backgroundColor,
+            float backgroundFadeInDuration,
+            float logoFadeInDuration,
+            float logoDisplayDuration,
+            float logoFadeOutDuration,
+            float backgroundHoldDuration,
+            float backgroundFadeOutDuration)
+        {
+            LogoSprite = logoSprite;
+            UseNativeLogoSize = useNativeLogoSize;
+            MaxLogoSize = maxLogoSize;
+            BackgroundColor = backgroundColor;
+            BackgroundFadeInDuration = backgroundFadeInDuration;
+            LogoFadeInDuration = logoFadeInDuration;
+            LogoDisplayDuration = logoDisplayDuration;
+            LogoFadeOutDuration = logoFadeOutDuration;
+            BackgroundHoldDuration = backgroundHoldDuration;
+            BackgroundFadeOutDuration = backgroundFadeOutDuration;
+        }
+
+        public static TitleLogoEventData FromAction(TitleLogoAction action)
+        {
+            return new TitleLogoEventData(
+                action.logoSprite,
+                action.useNativeLogoSize,
+                action.maxLogoSize,
+                action.backgroundColor,
+                action.backgroundFadeInDuration,
+                action.logoFadeInDuration,
+                action.logoDisplayDuration,
+                action.logoFadeOutDuration,
+                action.backgroundHoldDuration,
+                action.backgroundFadeOutDuration
+            );
         }
     }
 }

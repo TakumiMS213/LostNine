@@ -27,6 +27,7 @@ namespace ScenarioSystem.Adapter
         private void OnEnable()
         {
             ScenarioEventBus.OnComuToggleRequested += HandleComuToggle;
+            ScenarioEventBus.OnComuToggleInstantRequested += HandleComuToggleInstant;
             ScenarioEventBus.OnScenarioStarted += HandleScenarioStarted;
             ScenarioEventBus.OnScenarioEnded += HandleScenarioEnded;
         }
@@ -34,6 +35,7 @@ namespace ScenarioSystem.Adapter
         private void OnDisable()
         {
             ScenarioEventBus.OnComuToggleRequested -= HandleComuToggle;
+            ScenarioEventBus.OnComuToggleInstantRequested -= HandleComuToggleInstant;
             ScenarioEventBus.OnScenarioStarted -= HandleScenarioStarted;
             ScenarioEventBus.OnScenarioEnded -= HandleScenarioEnded;
         }
@@ -50,6 +52,25 @@ namespace ScenarioSystem.Adapter
             {
                 Debug.Log("[ComuAdapterExtended] ToggleComu");
                 comuManager.ToggleComu();
+            }
+            else
+            {
+                Debug.LogWarning("[ComuAdapterExtended] ComuStartandEndManager not found.");
+            }
+        }
+
+        /// <summary>
+        /// アニメーションなしでコミュニケーション状態を即座に切り替える。
+        /// ToggleComuforPortrait と同じロジック判定を行い、形状変更も即座に適用する。
+        /// </summary>
+        private void HandleComuToggleInstant()
+        {
+            ResolveManager();
+
+            if (comuManager != null)
+            {
+                Debug.Log("[ComuAdapterExtended] ToggleComuInstant");
+                comuManager.ToggleComuInstant();
             }
             else
             {
