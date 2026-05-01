@@ -9,6 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 03fcd3de516dc194eb30d26b041e0ee1, type: 3}
-  m_Name: InstantComuStart
+  m_Script: {fileID: 11500000, guid: 691722a4842a34d54a4e56cd2f182455, type: 3}
+  m_Name: ToMain
   m_EditorClassIdentifier: 
+  targetSceneName: Main
+  useChapterSelect: 0

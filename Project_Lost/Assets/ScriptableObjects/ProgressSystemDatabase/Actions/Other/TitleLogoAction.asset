@@ -22,3 +22,4 @@ MonoBehaviour:
   logoFadeOutDuration: 0.8
   backgroundHoldDuration: 0.4
   backgroundFadeOutDuration: 1
+  fadeOutBackgroundAfterLogo: 0

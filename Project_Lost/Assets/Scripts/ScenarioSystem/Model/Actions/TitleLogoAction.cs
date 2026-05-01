@@ -29,12 +29,17 @@ namespace ScenarioSystem.Model.Actions
         [Min(0f)] public float backgroundHoldDuration = 0.4f;
         [Min(0f)] public float backgroundFadeOutDuration = 1.0f;
 
+        [Header("Flow")]
+        [Tooltip("If true, the action waits for the final black background fade-out. If false, it completes after the logo fade-out and leaves the black background visible.")]
+        public bool fadeOutBackgroundAfterLogo = true;
+
         public float TotalDuration =>
             Mathf.Max(0f, backgroundFadeInDuration)
             + Mathf.Max(0f, logoFadeInDuration)
             + Mathf.Max(0f, logoDisplayDuration)
             + Mathf.Max(0f, logoFadeOutDuration)
-            + Mathf.Max(0f, backgroundHoldDuration)
-            + Mathf.Max(0f, backgroundFadeOutDuration);
+            + (fadeOutBackgroundAfterLogo
+                ? Mathf.Max(0f, backgroundHoldDuration) + Mathf.Max(0f, backgroundFadeOutDuration)
+                : 0f);
     }
 }

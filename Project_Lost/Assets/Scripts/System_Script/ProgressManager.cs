@@ -37,6 +37,9 @@ public class ProgressManager : MonoBehaviour
     [Tooltip("タイトルシーンの名前")]
     [SerializeField] private string titleSceneName = "Title";
 
+    [Tooltip("ストーリーシーンの名前")]
+    [SerializeField] private string storySceneName = "Story";
+
     public int CurrentChapter => _currentChapter;
     public GamePhase CurrentPhase => _currentPhase;
     public int CurrentKeywordProgress => _currentKeywordProgress;
@@ -46,6 +49,7 @@ public class ProgressManager : MonoBehaviour
     public bool AllKeywordsCollected => _currentKeywordProgress >= _keywordThreshold;
     public string MainSceneName => mainSceneName;
     public string TitleSceneName => titleSceneName;
+    public string StorySceneName => storySceneName;
 
     public event Action OnProgressChanged;
 
@@ -125,9 +129,9 @@ public class ProgressManager : MonoBehaviour
         OnProgressChanged?.Invoke();
 
         if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionTo(mainSceneName);
+            SceneTransition.Instance.TransitionTo(storySceneName);
         else
-            SceneManager.LoadScene(mainSceneName);
+            SceneManager.LoadScene(storySceneName);
     }
 
     /// <summary>

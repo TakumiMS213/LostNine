@@ -88,10 +88,18 @@ namespace ScenarioSystem.View
             yield return Wait(data.LogoDisplayDuration);
             yield return FadeImage(logoImage, Color.white, 1f, 0f, data.LogoFadeOutDuration);
             logoImage.gameObject.SetActive(false);
-            yield return Wait(data.BackgroundHoldDuration);
-            yield return FadeImage(backgroundImage, backgroundColor, targetBackgroundAlpha, 0f, data.BackgroundFadeOutDuration);
 
-            HideImmediate();
+            if (data.FadeOutBackgroundAfterLogo)
+            {
+                yield return Wait(data.BackgroundHoldDuration);
+                yield return FadeImage(backgroundImage, backgroundColor, targetBackgroundAlpha, 0f, data.BackgroundFadeOutDuration);
+                HideImmediate();
+            }
+            else
+            {
+                SetImageAlpha(backgroundImage, backgroundColor, targetBackgroundAlpha);
+            }
+
             _playRoutine = null;
         }
 

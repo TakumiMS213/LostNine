@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: ScenarioDataDatabase
   m_EditorClassIdentifier: 
   allScenarios:
+  - {fileID: 11400000, guid: 5f3d7c94bc211594e9d7a63cd19696ab, type: 2}
   - {fileID: 11400000, guid: 84e8262e2a6914bdaa942a028603b4fe, type: 2}
   - {fileID: 11400000, guid: f44777ccb167b47a0b53d0d98026eb05, type: 2}
   - {fileID: 11400000, guid: e3ed0cb913dc94a41977e33829ac2f4d, type: 2}

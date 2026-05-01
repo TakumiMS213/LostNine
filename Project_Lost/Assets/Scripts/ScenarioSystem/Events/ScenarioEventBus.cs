@@ -275,6 +275,7 @@ namespace ScenarioSystem.Events
         public readonly float LogoFadeOutDuration;
         public readonly float BackgroundHoldDuration;
         public readonly float BackgroundFadeOutDuration;
+        public readonly bool FadeOutBackgroundAfterLogo;
 
         public TitleLogoEventData(
             Sprite logoSprite,
@@ -286,7 +287,8 @@ namespace ScenarioSystem.Events
             float logoDisplayDuration,
             float logoFadeOutDuration,
             float backgroundHoldDuration,
-            float backgroundFadeOutDuration)
+            float backgroundFadeOutDuration,
+            bool fadeOutBackgroundAfterLogo)
         {
             LogoSprite = logoSprite;
             UseNativeLogoSize = useNativeLogoSize;
@@ -298,6 +300,7 @@ namespace ScenarioSystem.Events
             LogoFadeOutDuration = logoFadeOutDuration;
             BackgroundHoldDuration = backgroundHoldDuration;
             BackgroundFadeOutDuration = backgroundFadeOutDuration;
+            FadeOutBackgroundAfterLogo = fadeOutBackgroundAfterLogo;
         }
 
         public static TitleLogoEventData FromAction(TitleLogoAction action)
@@ -312,7 +315,8 @@ namespace ScenarioSystem.Events
                 action.logoDisplayDuration,
                 action.logoFadeOutDuration,
                 action.backgroundHoldDuration,
-                action.backgroundFadeOutDuration
+                action.backgroundFadeOutDuration,
+                action.fadeOutBackgroundAfterLogo
             );
         }
     }

@@ -100,14 +100,18 @@ namespace ScenarioSystem.View
         {
             if (portraitImage == null) return;
 
-            if (data.Portrait != null)
+            if (data.Portrait == null)
             {
-                portraitImage.sprite = data.Portrait;
-                portraitImage.gameObject.SetActive(true);
-                SetPortraitPosition(portraitImage.rectTransform, data.PortraitPosition);
-
-                if (jumpOnText) PlayJump();
+                SetImageAlpha(portraitImage, 0f);
+                return;
             }
+
+            portraitImage.sprite = data.Portrait;
+            portraitImage.gameObject.SetActive(true);
+            SetImageAlpha(portraitImage, 1f);
+            SetPortraitPosition(portraitImage.rectTransform, data.PortraitPosition);
+
+            if (jumpOnText) PlayJump();
         }
 
         private void SetPortraitPosition(RectTransform rect, PortraitPosition position)
@@ -135,6 +139,15 @@ namespace ScenarioSystem.View
             var seq = DOTween.Sequence();
             seq.Append(rect.DOAnchorPos(target, jumpDuration * 0.5f).SetEase(Ease.OutQuad));
             seq.Append(rect.DOAnchorPos(original, jumpDuration * 0.5f).SetEase(jumpEase));
+        }
+
+        private static void SetImageAlpha(Image image, float alpha)
+        {
+            if (image == null) return;
+
+            var color = image.color;
+            color.a = Mathf.Clamp01(alpha);
+            image.color = color;
         }
 
         #endregion

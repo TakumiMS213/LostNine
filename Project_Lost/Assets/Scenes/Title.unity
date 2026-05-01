@@ -10496,6 +10496,7 @@ MonoBehaviour:
   mainSceneName: Main
   chapterSelectSceneName: ChapterSelect
   titleSceneName: Title
+  storySceneName: Story
 --- !u!4 &848492278
 Transform:
   m_ObjectHideFlags: 0
