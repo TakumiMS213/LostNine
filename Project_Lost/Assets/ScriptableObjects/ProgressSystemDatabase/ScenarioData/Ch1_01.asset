@@ -15,10 +15,10 @@ MonoBehaviour:
   scenarioId: Ch1_Prologue
   showMainWindow: 1
   actions:
-  - {fileID: 11400000, guid: af32947cafb83e744b1327557f388400, type: 2}
   - {fileID: 11400000, guid: db4427563bdc94503ae07ac1ea3797a1, type: 2}
-  - {fileID: 11400000, guid: d1143a7119017456ba80b7368f804e2a, type: 2}
-  - {fileID: 11400000, guid: f92fbbf2e27e3694b80a43e708dbb2b0, type: 2}
+  - {fileID: 11400000, guid: 5bbe58c152df1e7438669754f0d0f049, type: 2}
+  - {fileID: 11400000, guid: d794e04a60df749c9961fc3c5b6e1cb2, type: 2}
+  - {fileID: 11400000, guid: b513387ce3c0697499aaa39aa78c04ac, type: 2}
   - {fileID: 11400000, guid: b2015826a2bc54834a2a1f0904f1a0de, type: 2}
   nextScenario: {fileID: 0}
   loop: 0
