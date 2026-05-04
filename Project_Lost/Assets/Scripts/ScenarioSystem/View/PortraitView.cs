@@ -162,24 +162,42 @@ namespace ScenarioSystem.View
                 return;
             }
 
+            if (data.Portrait == null)
+            {
+                HideGhostPortrait();
+                return;
+            }
+
+            // 新たに中央（Center）で喋る場合は、既存のゴーストを強制的に消す
+            if (data.PortraitPosition == PortraitPosition.Center)
+            {
+                HideGhostPortrait();
+                return;
+            }
+
             bool hasPrevious = _previousPortrait != null;
             bool speakerChanged = !string.Equals(data.SpeakerName, _previousSpeakerName, StringComparison.Ordinal);
             bool positionChanged = data.PortraitPosition != _previousPortraitPosition;
 
-            if (hasPrevious && data.Portrait != null && (speakerChanged || positionChanged))
+            if (speakerChanged || positionChanged)
             {
-                ghostPortraitImage.sprite = _previousPortrait;
-                ghostPortraitImage.gameObject.SetActive(true);
-                SetPortraitPosition(ghostPortraitImage.rectTransform, _previousPortraitPosition);
+                if (hasPrevious)
+                {
+                    ghostPortraitImage.sprite = _previousPortrait;
+                    ghostPortraitImage.gameObject.SetActive(true);
+                    SetPortraitPosition(ghostPortraitImage.rectTransform, _previousPortraitPosition);
 
-                var color = ghostPortraitImage.color;
-                color.a = ghostPortraitAlpha;
-                ghostPortraitImage.color = color;
+                    var color = ghostPortraitImage.color;
+                    color.a = ghostPortraitAlpha;
+                    ghostPortraitImage.color = color;
+                }
+                else
+                {
+                    HideGhostPortrait();
+                }
             }
-            else
-            {
-                HideGhostPortrait();
-            }
+            // 話者も位置も変わらない（連続して同じキャラが喋る）場合は、
+            // 新しいゴーストを生成せず、また現在のゴーストも消さずに維持する。
         }
 
         private void HideGhostPortrait()

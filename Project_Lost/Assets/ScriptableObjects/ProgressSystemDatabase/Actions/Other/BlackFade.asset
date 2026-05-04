@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c1d3a0f6b414ccf9d8b0d7066cbb3f1, type: 3}
+  m_Name: BlackFade
+  m_EditorClassIdentifier: 
+  logoSprite: {fileID: 0}
+  useNativeLogoSize: 1
+  maxLogoSize: {x: 1638.4, y: 909.6}
+  backgroundColor: {r: 0, g: 0, b: 0, a: 1}
+  backgroundFadeInDuration: 1
+  logoFadeInDuration: 1.2
+  logoDisplayDuration: 1.5
+  logoFadeOutDuration: 0.8
+  backgroundHoldDuration: 0.4
+  backgroundFadeOutDuration: 1
+  fadeOutBackgroundAfterLogo: 0
