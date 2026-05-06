@@ -12,4 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d1419a330f93d40d0a6036a06f49986d, type: 3}
   m_Name: Ch2_Prologue
   m_EditorClassIdentifier: 
-  entries: []
+  entries:
+  - speakerName: 
+    text: 
+    portrait: {fileID: -4942336806492926098, guid: 4b3a70eb92a7f7149b01cc2968185357, type: 3}
+    portraitPosition: 0
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}

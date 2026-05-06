@@ -10471,8 +10471,10 @@ MonoBehaviour:
     objectiveText: "\u8A71\u3092\u8074\u3053\u3046"
   - phase: 2
     objectiveText: "\u30AD\u30FC\u30EF\u30FC\u30C9\u3092\u898B\u3064\u3051\u51FA\u305D\u3046"
-  - phase: 3
-    objectiveText: 
+  - phase: 5
+    objectiveText: "\u8A71\u3092\u8074\u3053\u3046"
+  - phase: 6
+    objectiveText: "\u8A71\u3092\u8074\u3053\u3046"
   overrides: []
   fallbackText: ???
   manualMode: 0
