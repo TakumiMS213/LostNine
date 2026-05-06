@@ -14,6 +14,9 @@ namespace ScenarioSystem.Model.Actions
         [Tooltip("オーバーレイとして表示するテキスト。")]
         public string text;
 
+        [Tooltip("Overlay message speaker name.")]
+        public string speakerName = "System";
+
         [Tooltip("表示するポートレート画像（任意）")]
         public Sprite portrait;
 

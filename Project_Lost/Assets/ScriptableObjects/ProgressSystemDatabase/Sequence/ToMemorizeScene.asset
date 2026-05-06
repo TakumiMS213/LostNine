@@ -14,4 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   steps:
   - {fileID: 11400000, guid: d92f7a62f33c44b0ca9cb4839b0c70f2, type: 2}
+  - {fileID: 11400000, guid: d63dbd02c673b6c4f9b54775c6e2a8e9, type: 2}
   - {fileID: 11400000, guid: cbd759972052b4c539dc9cd3f6710507, type: 2}

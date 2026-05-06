@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d77a5bd30c5e49789c68064f1113d9c, type: 3}
   m_Name: Ch1_Overlay_02
   m_EditorClassIdentifier: 
-  text: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u3092\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u4F1A\u8A71\u3092\u59CB\u3081\u3088\u3046"
+  text: "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u3092\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u4F1A\u8A71\u3092\u59CB\u3081\u307E\u3059"
   portrait: {fileID: 0}
   portraitPosition: 0
-  displayDuration: 2
+  displayDuration: 0

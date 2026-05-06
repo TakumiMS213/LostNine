@@ -27,7 +27,7 @@ namespace ScenarioSystem.Presenter.Executors
                 return;
             }
 
-            manager.UpdateCharacterText(characterAction.CharacterName, characterAction.CharacterDescription);
+            manager.UpdateCharacter(characterAction.CharacterSprite, characterAction.CharacterName, characterAction.CharacterDescription);
             onComplete?.Invoke();
         }
     }

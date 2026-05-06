@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 255a7499b43a740c38b9715c41cd038a, type: 3}
-  m_Name: Ch1_04
+  m_Name: Ch1_03
   m_EditorClassIdentifier: 
-  scenarioId: Ch1_Extraction
+  scenarioId: Ch1_Dialogue
   showMainWindow: 1
   actions:
-  - {fileID: 11400000, guid: 4c80fe23ce73443ee9960c9b8bff2c56, type: 2}
-  - {fileID: 11400000, guid: 940ef0ec181160a49804f9246954a721, type: 2}
   - {fileID: 11400000, guid: f146ef37397974dce8fe39bb05bc5d0a, type: 2}
-  nextScenario: {fileID: 0}
-  loop: 1
+  - {fileID: 11400000, guid: 96f300603b9634d519eb523a12a3649f, type: 2}
+  - {fileID: 11400000, guid: b2015826a2bc54834a2a1f0904f1a0de, type: 2}
+  nextScenario: {fileID: 11400000, guid: e3d009f8471c38947a264b7024485593, type: 2}
+  loop: 0

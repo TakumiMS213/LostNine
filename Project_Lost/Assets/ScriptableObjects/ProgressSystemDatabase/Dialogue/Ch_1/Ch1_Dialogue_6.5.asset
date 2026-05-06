@@ -21,11 +21,3 @@ MonoBehaviour:
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
     backgroundImage: {fileID: 0}
-  - speakerName: "\u30AB\u30C1\u30E7\u30A6"
-    text: "\u3055\u3066..."
-    portrait: {fileID: 21300000, guid: 13979ae4426a346a99d92c1682e2c956, type: 3}
-    portraitPosition: 0
-    typingSpeed: 0
-    nameSlideDirection: 0
-    voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}

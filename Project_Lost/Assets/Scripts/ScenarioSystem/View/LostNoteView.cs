@@ -227,11 +227,11 @@ namespace ScenarioSystem.View
 
         private void ApplyTextSettings()
         {
-            ApplyTextSettings(titleTexts, TitleFontSize);
-            ApplyTextSettings(descriptionTexts, DescriptionFontSize);
+            ApplyTextSettings(titleTexts, TitleFontSize, false);
+            ApplyTextSettings(descriptionTexts, DescriptionFontSize, true);
         }
 
-        private static void ApplyTextSettings(TMP_Text[] texts, float fontSize)
+        private static void ApplyTextSettings(TMP_Text[] texts, float fontSize, bool enableAutoSizing)
         {
             if (texts == null)
                 return;
@@ -241,7 +241,7 @@ namespace ScenarioSystem.View
                 if (text == null)
                     continue;
 
-                text.enableAutoSizing = false;
+                text.enableAutoSizing = enableAutoSizing;
                 text.fontSize = fontSize;
                 text.textWrappingMode = TextWrappingModes.Normal;
             }

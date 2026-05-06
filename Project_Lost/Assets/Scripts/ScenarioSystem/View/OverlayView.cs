@@ -14,6 +14,7 @@ namespace ScenarioSystem.View
     {
         [Header("UI References")]
         [SerializeField] private GameObject overlayRoot;
+        [SerializeField] private TMP_Text speakerNameText;
         [SerializeField] private TMP_Text overlayText;
         [SerializeField] private Image portraitImage;
 
@@ -53,6 +54,7 @@ namespace ScenarioSystem.View
         private void HandleOverlayRequested(OverlayEventData data)
         {
             if (overlayRoot != null) overlayRoot.SetActive(true);
+            if (speakerNameText != null) speakerNameText.text = data.SpeakerName ?? string.Empty;
             if (overlayText != null) overlayText.text = data.Text;
             
             // ゴーストの更新
@@ -80,6 +82,7 @@ namespace ScenarioSystem.View
         private void HandleOverlayDismissed()
         {
             if (overlayRoot != null) overlayRoot.SetActive(false);
+            if (speakerNameText != null) speakerNameText.text = string.Empty;
             ClearGhostState();
         }
 
@@ -89,6 +92,7 @@ namespace ScenarioSystem.View
             if (!visible)
             {
                 if (overlayRoot != null) overlayRoot.SetActive(false);
+                if (speakerNameText != null) speakerNameText.text = string.Empty;
                 ClearGhostState();
             }
         }

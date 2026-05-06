@@ -36,7 +36,8 @@ namespace ScenarioSystem.Presenter.Executors
             }
 
             // View 側にデータ送信
-            ScenarioEventBus.RaiseOverlayRequested(new OverlayEventData(overlay.text, overlay.portrait, overlay.portraitPosition));
+            string speakerName = string.IsNullOrWhiteSpace(overlay.speakerName) ? "System" : overlay.speakerName;
+            ScenarioEventBus.RaiseOverlayRequested(new OverlayEventData(overlay.text, speakerName, overlay.portrait, overlay.portraitPosition));
 
             if (overlay.displayDuration <= 0f)
             {

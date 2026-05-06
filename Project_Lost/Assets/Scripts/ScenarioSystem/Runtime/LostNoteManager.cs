@@ -100,8 +100,13 @@ namespace ScenarioSystem.Runtime
 
         public void UpdateCharacterText(string characterName, string characterDescription)
         {
+            UpdateCharacter(_characterState.CharacterSprite, characterName, characterDescription);
+        }
+
+        public void UpdateCharacter(Sprite characterSprite, string characterName, string characterDescription)
+        {
             _characterState = new LostNoteCharacterState(
-                _characterState.CharacterSprite,
+                characterSprite,
                 characterName ?? string.Empty,
                 characterDescription ?? string.Empty);
 

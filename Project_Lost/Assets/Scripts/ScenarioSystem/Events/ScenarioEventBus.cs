@@ -261,12 +261,14 @@ namespace ScenarioSystem.Events
     public readonly struct OverlayEventData
     {
         public readonly string Text;
+        public readonly string SpeakerName;
         public readonly Sprite Portrait;
         public readonly PortraitPosition PortraitPosition;
 
-        public OverlayEventData(string text, Sprite portrait, PortraitPosition portraitPosition)
+        public OverlayEventData(string text, string speakerName, Sprite portrait, PortraitPosition portraitPosition)
         {
             Text = text;
+            SpeakerName = speakerName;
             Portrait = portrait;
             PortraitPosition = portraitPosition;
         }
