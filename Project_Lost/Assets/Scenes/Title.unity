@@ -5324,14 +5324,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 848492277}
         m_TargetAssemblyTypeName: ProgressManager, Assembly-CSharp
-        m_MethodName: StartFromChapter
-        m_Mode: 3
+        m_MethodName: StartScenarioFromMainById
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 5
+          m_IntArgument: 1
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ch5_Story
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &94768558
@@ -6706,14 +6706,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 848492277}
         m_TargetAssemblyTypeName: ProgressManager, Assembly-CSharp
-        m_MethodName: StartFromChapter
-        m_Mode: 3
+        m_MethodName: StartScenarioFromMainById
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 6
+          m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ch6_Story
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &333817342
@@ -7688,14 +7688,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 848492277}
         m_TargetAssemblyTypeName: ProgressManager, Assembly-CSharp
-        m_MethodName: StartFromChapter
-        m_Mode: 3
+        m_MethodName: StartScenarioFromMainById
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 2
+          m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ch2_Story
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &431429641
@@ -8345,14 +8345,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 848492277}
         m_TargetAssemblyTypeName: ProgressManager, Assembly-CSharp
-        m_MethodName: StartFromChapter
-        m_Mode: 3
+        m_MethodName: StartScenarioFromMainById
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 8
+          m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ch8_Story
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &581488038
@@ -9318,14 +9318,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 848492277}
         m_TargetAssemblyTypeName: ProgressManager, Assembly-CSharp
-        m_MethodName: StartFromChapter
-        m_Mode: 3
+        m_MethodName: StartScenarioFromMainById
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 3
+          m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ch3_Story
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &667138939
@@ -9754,14 +9754,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 848492277}
         m_TargetAssemblyTypeName: ProgressManager, Assembly-CSharp
-        m_MethodName: StartFromChapter
-        m_Mode: 3
+        m_MethodName: StartScenarioFromMainById
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 1
+          m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ch1_DialogueStart
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &751404497
@@ -11622,14 +11622,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 848492277}
         m_TargetAssemblyTypeName: ProgressManager, Assembly-CSharp
-        m_MethodName: StartFromChapter
-        m_Mode: 3
+        m_MethodName: StartScenarioFromMainById
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 9
+          m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ch9_Story
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1240201158
@@ -12115,14 +12115,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 848492277}
         m_TargetAssemblyTypeName: ProgressManager, Assembly-CSharp
-        m_MethodName: StartFromChapter
-        m_Mode: 3
+        m_MethodName: StartScenarioFromMainById
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 7
+          m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ch7_Story
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1367531548
@@ -12933,14 +12933,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 848492277}
         m_TargetAssemblyTypeName: ProgressManager, Assembly-CSharp
-        m_MethodName: StartFromChapter
-        m_Mode: 3
+        m_MethodName: StartScenarioFromMainById
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 4
+          m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ch4_Story
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!114 &1627852140

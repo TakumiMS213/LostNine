@@ -100,6 +100,11 @@ public class ComuStartandEndManager : MonoBehaviour
         ToggleComuforPortrait(false);
     }
 
+    public void ToggleComuFromScenario(bool allowAnimation = true)
+    {
+        ToggleComuInternal(allowAnimation, ignorePortraitLock: true);
+    }
+
     /// <summary>
     /// Portrait クリック時のメイン処理。
     /// ComuLogic に判定を委譲し、結果に応じた UI 操作を行う。
@@ -108,7 +113,14 @@ public class ComuStartandEndManager : MonoBehaviour
     /// </summary>
     public void ToggleComuforPortrait(bool allowAnimation = true)
     {
-        var result = _logic.JudgeToggle();
+        ToggleComuInternal(allowAnimation, ignorePortraitLock: false);
+    }
+
+    private void ToggleComuInternal(bool allowAnimation, bool ignorePortraitLock)
+    {
+        var result = ignorePortraitLock
+            ? JudgeToggleIgnoringPortraitLock()
+            : _logic.JudgeToggle();
 
         switch (result)
         {
@@ -155,6 +167,16 @@ public class ComuStartandEndManager : MonoBehaviour
                 _logic.IsInCommunication = true;
                 return;
         }
+    }
+
+    private ComuLogic.ToggleResult JudgeToggleIgnoringPortraitLock()
+    {
+        if (_logic.IsAnimating)
+            return ComuLogic.ToggleResult.Blocked;
+
+        return _logic.IsInCommunication
+            ? ComuLogic.ToggleResult.EndCommunication
+            : ComuLogic.ToggleResult.StartCommunication;
     }
 
     /// <summary>
@@ -262,8 +284,6 @@ public class ComuStartandEndManager : MonoBehaviour
             messageWindowBackGround.SetActive(true);
             NamePlateBackGround.SetActive(true);
             ObjectiveDisplay.SetActive(true);
-            Memorizer.SetActive(false); 
-            LostNote.SetActive(false);
             ToggleEffect.SetActive(false);
             if (Portrait != null) Portrait.SetActive(true);
             
@@ -327,8 +347,6 @@ public class ComuStartandEndManager : MonoBehaviour
         messageWindow.SetActive(false);
         messageWindowBackGround.SetActive(false);
         NamePlateBackGround.SetActive(false);
-        Memorizer.SetActive(false);
-        LostNote.SetActive(false);
         ObjectiveDisplay.SetActive(false);
         ToggleEffect.SetActive(true);
 

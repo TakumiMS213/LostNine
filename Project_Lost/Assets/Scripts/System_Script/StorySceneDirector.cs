@@ -44,7 +44,9 @@ namespace System_Script
             // イベントの購読
             ScenarioEventBus.OnScenarioEnded += HandleScenarioEnded;
 
-            string scenarioId = $"Ch{ProgressManager.Instance.CurrentChapter}_Story";
+            string scenarioId = ProgressManager.Instance.TryConsumeStoryScenarioId(out var requestedScenarioId)
+                ? requestedScenarioId
+                : $"Ch{ProgressManager.Instance.CurrentChapter}_Story";
             Debug.Log($"[StorySceneDirector] 自動再生開始: {scenarioId}");
             
             MessageWindowFacade.Instance.StartScenarioById(scenarioId);

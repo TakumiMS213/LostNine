@@ -12,16 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 255a7499b43a740c38b9715c41cd038a, type: 3}
   m_Name: Ch1_01
   m_EditorClassIdentifier: 
-  scenarioId: Ch1_Prologue
+  scenarioId: 
   showMainWindow: 1
   actions:
   - {fileID: 11400000, guid: db4427563bdc94503ae07ac1ea3797a1, type: 2}
   - {fileID: 11400000, guid: 5bbe58c152df1e7438669754f0d0f049, type: 2}
   - {fileID: 11400000, guid: d794e04a60df749c9961fc3c5b6e1cb2, type: 2}
   - {fileID: 11400000, guid: b513387ce3c0697499aaa39aa78c04ac, type: 2}
-  - {fileID: 11400000, guid: b2015826a2bc54834a2a1f0904f1a0de, type: 2}
   - {fileID: 11400000, guid: a69eb60de402a4f49a499c7facc2cb4e, type: 2}
-  - {fileID: 11400000, guid: a51ad2f912348e84bb63d9e13163e07d, type: 2}
   - {fileID: 11400000, guid: d157f092d34f842eabfd03c6cb19351b, type: 2}
-  nextScenario: {fileID: 0}
+  nextScenario: {fileID: 11400000, guid: f44777ccb167b47a0b53d0d98026eb05, type: 2}
   loop: 0

@@ -71,8 +71,9 @@ namespace System_Script
                 return;
             }
 
-            // 例: "Ch1_Presentation" のようなキーを取得
-            string key = ProgressManager.Instance.GetScenarioKey();
+            string key = ProgressManager.Instance.TryConsumeMainScenarioId(out var requestedScenarioId)
+                ? requestedScenarioId
+                : ProgressManager.Instance.GetScenarioKey();
             Debug.Log($"[AutoPlayProgressScenario] シーン開始: Progressに応じたシナリオ({key})を自動再生します。");
             
             // Facade経由でデータベースから検索して再生

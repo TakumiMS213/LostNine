@@ -786,6 +786,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   clickableImmediately: 0
+  keyWordDatabase: {fileID: 11400000, guid: 0f7ab7d5fa0f4e4f91858d10a88f0fe0, type: 2}
 --- !u!114 &466528018
 MonoBehaviour:
   m_ObjectHideFlags: 0

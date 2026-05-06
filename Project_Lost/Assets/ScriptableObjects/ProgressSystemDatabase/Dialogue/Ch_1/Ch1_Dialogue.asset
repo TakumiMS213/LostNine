@@ -126,7 +126,7 @@ MonoBehaviour:
     voiceClip: {fileID: 0}
     backgroundImage: {fileID: 8317830989643653784, guid: b1a5acd78786285408ca05417cccc6f8, type: 3}
   - speakerName: "\u9ED2\u3044\u602A\u7269"
-    text: "\u30B0\u30EB\u30EB........"
+    text: "\u30B0\u30EB\u30EB........\u30AC\u30A1\u30C3\u2015\u2015\uFF01\uFF01\uFF01\uFF01"
     portrait: {fileID: 21300000, guid: 236453c52231b0e418872210e9dcb804, type: 3}
     portraitPosition: 0
     typingSpeed: 0
@@ -134,7 +134,7 @@ MonoBehaviour:
     voiceClip: {fileID: 0}
     backgroundImage: {fileID: 8317830989643653784, guid: b1a5acd78786285408ca05417cccc6f8, type: 3}
   - speakerName: 
-    text: "<size=130%>\uFF08\u30AD\u30AD\u30FC\u30FC\u30FC\u30FC\u30FC\u30FC\u30FC\u30FC\u30FC\u30FC\u30FC\u30C3\u3000\u30C9\u30AC\u30B7\u30E3\u30C3\uFF01\uFF09</size>"
+    text: "<size=130%>\uFF08\u30AD\u30AD\u30FC\u30FC\u30FC\u30FC\u30FC\u30FC\u30FC\u30FC\u30C3\u3000\u30C9\u30AC\u30B7\u30E3\u30C3\uFF01\uFF09</size>"
     portrait: {fileID: 21300000, guid: f3f65e03f4cbec441b408057920c5ed9, type: 3}
     portraitPosition: 2
     typingSpeed: 0

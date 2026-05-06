@@ -46,6 +46,9 @@ namespace MessageWindowSystem.Core
         /// <summary>Fired when a keyword is successfully charged and clicked.</summary>
         public event Action<string> OnKeywordClicked;
 
+        /// <summary>Fired only when a keyword is newly extracted.</summary>
+        public event Action<string> OnKeywordExtracted;
+
         /// <summary>Requests the manager to play a keyword scenario by ID.</summary>
         public event Action<string> OnKeywordScenarioRequested;
 
@@ -289,6 +292,8 @@ namespace MessageWindowSystem.Core
                     
                     if (added)
                     {
+                        OnKeywordExtracted?.Invoke(linkID);
+
                         // If the progress just hit the threshold, GameFlowDirector will take over the sequence.
                         // We must NOT play the individual keyword scenario, otherwise they collide.
                         if (pm.CurrentKeywordProgress >= pm.KeywordThreshold && beforeProgress < pm.KeywordThreshold)

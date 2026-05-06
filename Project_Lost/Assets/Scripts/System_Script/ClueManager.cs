@@ -64,7 +64,6 @@ public class ClueManager : MonoBehaviour
         if (!_clicked.Contains(id))
         {
             _clicked.Add(id);
-            AddNoteAutomatically(id);
             // NOTE: Color persistence is disabled. No greying out of clicked keywords.
         }
 
@@ -77,11 +76,6 @@ public class ClueManager : MonoBehaviour
     {
         _clicked.Remove(id);
         _discovered.Remove(id);
-    }
-
-    private void AddNoteAutomatically(string id)
-    {
-        // TODO: Integrate with NotebookManager when available
     }
 
     /// <summary>

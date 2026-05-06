@@ -22,6 +22,8 @@ public class ProgressManager : MonoBehaviour
     [SerializeField] private int _keywordThreshold = 3;
 
     private HashSet<string> _extractedKeywords = new HashSet<string>();
+    private string _pendingStoryScenarioId;
+    private string _pendingMainScenarioId;
 
     [Header("Chapter Settings")]
     [Tooltip("最大チャプター数")]
@@ -142,6 +144,16 @@ public class ProgressManager : MonoBehaviour
         StartFromChapter(1);
     }
 
+    public void LoadGame()
+    {
+        _pendingStoryScenarioId = null;
+
+        if (SceneTransition.Instance != null)
+            SceneTransition.Instance.TransitionToSimple(mainSceneName);
+        else
+            SceneManager.LoadScene(mainSceneName);
+    }
+
     /// <summary>
     /// キーワードを1つ追加する。しきい値に達したらイベントを発火する。
     /// </summary>
@@ -178,6 +190,100 @@ public class ProgressManager : MonoBehaviour
     /// Returns a string key for scenario lookup (e.g., "Ch1_Dialogue").
     /// </summary>
     public string GetScenarioKey() => $"Ch{_currentChapter}_{_currentPhase}";
+
+    /// <summary>
+    /// Queues a scenario ID and moves to the Story scene.
+    /// </summary>
+    public void StartScenarioById(string scenarioId)
+    {
+        StartScenarioById(scenarioId, null);
+    }
+
+    public void StartScenarioById(string scenarioId, Action onComplete = null)
+    {
+        string normalizedScenarioId = scenarioId?.Trim();
+        if (string.IsNullOrEmpty(normalizedScenarioId))
+        {
+            Debug.LogWarning("[ProgressManager] Scenario ID is empty.");
+            onComplete?.Invoke();
+            return;
+        }
+
+        _pendingStoryScenarioId = normalizedScenarioId;
+        ApplyChapterFromScenarioId(normalizedScenarioId);
+        Debug.Log($"[ProgressManager] Queued story scenario: {normalizedScenarioId}");
+
+        if (SceneTransition.Instance != null)
+            SceneTransition.Instance.TransitionTo(storySceneName);
+        else
+            SceneManager.LoadScene(storySceneName);
+
+        onComplete?.Invoke();
+    }
+
+    public bool TryConsumeStoryScenarioId(out string scenarioId)
+    {
+        scenarioId = _pendingStoryScenarioId;
+        _pendingStoryScenarioId = null;
+        return !string.IsNullOrEmpty(scenarioId);
+    }
+
+    public void StartScenarioFromMainById(string scenarioId)
+    {
+        string normalizedScenarioId = scenarioId?.Trim();
+        if (string.IsNullOrEmpty(normalizedScenarioId))
+        {
+            Debug.LogWarning("[ProgressManager] Main scenario ID is empty.");
+            return;
+        }
+
+        _pendingStoryScenarioId = null;
+        _pendingMainScenarioId = normalizedScenarioId;
+        ApplyChapterFromScenarioId(normalizedScenarioId);
+        _currentPhase = GamePhase.Dialogue;
+        ResetKeywordProgress();
+        OnProgressChanged?.Invoke();
+        Debug.Log($"[ProgressManager] Queued main scenario: {normalizedScenarioId}");
+
+        if (SceneTransition.Instance != null)
+            SceneTransition.Instance.TransitionTo(mainSceneName);
+        else
+            SceneManager.LoadScene(mainSceneName);
+    }
+
+    public bool TryConsumeMainScenarioId(out string scenarioId)
+    {
+        scenarioId = _pendingMainScenarioId;
+        _pendingMainScenarioId = null;
+        return !string.IsNullOrEmpty(scenarioId);
+    }
+
+    private void ApplyChapterFromScenarioId(string scenarioId)
+    {
+        if (!TryParseChapterFromScenarioId(scenarioId, out int chapter))
+            return;
+
+        _currentChapter = Mathf.Clamp(chapter, 1, _maxChapter);
+        _currentPhase = GamePhase.Prologue;
+        ResetKeywordProgress();
+        OnProgressChanged?.Invoke();
+    }
+
+    private static bool TryParseChapterFromScenarioId(string scenarioId, out int chapter)
+    {
+        chapter = 0;
+        if (string.IsNullOrEmpty(scenarioId) || scenarioId.Length < 3 || scenarioId[0] != 'C' || scenarioId[1] != 'h')
+            return false;
+
+        int index = 2;
+        while (index < scenarioId.Length && char.IsDigit(scenarioId[index]))
+        {
+            chapter = chapter * 10 + (scenarioId[index] - '0');
+            index++;
+        }
+
+        return chapter > 0;
+    }
 
     /// <summary>
     /// チャプター選択シーンへ遷移する。

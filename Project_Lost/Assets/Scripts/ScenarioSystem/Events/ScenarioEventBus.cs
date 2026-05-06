@@ -93,6 +93,8 @@ namespace ScenarioSystem.Events
         /// <summary>オーバーレイテキストの非表示が要求された。</summary>
         public static event Action OnOverlayDismissed;
 
+        public static event Action<LostNoteEventData> OnLostNoteRequested;
+
         // ──────────────────────────────
         //  Center Portrait
         // ──────────────────────────────
@@ -154,6 +156,12 @@ namespace ScenarioSystem.Events
         public static void RaiseOverlayDismissed()
             => OnOverlayDismissed?.Invoke();
 
+        public static void RaiseLostNoteRequested(LostNoteEventData data)
+            => OnLostNoteRequested?.Invoke(data);
+
+        public static void RaiseLostNoteRequested(string keywordId, string title, string description)
+            => OnLostNoteRequested?.Invoke(new LostNoteEventData(keywordId, title, description));
+
         public static void RaiseCenterPortraitChanged(Sprite sprite)
             => OnCenterPortraitChanged?.Invoke(sprite);
 
@@ -186,6 +194,7 @@ namespace ScenarioSystem.Events
             OnWindowVisibilityChanged = null;
             OnOverlayRequested = null;
             OnOverlayDismissed = null;
+            OnLostNoteRequested = null;
             OnCenterPortraitChanged = null;
             OnTitleLogoRequested = null;
         }
@@ -260,6 +269,20 @@ namespace ScenarioSystem.Events
             Text = text;
             Portrait = portrait;
             PortraitPosition = portraitPosition;
+        }
+    }
+
+    public readonly struct LostNoteEventData
+    {
+        public readonly string KeywordId;
+        public readonly string Title;
+        public readonly string Description;
+
+        public LostNoteEventData(string keywordId, string title, string description)
+        {
+            KeywordId = keywordId;
+            Title = title;
+            Description = description;
         }
     }
 
