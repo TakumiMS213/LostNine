@@ -20,5 +20,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b2015826a2bc54834a2a1f0904f1a0de, type: 2}
   - {fileID: 11400000, guid: f921cae1b50e80049a50b30e94d19b8b, type: 2}
   - {fileID: 11400000, guid: a7f0843314d2109499fc7d7b9f5f1c54, type: 2}
+  - {fileID: 11400000, guid: 2883421a4a6444eb895927a2d95b063b, type: 2}
   nextScenario: {fileID: 0}
   loop: 0

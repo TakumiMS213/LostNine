@@ -1758,7 +1758,7 @@ RectTransform:
   m_GameObject: {fileID: 595244877}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 393266959}
@@ -5215,9 +5215,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 280a781590ad14209b5025b3abe0b06c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  flashOverlay: {fileID: 0}
-  fadeOverlay: {fileID: 0}
-  centerImage: {fileID: 0}
+  flashOverlay: {fileID: 1063110769}
+  fadeOverlay: {fileID: 1407409562}
+  centerImage: {fileID: 595244879}
   seAudioSource: {fileID: 1025205478}
   bgmAudioSource: {fileID: 1251147751}
   flashInDuration: 0.08
@@ -6525,13 +6525,16 @@ MonoBehaviour:
   dialogueText: {fileID: 1091481923}
   windowRoot: {fileID: 393266955}
   defaultTypingSpeed: 0.05
-  advanceIndicatorSprite: {fileID: 21300000, guid: 9581870bad71d4c08952aebdef723892, type: 3}
-  advanceIndicatorParent: {fileID: 453135344}
+  advanceIndicatorSprite: {fileID: 0}
+  advanceIndicatorParent: {fileID: 0}
   advanceIndicatorSize: {x: 32, y: 32}
   advanceIndicatorOffset: {x: -44, y: 34}
   enableSkipMode: 1
   skipKey: 55
   skipTypingSpeed: 0.001
+  enableAutoAdvance: 1
+  autoAdvanceInterval: 0.06
+  autoAdvanceInitialDelay: 0.08
   keywordHandler: {fileID: 1091481921}
 --- !u!1 &2020681911
 GameObject:

@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using Communication;
 using MessageWindowSystem.Core;
 using MessageWindowSystem.Testing;
+using ScenarioSystem.View;
 using TMPro;
 
 /// <summary>
@@ -35,6 +36,12 @@ public class ComuStartandEndManager : MonoBehaviour
     [SerializeField] private GameObject unclickableOverlay;
     [Tooltip("SE played when clicking portrait while it's unclickable")]
     [SerializeField] private AudioClip unclickableSE;
+
+    [Header("Portrait Guidance")]
+    [SerializeField] private Sprite portraitGuidanceSprite;
+    [SerializeField] private Vector2 portraitGuidanceSize = new Vector2(216f, 216f);
+    [SerializeField] private Vector2 portraitGuidanceOffset = new Vector2(0f, -40f);
+    [SerializeField] private Color portraitGuidanceColor = Color.yellow;
     
     [SerializeField] private MessageWindowIndexStarter messageWindowIndexStarter;
 
@@ -68,6 +75,7 @@ public class ComuStartandEndManager : MonoBehaviour
     private float _originalFontSize;
     /// <summary>通常モード時のスプライト。Awake で記録する。</summary>
     private Sprite _originalSprite;
+    private GameObject _portraitGuidanceObject;
 
     public bool IsInCommunication => _logic.IsInCommunication;
 
@@ -459,6 +467,41 @@ public class ComuStartandEndManager : MonoBehaviour
         {
             unclickableOverlay.SetActive(!interactable);
         }
+
+    }
+
+    public void SetPortraitGuidanceVisible(bool isVisible)
+    {
+        EnsurePortraitGuidance();
+
+        if (_portraitGuidanceObject != null)
+            _portraitGuidanceObject.SetActive(isVisible);
+    }
+
+    private void EnsurePortraitGuidance()
+    {
+        if (_portraitGuidanceObject != null || Portrait == null || portraitGuidanceSprite == null)
+            return;
+
+        var portraitRect = Portrait.transform as RectTransform;
+        if (portraitRect == null)
+            return;
+
+        _portraitGuidanceObject = new GameObject("PortraitGuidance", typeof(RectTransform), typeof(Image), typeof(MessageWindowCaretIndicator));
+        _portraitGuidanceObject.transform.SetParent(portraitRect, false);
+
+        var rect = _portraitGuidanceObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 1f);
+        rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.anchoredPosition = portraitGuidanceOffset;
+        rect.sizeDelta = portraitGuidanceSize;
+
+        var image = _portraitGuidanceObject.GetComponent<Image>();
+        image.sprite = portraitGuidanceSprite;
+        image.color = portraitGuidanceColor;
+        image.raycastTarget = false;
+        _portraitGuidanceObject.SetActive(false);
     }
 
     #endregion

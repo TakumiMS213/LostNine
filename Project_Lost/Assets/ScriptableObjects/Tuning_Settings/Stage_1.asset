@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2db6ca3f045c745ec8612dc14004a3de, type: 3}
   m_Name: Stage_1
   m_EditorClassIdentifier: 
-  targetTolerance: 1
+  targetTolerance: 3
   isMovingTarget: 0
   targetMoveSpeed: 0.8
   leftTargetPosition: {x: 0, y: 0}
@@ -28,7 +28,7 @@ MonoBehaviour:
   ngZonePenaltyRate: 2
   penaltyRecoverySpeed: 1
   overheatThreshold: 5
-  ngZoneSize: {x: 150, y: 150}
-  targetSafeMargin: 200
+  ngZoneSize: {x: 80, y: 80}
+  targetSafeMargin: 100
   syncThresholdForStability: 0.8
   stabilityDecayRate: 0.2

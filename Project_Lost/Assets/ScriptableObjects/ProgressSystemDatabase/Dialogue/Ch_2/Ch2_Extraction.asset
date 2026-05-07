@@ -46,7 +46,7 @@ MonoBehaviour:
     voiceClip: {fileID: 0}
     backgroundImage: {fileID: 0}
   - speakerName: "\u30EA\u30C9"
-    text: "\u305F\u3060<link=\"Ch2_Data2\">\u5730\u9762\u3092\u9019\u3046</link>\u3060\u3051\u306E\u4EBA\u305F\u3061\u304C\u53EF\u54C0\u305D\u3046...."
+    text: "\u305F\u3060<link=\"Ch2_Data2\">\u5730\u9762\u3092\u9019\u3046</link>\u3060\u3051\u306E\u4EBA\u305F\u3061\u304C\u53EF\u54C0\u305D\u3046\u3060\u3088\u306D...."
     portrait: {fileID: 21300000, guid: 4b3a70eb92a7f7149b01cc2968185357, type: 3}
     portraitPosition: 0
     typingSpeed: 0

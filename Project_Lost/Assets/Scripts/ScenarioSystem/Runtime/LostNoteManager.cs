@@ -105,10 +105,19 @@ namespace ScenarioSystem.Runtime
 
         public void UpdateCharacter(Sprite characterSprite, string characterName, string characterDescription)
         {
+            string normalizedName = characterName ?? string.Empty;
+            string normalizedDescription = characterDescription ?? string.Empty;
+            if (_characterState.CharacterSprite == characterSprite
+                && _characterState.CharacterName == normalizedName
+                && _characterState.CharacterDescription == normalizedDescription)
+            {
+                return;
+            }
+
             _characterState = new LostNoteCharacterState(
                 characterSprite,
-                characterName ?? string.Empty,
-                characterDescription ?? string.Empty);
+                normalizedName,
+                normalizedDescription);
 
             OnCharacterChanged?.Invoke();
             OnContentUpdated?.Invoke();
@@ -139,6 +148,8 @@ namespace ScenarioSystem.Runtime
 
         private void LoadCharacterForChapter(int chapter, bool notify)
         {
+            var previousState = _characterState;
+
             if (characterDatabase != null && characterDatabase.TryGetByChapter(chapter, out var data))
             {
                 _characterState = new LostNoteCharacterState(
@@ -152,8 +163,15 @@ namespace ScenarioSystem.Runtime
             }
 
             OnCharacterChanged?.Invoke();
-            if (notify)
+            if (notify && !IsSameCharacterState(previousState, _characterState))
                 OnContentUpdated?.Invoke();
+        }
+
+        private static bool IsSameCharacterState(LostNoteCharacterState left, LostNoteCharacterState right)
+        {
+            return left.CharacterSprite == right.CharacterSprite
+                && left.CharacterName == right.CharacterName
+                && left.CharacterDescription == right.CharacterDescription;
         }
 
         private void TrySubscribeProgressManager()

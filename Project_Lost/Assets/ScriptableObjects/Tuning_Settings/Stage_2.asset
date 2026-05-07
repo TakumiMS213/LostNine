@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Stage_2
   m_EditorClassIdentifier: 
   targetTolerance: 3
-  isMovingTarget: 1
+  isMovingTarget: 0
   targetMoveSpeed: 0.8
   leftTargetPosition: {x: 0, y: 0}
   rightTargetPosition: {x: 0, y: 0}
@@ -28,7 +28,7 @@ MonoBehaviour:
   ngZonePenaltyRate: 2
   penaltyRecoverySpeed: 1
   overheatThreshold: 5
-  ngZoneSize: {x: 80, y: 80}
-  targetSafeMargin: 100
+  ngZoneSize: {x: 100, y: 100}
+  targetSafeMargin: 120
   syncThresholdForStability: 0.8
   stabilityDecayRate: 0.2

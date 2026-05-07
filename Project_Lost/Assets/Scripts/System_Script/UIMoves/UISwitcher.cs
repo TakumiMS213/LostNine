@@ -58,6 +58,7 @@ public class UISwitcher : MonoBehaviour
             // Only hide if the panel is registered, active, AND hideOnEsc is enabled
             if (_panels[i].panel != null && _panels[i].panel.activeSelf && _panels[i].hideOnEsc)
             {
+                SystemScript.EscapeQuitHandler.SuppressQuitForCurrentFrame();
                 _panels[i].panel.SetActive(false);
             }
         }

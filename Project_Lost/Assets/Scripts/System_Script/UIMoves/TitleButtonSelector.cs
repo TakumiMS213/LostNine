@@ -67,6 +67,11 @@ public class TitleButtonSelector : MonoBehaviour
         // キャンセル（Esc / G）
         if (isSelected && (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.G)))
         {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                SystemScript.EscapeQuitHandler.SuppressQuitForCurrentFrame();
+            }
+
             Debug.Log("TitleButtonSelector: キャンセル入力検出");
             isSelected = false;
             ClearSelectedHighlights();

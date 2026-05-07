@@ -166,8 +166,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0}
   m_RaycastTarget: 1
@@ -236,8 +236,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 419264763ed514ad0a3ce420d4a0b914, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   choiceButtons:
   - {fileID: 1270441814}
   - {fileID: 919323745}
@@ -292,8 +292,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Material: {fileID: 0}
   m_Color: {r: 0.61834896, g: 0.372686, b: 0.6320754, a: 1}
   m_RaycastTarget: 1
@@ -7935,6 +7935,10 @@ MonoBehaviour:
   Portrait: {fileID: 2036071045}
   unclickableOverlay: {fileID: 22510855}
   unclickableSE: {fileID: 8300000, guid: e383b50e4a74d574bb72c4c9e19c07ce, type: 3}
+  portraitGuidanceSprite: {fileID: 21300000, guid: 9581870bad71d4c08952aebdef723892, type: 3}
+  portraitGuidanceSize: {x: 216, y: 216}
+  portraitGuidanceOffset: {x: 0, y: -40}
+  portraitGuidanceColor: {r: 1, g: 0.92, b: 0, a: 1}
   messageWindowIndexStarter: {fileID: 1257763095}
   useProgressBasedId: 1
   startScenarioId: 
@@ -8675,8 +8679,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 90
-  m_fontSizeBase: 90
+  m_fontSize: 87
+  m_fontSizeBase: 87
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -10398,8 +10402,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 90
-  m_fontSizeBase: 90
+  m_fontSize: 87
+  m_fontSizeBase: 87
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -12606,6 +12610,10 @@ MonoBehaviour:
   dialogueText: {fileID: 68159611}
   windowRoot: {fileID: 1387112744}
   defaultTypingSpeed: 0.05
+  advanceIndicatorSprite: {fileID: 0}
+  advanceIndicatorParent: {fileID: 0}
+  advanceIndicatorSize: {x: 32, y: 32}
+  advanceIndicatorOffset: {x: -44, y: 34}
   enableSkipMode: 1
   skipKey: 55
   skipTypingSpeed: 0.001
@@ -13140,8 +13148,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 90
-  m_fontSizeBase: 90
+  m_fontSize: 87
+  m_fontSizeBase: 87
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18

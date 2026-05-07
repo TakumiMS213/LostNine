@@ -9,7 +9,7 @@ namespace ScenarioSystem.View
     public class LostNoteView : MonoBehaviour
     {
         private const int MaxMemoCount = 3;
-        private const float TitleFontSize = 90f;
+        private const float TitleFontSize = 87f;
         private const float DescriptionFontSize = 70f;
 
         [Header("UI References")]

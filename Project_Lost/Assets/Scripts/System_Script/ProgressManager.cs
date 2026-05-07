@@ -228,6 +228,25 @@ public class ProgressManager : MonoBehaviour
         return !string.IsNullOrEmpty(scenarioId);
     }
 
+    public void StartProgressScenarioInStory(string scenarioId)
+    {
+        string normalizedScenarioId = scenarioId?.Trim();
+        if (string.IsNullOrEmpty(normalizedScenarioId))
+        {
+            Debug.LogWarning("[ProgressManager] Progress scenario ID is empty.");
+            return;
+        }
+
+        _pendingMainScenarioId = null;
+        _pendingStoryScenarioId = normalizedScenarioId;
+        Debug.Log($"[ProgressManager] Queued progress scenario in Story: {normalizedScenarioId}");
+
+        if (SceneTransition.Instance != null)
+            SceneTransition.Instance.TransitionTo(storySceneName);
+        else
+            SceneManager.LoadScene(storySceneName);
+    }
+
     public void StartScenarioFromMainById(string scenarioId)
     {
         string normalizedScenarioId = scenarioId?.Trim();

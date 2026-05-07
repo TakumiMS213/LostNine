@@ -1,9 +1,10 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
-using UnityEngine.SceneManagement;
 
 namespace Teichaku.Core
 {
@@ -68,6 +69,15 @@ namespace Teichaku.Core
         [Header("クリア演出画像")]
         [Tooltip("クリア時に表示する演出画像（UI Image）")]
         [SerializeField] private Image clearImage;
+        [SerializeField] private List<ChapterClearResult> chapterClearResults = new();
+        [SerializeField] private Vector2 resultImageSize = new Vector2(750f, 500f);
+        [SerializeField] private Vector2 resultTextOffset = new Vector2(0f, -330f);
+        [SerializeField] private float resultTextFontSize = 80f;
+        [SerializeField] private TMP_FontAsset resultTextFont;
+        [SerializeField] private Color resultTextColor = Color.white;
+        [SerializeField] private string resultHeaderText = "特定したたなくしもの";
+        [SerializeField] private Vector2 resultHeaderOffset = new Vector2(0f, 330f);
+        [SerializeField] private float resultHeaderFontSizeMultiplier = 1.5f;
 
         [Tooltip("クリア画像の表示時間（秒）")]
         [SerializeField] private float clearImageDisplayDuration = 2f;
@@ -79,6 +89,17 @@ namespace Teichaku.Core
         [SerializeField] private float clearImageFadeOutDuration = 0.3f;
 
         private Vector2 _gridInitialPos;
+        private Image _resultImage;
+        private TextMeshProUGUI _resultText;
+        private TextMeshProUGUI _resultHeaderText;
+
+        [Serializable]
+        private class ChapterClearResult
+        {
+            public int chapter;
+            public Sprite image;
+            public string title;
+        }
 
         private void Awake()
         {
@@ -103,6 +124,8 @@ namespace Teichaku.Core
                 ci.a = 0f;
                 clearImage.color = ci;
             }
+            EnsureResultViews();
+            SetResultAlpha(0f);
         }
 
         /// <summary>
@@ -166,33 +189,48 @@ namespace Teichaku.Core
         /// </summary>
         private IEnumerator ClearSequence()
         {
+            EnsureResultViews();
+            var result = ResolveClearResult();
+
             // クリア演出画像が設定されている場合、表示する
-            if (clearImage != null)
+            if (_resultImage != null && _resultText != null && _resultHeaderText != null && result != null)
             {
                 // フェードイン
-                clearImage.DOFade(1f, clearImageFadeInDuration);
+                _resultImage.sprite = result.image;
+                _resultImage.enabled = result.image != null;
+                _resultHeaderText.text = resultHeaderText;
+                _resultText.text = result.title ?? string.Empty;
+
+                _resultImage.DOFade(1f, clearImageFadeInDuration);
+                _resultHeaderText.DOFade(1f, clearImageFadeInDuration);
+                _resultText.DOFade(1f, clearImageFadeInDuration);
                 yield return new WaitForSeconds(clearImageFadeInDuration);
 
                 // 一定時間表示
                 yield return new WaitForSeconds(clearImageDisplayDuration);
 
                 // フェードアウト
-                clearImage.DOFade(0f, clearImageFadeOutDuration);
+                _resultImage.DOFade(0f, clearImageFadeOutDuration);
+                _resultHeaderText.DOFade(0f, clearImageFadeOutDuration);
+                _resultText.DOFade(0f, clearImageFadeOutDuration);
                 yield return new WaitForSeconds(clearImageFadeOutDuration);
 
-                Debug.Log("[TeichakuFeedback] Clear image sequence completed.");
+                Debug.Log("[TeichakuFeedback] Clear result sequence completed.");
             }
 
             // ProgressをPresentationフェーズに変換
-            if (ProgressManager.Instance != null)
-                ProgressManager.Instance.SetProgress(
-                    ProgressManager.Instance.CurrentChapter, GamePhase.Presentation);
+            var pm = ProgressManager.Instance;
+            if (pm == null)
+            {
+                Debug.LogWarning("[TeichakuFeedback] ProgressManager not found.");
+                yield break;
+            }
 
-            // フェード付きでMainシーンへ戻る
-            if (SceneTransition.Instance != null)
-                SceneTransition.Instance.TransitionTo("Main");
-            else
-                SceneManager.LoadScene("Main");
+            pm.SetProgress(pm.CurrentChapter, GamePhase.Presentation);
+
+            // PresentationはStoryシーンで再生する
+            string scenarioId = $"Ch{pm.CurrentChapter}_Presentation";
+            pm.StartProgressScenarioInStory(scenarioId);
         }
 
         /// <summary>
@@ -264,6 +302,109 @@ namespace Teichaku.Core
             {
                 gridContainer.DOKill();
                 gridContainer.anchoredPosition = _gridInitialPos;
+            }
+        }
+
+        private ChapterClearResult ResolveClearResult()
+        {
+            int chapter = ProgressManager.Instance != null ? ProgressManager.Instance.CurrentChapter : 0;
+            return chapterClearResults?.Find(result => result != null && result.chapter == chapter);
+        }
+
+        private void EnsureResultViews()
+        {
+            if (_resultImage != null && _resultText != null && _resultHeaderText != null)
+                return;
+
+            Transform parent = clearImage != null && clearImage.transform.parent != null
+                ? clearImage.transform.parent
+                : transform;
+
+            if (_resultImage == null)
+            {
+                var imageObject = new GameObject("ClearResultImage", typeof(RectTransform), typeof(Image));
+                imageObject.transform.SetParent(parent, false);
+
+                var rect = imageObject.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = Vector2.zero;
+                rect.sizeDelta = resultImageSize;
+
+                _resultImage = imageObject.GetComponent<Image>();
+                _resultImage.raycastTarget = false;
+                _resultImage.preserveAspect = true;
+            }
+
+            if (_resultText == null)
+            {
+                var textObject = new GameObject("ClearResultText", typeof(RectTransform), typeof(TextMeshProUGUI));
+                textObject.transform.SetParent(parent, false);
+
+                var rect = textObject.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = resultTextOffset;
+                rect.sizeDelta = new Vector2(1200f, 160f);
+
+                _resultText = textObject.GetComponent<TextMeshProUGUI>();
+                _resultText.alignment = TextAlignmentOptions.Center;
+                _resultText.fontSize = resultTextFontSize;
+                if (resultTextFont != null)
+                {
+                    _resultText.font = resultTextFont;
+                }
+                _resultText.color = resultTextColor;
+                _resultText.raycastTarget = false;
+            }
+
+            if (_resultHeaderText == null)
+            {
+                var textObject = new GameObject("ClearResultHeaderText", typeof(RectTransform), typeof(TextMeshProUGUI));
+                textObject.transform.SetParent(parent, false);
+
+                var rect = textObject.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = resultHeaderOffset;
+                rect.sizeDelta = new Vector2(1400f, 180f);
+
+                _resultHeaderText = textObject.GetComponent<TextMeshProUGUI>();
+                _resultHeaderText.alignment = TextAlignmentOptions.Center;
+                _resultHeaderText.fontSize = resultTextFontSize * resultHeaderFontSizeMultiplier;
+                if (resultTextFont != null)
+                {
+                    _resultHeaderText.font = resultTextFont;
+                }
+                _resultHeaderText.color = resultTextColor;
+                _resultHeaderText.raycastTarget = false;
+            }
+        }
+
+        private void SetResultAlpha(float alpha)
+        {
+            if (_resultImage != null)
+            {
+                var color = _resultImage.color;
+                color.a = alpha;
+                _resultImage.color = color;
+            }
+
+            if (_resultText != null)
+            {
+                var color = _resultText.color;
+                color.a = alpha;
+                _resultText.color = color;
+            }
+
+            if (_resultHeaderText != null)
+            {
+                var color = _resultHeaderText.color;
+                color.a = alpha;
+                _resultHeaderText.color = color;
             }
         }
     }

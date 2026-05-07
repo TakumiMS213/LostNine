@@ -1819,6 +1819,18 @@ MonoBehaviour:
   clearSE: {fileID: 0}
   failSE: {fileID: 0}
   clearImage: {fileID: 1001468983}
+  chapterClearResults:
+  - chapter: 2
+    image: {fileID: 21300000, guid: d76feaeb45b121a4098c48f3d659cee4, type: 3}
+    title: "\u6CE5\u306E\u4ED8\u3044\u305F\u8449\u3063\u3071"
+  resultImageSize: {x: 750, y: 500}
+  resultTextOffset: {x: 0, y: -330}
+  resultTextFontSize: 80
+  resultTextFont: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  resultTextColor: {r: 1, g: 1, b: 1, a: 1}
+  resultHeaderText: "\u7279\u5B9A\u3057\u305F\u305F\u306A\u304F\u3057\u3082\u306E"
+  resultHeaderOffset: {x: 0, y: 330}
+  resultHeaderFontSizeMultiplier: 1.5
   clearImageDisplayDuration: 2
   clearImageFadeInDuration: 0.3
   clearImageFadeOutDuration: 0.3

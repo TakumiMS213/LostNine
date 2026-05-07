@@ -1,0 +1,1157 @@
+fileFormatVersion: 2
+guid: deccf2da7f7427e4fa3c9720132b228c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5628813350797334047
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_0
+  - first:
+      213: -1022963588945370412
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_1
+  - first:
+      213: -9109296315075258151
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_2
+  - first:
+      213: 8470502683539630416
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_3
+  - first:
+      213: -1330829111675163865
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_4
+  - first:
+      213: 5013747990934441972
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_5
+  - first:
+      213: -5027145677177178597
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_6
+  - first:
+      213: -950794324054817438
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_7
+  - first:
+      213: 7919697328404325103
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_8
+  - first:
+      213: 5703324219927404614
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_9
+  - first:
+      213: -8510014973938957683
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_10
+  - first:
+      213: -403069629317498961
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_11
+  - first:
+      213: -30860202896472594
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_12
+  - first:
+      213: 5630840007242115579
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_13
+  - first:
+      213: -274655011004788615
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_14
+  - first:
+      213: 723792872471205920
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_15
+  - first:
+      213: -7740510200502909009
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_16
+  - first:
+      213: 4214080966003906199
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_17
+  - first:
+      213: -8526354273288601368
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_18
+  - first:
+      213: 5049815482746854633
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_19
+  - first:
+      213: 4531766073611946657
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_20
+  - first:
+      213: 7803134908130061180
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_21
+  - first:
+      213: -4998954059323679762
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_22
+  - first:
+      213: -650703160205582862
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_23
+  - first:
+      213: 1374391009546374058
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_24
+  - first:
+      213: 433217300756084149
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_25
+  - first:
+      213: -8134794974229789931
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_26
+  - first:
+      213: 7488138801351809005
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_27
+  - first:
+      213: 742792933553705392
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_28
+  - first:
+      213: 4439463201081170654
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_29
+  - first:
+      213: 6852609249371489211
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_30
+  - first:
+      213: 1370159291209009921
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_31
+  - first:
+      213: -3615572515339236189
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_32
+  - first:
+      213: -4292868383805547808
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_33
+  - first:
+      213: 3474443061448879125
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_34
+  - first:
+      213: -3449281926277377259
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_35
+  - first:
+      213: -1855348046511057705
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_36
+  - first:
+      213: 1165692655248521430
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_37
+  - first:
+      213: -690962919815373082
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_38
+  - first:
+      213: -3309467952930489424
+    second: SofumeLogo_WhiteTextAlpha_1920x1080_39
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_0
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 389
+        width: 283
+        height: 301
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1650497bef8d1e40800000000000000
+      internalID: 5628813350797334047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_1
+      rect:
+        serializedVersion: 2
+        x: 404
+        y: 665
+        width: 18
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d2a0c62904bdc1f0800000000000000
+      internalID: -1022963588945370412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_2
+      rect:
+        serializedVersion: 2
+        x: 437
+        y: 666
+        width: 18
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d81a2ab347459180800000000000000
+      internalID: -9109296315075258151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_3
+      rect:
+        serializedVersion: 2
+        x: 469
+        y: 689
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0596f51ef454d8570800000000000000
+      internalID: 8470502683539630416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_4
+      rect:
+        serializedVersion: 2
+        x: 469
+        y: 666
+        width: 9
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72b6ad559f1f78de0800000000000000
+      internalID: -1330829111675163865
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_5
+      rect:
+        serializedVersion: 2
+        x: 493
+        y: 666
+        width: 17
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ffc9f8db39649540800000000000000
+      internalID: 5013747990934441972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_6
+      rect:
+        serializedVersion: 2
+        x: 525
+        y: 666
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b16b6bd34adfb3ab0800000000000000
+      internalID: -5027145677177178597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_7
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 666
+        width: 10
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 265414c89991ec2f0800000000000000
+      internalID: -950794324054817438
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_8
+      rect:
+        serializedVersion: 2
+        x: 600
+        y: 666
+        width: 18
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe2662482ca68ed60800000000000000
+      internalID: 7919697328404325103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_9
+      rect:
+        serializedVersion: 2
+        x: 633
+        y: 666
+        width: 15
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 640a7a71927462f40800000000000000
+      internalID: 5703324219927404614
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_10
+      rect:
+        serializedVersion: 2
+        x: 661
+        y: 666
+        width: 13
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d820d1d187a56e980800000000000000
+      internalID: -8510014973938957683
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_11
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 689
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa738c4ce42086af0800000000000000
+      internalID: -403069629317498961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_12
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 666
+        width: 9
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ee5c8a81fcc529ff0800000000000000
+      internalID: -30860202896472594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_13
+      rect:
+        serializedVersion: 2
+        x: 710
+        y: 666
+        width: 12
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf969b23723c42e40800000000000000
+      internalID: 5630840007242115579
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_14
+      rect:
+        serializedVersion: 2
+        x: 736
+        y: 666
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 970574109ba303cf0800000000000000
+      internalID: -274655011004788615
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_15
+      rect:
+        serializedVersion: 2
+        x: 766
+        y: 666
+        width: 13
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0281b9e58cd6b0a00800000000000000
+      internalID: 723792872471205920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_16
+      rect:
+        serializedVersion: 2
+        x: 792
+        y: 666
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa78cbecbfe249490800000000000000
+      internalID: -7740510200502909009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_17
+      rect:
+        serializedVersion: 2
+        x: 844
+        y: 666
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 796d569bf4c6b7a30800000000000000
+      internalID: 4214080966003906199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_18
+      rect:
+        serializedVersion: 2
+        x: 874
+        y: 666
+        width: 13
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e0cf7786fd4ca980800000000000000
+      internalID: -8526354273288601368
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_19
+      rect:
+        serializedVersion: 2
+        x: 919
+        y: 666
+        width: 19
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ecd46e2d6c841640800000000000000
+      internalID: 5049815482746854633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_20
+      rect:
+        serializedVersion: 2
+        x: 951
+        y: 666
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1aa8ececb3114ee30800000000000000
+      internalID: 4531766073611946657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_21
+      rect:
+        serializedVersion: 2
+        x: 982
+        y: 666
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c7bea8d2bdd4a4c60800000000000000
+      internalID: 7803134908130061180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_22
+      rect:
+        serializedVersion: 2
+        x: 1013
+        y: 666
+        width: 18
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eebd385c4c520aab0800000000000000
+      internalID: -4998954059323679762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_23
+      rect:
+        serializedVersion: 2
+        x: 1046
+        y: 666
+        width: 18
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2fdd8b16cec38f6f0800000000000000
+      internalID: -650703160205582862
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_24
+      rect:
+        serializedVersion: 2
+        x: 1078
+        y: 666
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aab80826751d21310800000000000000
+      internalID: 1374391009546374058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_25
+      rect:
+        serializedVersion: 2
+        x: 1110
+        y: 666
+        width: 9
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5b5be1af6d8130600800000000000000
+      internalID: 433217300756084149
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_26
+      rect:
+        serializedVersion: 2
+        x: 1134
+        y: 666
+        width: 17
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 513866822176b1f80800000000000000
+      internalID: -8134794974229789931
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_27
+      rect:
+        serializedVersion: 2
+        x: 1165
+        y: 662
+        width: 17
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de7d463e0963be760800000000000000
+      internalID: 7488138801351809005
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_28
+      rect:
+        serializedVersion: 2
+        x: 1196
+        y: 663
+        width: 17
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b19322dc3eee4a00800000000000000
+      internalID: 742792933553705392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_29
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 500
+        width: 146
+        height: 127
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eda9cd592442c9d30800000000000000
+      internalID: 4439463201081170654
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_30
+      rect:
+        serializedVersion: 2
+        x: 589
+        y: 503
+        width: 144
+        height: 124
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb3085d3ecb591f50800000000000000
+      internalID: 6852609249371489211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_31
+      rect:
+        serializedVersion: 2
+        x: 767
+        y: 503
+        width: 114
+        height: 124
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10bc63ead98c30310800000000000000
+      internalID: 1370159291209009921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_32
+      rect:
+        serializedVersion: 2
+        x: 916
+        y: 501
+        width: 125
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ac0a8314f7e2ddc0800000000000000
+      internalID: -3615572515339236189
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_33
+      rect:
+        serializedVersion: 2
+        x: 1076
+        y: 501
+        width: 144
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ead3c313faac64c0800000000000000
+      internalID: -4292868383805547808
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_34
+      rect:
+        serializedVersion: 2
+        x: 1255
+        y: 503
+        width: 115
+        height: 124
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 51c2bf55e83b73030800000000000000
+      internalID: 3474443061448879125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_35
+      rect:
+        serializedVersion: 2
+        x: 1406
+        y: 503
+        width: 135
+        height: 124
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 513df06fc50b120d0800000000000000
+      internalID: -3449281926277377259
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_36
+      rect:
+        serializedVersion: 2
+        x: 1576
+        y: 503
+        width: 30
+        height: 124
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d45ef028ca7046e0800000000000000
+      internalID: -1855348046511057705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_37
+      rect:
+        serializedVersion: 2
+        x: 1642
+        y: 503
+        width: 167
+        height: 124
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d8be593b4f5d2010800000000000000
+      internalID: 1165692655248521430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_38
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 423
+        width: 1405
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ee1073a2e43966f0800000000000000
+      internalID: -690962919815373082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: SofumeLogo_WhiteTextAlpha_1920x1080_39
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 410
+        width: 1405
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0bbf90e5e686212d0800000000000000
+      internalID: -3309467952930489424
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      SofumeLogo_WhiteTextAlpha_1920x1080_0: 5628813350797334047
+      SofumeLogo_WhiteTextAlpha_1920x1080_1: -1022963588945370412
+      SofumeLogo_WhiteTextAlpha_1920x1080_10: -8510014973938957683
+      SofumeLogo_WhiteTextAlpha_1920x1080_11: -403069629317498961
+      SofumeLogo_WhiteTextAlpha_1920x1080_12: -30860202896472594
+      SofumeLogo_WhiteTextAlpha_1920x1080_13: 5630840007242115579
+      SofumeLogo_WhiteTextAlpha_1920x1080_14: -274655011004788615
+      SofumeLogo_WhiteTextAlpha_1920x1080_15: 723792872471205920
+      SofumeLogo_WhiteTextAlpha_1920x1080_16: -7740510200502909009
+      SofumeLogo_WhiteTextAlpha_1920x1080_17: 4214080966003906199
+      SofumeLogo_WhiteTextAlpha_1920x1080_18: -8526354273288601368
+      SofumeLogo_WhiteTextAlpha_1920x1080_19: 5049815482746854633
+      SofumeLogo_WhiteTextAlpha_1920x1080_2: -9109296315075258151
+      SofumeLogo_WhiteTextAlpha_1920x1080_20: 4531766073611946657
+      SofumeLogo_WhiteTextAlpha_1920x1080_21: 7803134908130061180
+      SofumeLogo_WhiteTextAlpha_1920x1080_22: -4998954059323679762
+      SofumeLogo_WhiteTextAlpha_1920x1080_23: -650703160205582862
+      SofumeLogo_WhiteTextAlpha_1920x1080_24: 1374391009546374058
+      SofumeLogo_WhiteTextAlpha_1920x1080_25: 433217300756084149
+      SofumeLogo_WhiteTextAlpha_1920x1080_26: -8134794974229789931
+      SofumeLogo_WhiteTextAlpha_1920x1080_27: 7488138801351809005
+      SofumeLogo_WhiteTextAlpha_1920x1080_28: 742792933553705392
+      SofumeLogo_WhiteTextAlpha_1920x1080_29: 4439463201081170654
+      SofumeLogo_WhiteTextAlpha_1920x1080_3: 8470502683539630416
+      SofumeLogo_WhiteTextAlpha_1920x1080_30: 6852609249371489211
+      SofumeLogo_WhiteTextAlpha_1920x1080_31: 1370159291209009921
+      SofumeLogo_WhiteTextAlpha_1920x1080_32: -3615572515339236189
+      SofumeLogo_WhiteTextAlpha_1920x1080_33: -4292868383805547808
+      SofumeLogo_WhiteTextAlpha_1920x1080_34: 3474443061448879125
+      SofumeLogo_WhiteTextAlpha_1920x1080_35: -3449281926277377259
+      SofumeLogo_WhiteTextAlpha_1920x1080_36: -1855348046511057705
+      SofumeLogo_WhiteTextAlpha_1920x1080_37: 1165692655248521430
+      SofumeLogo_WhiteTextAlpha_1920x1080_38: -690962919815373082
+      SofumeLogo_WhiteTextAlpha_1920x1080_39: -3309467952930489424
+      SofumeLogo_WhiteTextAlpha_1920x1080_4: -1330829111675163865
+      SofumeLogo_WhiteTextAlpha_1920x1080_5: 5013747990934441972
+      SofumeLogo_WhiteTextAlpha_1920x1080_6: -5027145677177178597
+      SofumeLogo_WhiteTextAlpha_1920x1080_7: -950794324054817438
+      SofumeLogo_WhiteTextAlpha_1920x1080_8: 7919697328404325103
+      SofumeLogo_WhiteTextAlpha_1920x1080_9: 5703324219927404614
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
