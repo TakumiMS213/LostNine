@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Ch1_01
   m_EditorClassIdentifier: 
   keywordId: Data1
-  title: "\u30D0\u30A4\u30AF"
+  title: "\u3010\u30D0\u30A4\u30AF\u3011"
   description: "\u666E\u901A\u306E\u98DF\u3079\u7269\u306F\u98DF\u3079\u306A\u3055\u305D\u3046\u3060\u3088\u306D....\u3002"

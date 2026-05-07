@@ -13,3 +13,5 @@ MonoBehaviour:
   m_Name: ToMemorize
   m_EditorClassIdentifier: 
   sceneName: Memorize
+  useSceneTransition: 1
+  useSimpleFade: 0

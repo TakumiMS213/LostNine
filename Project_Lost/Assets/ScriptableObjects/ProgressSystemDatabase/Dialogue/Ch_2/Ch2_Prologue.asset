@@ -13,10 +13,90 @@ MonoBehaviour:
   m_Name: Ch2_Prologue
   m_EditorClassIdentifier: 
   entries:
-  - speakerName: 
-    text: 
-    portrait: {fileID: -4942336806492926098, guid: 4b3a70eb92a7f7149b01cc2968185357, type: 3}
+  - speakerName: "カチョウ"
+    text: "...さて、こんなところかね。"
+    portrait: {fileID: 21300000, guid: 13979ae4426a346a99d92c1682e2c956, type: 3}
     portraitPosition: 0
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "ヒイラギ"
+    text: "うぅ....むずかしい...."
+    portrait: {fileID: 21300000, guid: a3a23cdd243ef5d4582280f5a9d0c6e1, type: 3}
+    portraitPosition: 2
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "カチョウ"
+    text: "あとは実際にナクシビトを対応できると良いんだが...."
+    portrait: {fileID: 21300000, guid: 3e9209ca9223746229eb325d4a7984f9, type: 3}
+    portraitPosition: 0
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "ヒイラギ"
+    text: "で、でもそんな都合よく現れたり...."
+    portrait: {fileID: 21300000, guid: a3a23cdd243ef5d4582280f5a9d0c6e1, type: 3}
+    portraitPosition: 2
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "リド"
+    text: "あの....「遺失物管理課」はここですか...？"
+    portrait: {fileID: 21300000, guid: 4b3a70eb92a7f7149b01cc2968185357, type: 3}
+    portraitPosition: 0
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "ヒイラギ"
+    text: "するんだ....。"
+    portrait: {fileID: 21300000, guid: f3f65e03f4cbec441b408057920c5ed9, type: 3}
+    portraitPosition: 2
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "カチョウ"
+    text: "....丁度いい。お前がやってみるんだ。"
+    portrait: {fileID: 21300000, guid: 13979ae4426a346a99d92c1682e2c956, type: 3}
+    portraitPosition: 0
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "カチョウ"
+    text: "アタシは裏でガソリンでも飲んでるよ。"
+    portrait: {fileID: 21300000, guid: 13979ae4426a346a99d92c1682e2c956, type: 3}
+    portraitPosition: 0
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "カチョウ"
+    text: "せいぜい頑張りな。"
+    portrait: {fileID: 21300000, guid: 3e9209ca9223746229eb325d4a7984f9, type: 3}
+    portraitPosition: 0
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "ヒイラギ"
+    text: "（うぅ...できるかな...）"
+    portrait: {fileID: 21300000, guid: f3f65e03f4cbec441b408057920c5ed9, type: 3}
+    portraitPosition: 2
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "ヒイラギ"
+    text: "（でも命を助けられた？からにはやるしかない...）"
+    portrait: {fileID: 21300000, guid: a3a23cdd243ef5d4582280f5a9d0c6e1, type: 3}
+    portraitPosition: 2
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}

@@ -6525,6 +6525,10 @@ MonoBehaviour:
   dialogueText: {fileID: 1091481923}
   windowRoot: {fileID: 393266955}
   defaultTypingSpeed: 0.05
+  advanceIndicatorSprite: {fileID: 21300000, guid: 9581870bad71d4c08952aebdef723892, type: 3}
+  advanceIndicatorParent: {fileID: 453135344}
+  advanceIndicatorSize: {x: 32, y: 32}
+  advanceIndicatorOffset: {x: -44, y: 34}
   enableSkipMode: 1
   skipKey: 55
   skipTypingSpeed: 0.001

@@ -56,19 +56,38 @@ namespace ScenarioSystem.View
         /// <summary>
         /// キーワード抽出後、linkID と同名のシナリオを DB から検索して再生する。
         /// </summary>
-        private void HandleKeywordScenarioRequested(string keywordId)
+        private void HandleKeywordScenarioRequested(string keywordId, System.Action onComplete)
         {
-            if (string.IsNullOrEmpty(keywordId)) return;
+            if (string.IsNullOrEmpty(keywordId))
+            {
+                onComplete?.Invoke();
+                return;
+            }
 
             // ダミーキーワードはシナリオを持たない
             if (MessageWindowSystem.Core.KeywordHandler.IsDummyKeyword(keywordId))
             {
                 Debug.Log($"[KeywordView] Dummy keyword '{keywordId}' — no scenario to play.");
+                onComplete?.Invoke();
                 return;
             }
 
             Debug.Log($"[KeywordView] Playing keyword scenario: {keywordId}");
-            MessageWindowFacade.Instance?.StartScenarioById(keywordId);
+            if (MessageWindowFacade.Instance != null)
+            {
+                MessageWindowFacade.Instance.StartScenarioById(keywordId, () =>
+                {
+                    onComplete?.Invoke();
+
+                    var pm = ProgressManager.Instance;
+                    if (pm != null && !pm.AllKeywordsCollected)
+                        MessageWindowFacade.Instance.StartScenarioById($"Ch{pm.CurrentChapter}_Extraction");
+                });
+            }
+            else
+            {
+                onComplete?.Invoke();
+            }
         }
 
         #endregion

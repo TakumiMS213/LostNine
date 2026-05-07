@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d77a5bd30c5e49789c68064f1113d9c, type: 3}
+  m_Name: Ch1_Tuning_6
+  m_EditorClassIdentifier: 
+  text: "\u30DE\u30A6\u30B9\u3092\u4F7F\u3063\u3066\u30D1\u30CD\u30EB\u3092\u306A\u305E\u308B\u3068\u3001\u30D1\u30BA\u30EB\u3092\u89E3\u304F\u3053\u3068\u304C\u3067\u304D\u307E\u3059\u3002"
+  speakerName: System
+  portrait: {fileID: 0}
+  portraitPosition: 0
+  displayDuration: 0

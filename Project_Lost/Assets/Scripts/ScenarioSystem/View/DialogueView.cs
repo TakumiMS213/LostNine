@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using TMPro;
 using ScenarioSystem.Events;
 using ScenarioSystem.Model.Actions;
@@ -24,10 +26,19 @@ namespace ScenarioSystem.View
         [Header("Typing Settings")]
         [SerializeField] private float defaultTypingSpeed = 0.05f;
 
+        [Header("Advance Indicator")]
+        [SerializeField] private Sprite advanceIndicatorSprite;
+        [SerializeField] private RectTransform advanceIndicatorParent;
+        [SerializeField] private Vector2 advanceIndicatorSize = new Vector2(32f, 32f);
+        [SerializeField] private Vector2 advanceIndicatorOffset = new Vector2(-44f, 34f);
+
         [Header("Skip Mode")]
         [SerializeField] private bool enableSkipMode = true;
         [SerializeField] private Key skipKey = Key.LeftCtrl;
         [SerializeField] private float skipTypingSpeed = 0.001f;
+        [SerializeField] private bool enableAutoAdvance = true;
+        [SerializeField, Min(0.01f)] private float autoAdvanceInterval = 0.06f;
+        [SerializeField, Min(0f)] private float autoAdvanceInitialDelay = 0.08f;
 
         [Header("Keyword Integration")]
         [Tooltip("キーワードクリック時に advance をブロックするための参照。")]
@@ -40,6 +51,9 @@ namespace ScenarioSystem.View
         private Coroutine _typingCoroutine;
         private bool _isTyping;
         private string _currentFullText;
+        private bool _wasSkipHeld;
+        private float _nextAutoAdvanceTime;
+        private GameObject _advanceIndicatorObject;
 
         #endregion
 
@@ -50,18 +64,79 @@ namespace ScenarioSystem.View
 
         #endregion
 
+        #region Setup
+
+        public void Configure(TMP_Text text, GameObject root, float typingSpeed = 0.05f)
+        {
+            dialogueText = text;
+            windowRoot = root;
+            defaultTypingSpeed = typingSpeed;
+            keywordHandler = null;
+            EnsureAdvanceIndicator();
+        }
+
+        #endregion
+
         #region Unity Lifecycle
 
         private void OnEnable()
         {
             ScenarioEventBus.OnDialogueRequested += HandleDialogue;
             ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibility;
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        private void Start()
+        {
+            EnsureAdvanceIndicator();
         }
 
         private void OnDisable()
         {
             ScenarioEventBus.OnDialogueRequested -= HandleDialogue;
             ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibility;
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            ResetAutoAdvanceState();
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus)
+                ResetAutoAdvanceState();
+        }
+
+        private void OnApplicationPause(bool pauseStatus)
+        {
+            if (pauseStatus)
+                ResetAutoAdvanceState();
+        }
+
+        private void Update()
+        {
+            if (!enableSkipMode || !enableAutoAdvance)
+                return;
+
+            bool skipHeld = IsSkipHeld();
+            if (!skipHeld)
+            {
+                _wasSkipHeld = false;
+                return;
+            }
+
+            if (!_wasSkipHeld)
+            {
+                _wasSkipHeld = true;
+                _nextAutoAdvanceTime = Time.unscaledTime + autoAdvanceInitialDelay;
+                return;
+            }
+
+            if (Time.unscaledTime < _nextAutoAdvanceTime)
+                return;
+
+            _nextAutoAdvanceTime = Time.unscaledTime + autoAdvanceInterval;
+
+            if (windowRoot == null || windowRoot.activeInHierarchy)
+                OnUserInput();
         }
 
         #endregion
@@ -109,6 +184,14 @@ namespace ScenarioSystem.View
         {
             if (windowRoot != null)
                 windowRoot.SetActive(visible);
+
+            if (!visible)
+                ResetAutoAdvanceState();
+        }
+
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ResetAutoAdvanceState();
         }
 
         #endregion
@@ -125,7 +208,7 @@ namespace ScenarioSystem.View
             int total = dialogueText.textInfo.characterCount;
             for (int i = 0; i <= total; i++)
             {
-                float step = (enableSkipMode && Keyboard.current?[skipKey].isPressed == true)
+                float step = (enableSkipMode && IsSkipHeld())
                     ? skipTypingSpeed
                     : speed;
 
@@ -154,6 +237,67 @@ namespace ScenarioSystem.View
             _isTyping = false;
             _typingCoroutine = null;
             ScenarioEventBus.RaiseTypingCompleted();
+        }
+
+        private bool IsSkipHeld()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null)
+                return false;
+
+            if (IsControlSkipKey())
+            {
+                bool inputSystemHeld = keyboard.leftCtrlKey.isPressed || keyboard.rightCtrlKey.isPressed;
+#if ENABLE_LEGACY_INPUT_MANAGER
+                bool legacyHeld = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+                return inputSystemHeld && legacyHeld;
+#else
+                return inputSystemHeld;
+#endif
+            }
+
+            var keyControl = keyboard[skipKey];
+            return keyControl != null && keyControl.isPressed;
+        }
+
+        private bool IsControlSkipKey()
+        {
+            return skipKey == Key.LeftCtrl || skipKey == Key.RightCtrl;
+        }
+
+        private void ResetAutoAdvanceState()
+        {
+            _wasSkipHeld = false;
+            _nextAutoAdvanceTime = 0f;
+        }
+
+        private void EnsureAdvanceIndicator()
+        {
+            var parent = advanceIndicatorParent != null
+                ? advanceIndicatorParent
+                : windowRoot != null
+                    ? windowRoot.transform as RectTransform
+                    : null;
+
+            if (advanceIndicatorSprite == null || parent == null || _advanceIndicatorObject != null)
+                return;
+
+            _advanceIndicatorObject = new GameObject("AdvanceIndicator");
+            _advanceIndicatorObject.transform.SetParent(parent, false);
+
+            var rect = _advanceIndicatorObject.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(1f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = advanceIndicatorSize;
+            rect.anchoredPosition = advanceIndicatorOffset;
+
+            var image = _advanceIndicatorObject.AddComponent<Image>();
+            image.sprite = advanceIndicatorSprite;
+            image.raycastTarget = false;
+            image.preserveAspect = true;
+
+            _advanceIndicatorObject.AddComponent<MessageWindowCaretIndicator>();
         }
 
         #endregion

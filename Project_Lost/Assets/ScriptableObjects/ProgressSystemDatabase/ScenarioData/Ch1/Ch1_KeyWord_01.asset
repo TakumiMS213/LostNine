@@ -17,5 +17,5 @@ MonoBehaviour:
   actions:
   - {fileID: 11400000, guid: 83685c137fb2b4e4ca6ae170849a7334, type: 2}
   - {fileID: 11400000, guid: ea2bf58f179cdcd4eba2c93022f9d308, type: 2}
-  nextScenario: {fileID: 11400000, guid: e3d009f8471c38947a264b7024485593, type: 2}
+  nextScenario: {fileID: 0}
   loop: 0

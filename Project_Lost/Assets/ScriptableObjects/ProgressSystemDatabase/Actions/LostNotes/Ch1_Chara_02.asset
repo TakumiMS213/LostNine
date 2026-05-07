@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3f4a5b6c7d849e0f1a2b3c4d5e6f7a8, type: 3}
   m_Name: Ch1_Chara_02
   m_EditorClassIdentifier: 
-  characterSprite: {fileID: 0}
+  characterSprite: {fileID: 21300000, guid: 114fb5c50502e4f64b51ded786bf42cf, type: 3}
   characterName: "NAME\uFF1A\u30EA\u30C9"
-  characterDescription: 
+  characterDescription: "\u30EF\u30BF\u30EA\u30C9\u30EA\u306E\u3088\u3046\u306A\u5C11\u5E74\n\u3061\u3087\u3063\u3068\u76EE\u304C\u6016\u3044\u304B\u3082..."

@@ -50,7 +50,7 @@ namespace MessageWindowSystem.Core
         public event Action<string> OnKeywordExtracted;
 
         /// <summary>Requests the manager to play a keyword scenario by ID.</summary>
-        public event Action<string> OnKeywordScenarioRequested;
+        public event Action<string, Action> OnKeywordScenarioRequested;
 
         // Removed OnKeywordInteractionComplete
 
@@ -281,27 +281,10 @@ namespace MessageWindowSystem.Core
             OnKeywordClicked?.Invoke(linkID);
             ClueManager.Instance?.ProcessKeywordClick(linkID);
 
-            bool thresholdReachedThisTime = false;
+            bool shouldAddProgressAfterScenario = false;
             if (!IsDummyKeyword(linkID))
             {
-                var pm = ProgressManager.Instance;
-                if (pm != null)
-                {
-                    int beforeProgress = pm.CurrentKeywordProgress;
-                    bool added = pm.AddKeyword(linkID);
-                    
-                    if (added)
-                    {
-                        OnKeywordExtracted?.Invoke(linkID);
-
-                        // If the progress just hit the threshold, GameFlowDirector will take over the sequence.
-                        // We must NOT play the individual keyword scenario, otherwise they collide.
-                        if (pm.CurrentKeywordProgress >= pm.KeywordThreshold && beforeProgress < pm.KeywordThreshold)
-                        {
-                            thresholdReachedThisTime = true;
-                        }
-                    }
-                }
+                shouldAddProgressAfterScenario = ProgressManager.Instance != null;
             }
             else
             {
@@ -313,11 +296,32 @@ namespace MessageWindowSystem.Core
             _isHoveringLink = false;
             CursorManager.Instance?.ResetToDefault();
 
-            // Only request individual scenario if the main sequence override didn't trigger
-            if (!thresholdReachedThisTime)
+            if (shouldAddProgressAfterScenario)
             {
-                OnKeywordScenarioRequested?.Invoke(linkID);
+                var handler = OnKeywordScenarioRequested;
+                if (handler != null)
+                {
+                    handler.Invoke(linkID, () =>
+                    {
+                        if (TryAddKeywordProgress(linkID))
+                            OnKeywordExtracted?.Invoke(linkID);
+                    });
+                }
+                else if (TryAddKeywordProgress(linkID))
+                {
+                    OnKeywordExtracted?.Invoke(linkID);
+                }
             }
+            else
+            {
+                OnKeywordScenarioRequested?.Invoke(linkID, null);
+            }
+        }
+
+        private bool TryAddKeywordProgress(string linkID)
+        {
+            var pm = ProgressManager.Instance;
+            return pm != null && pm.AddKeyword(linkID);
         }
 
         #endregion

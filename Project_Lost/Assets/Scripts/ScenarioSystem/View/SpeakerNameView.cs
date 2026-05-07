@@ -34,6 +34,20 @@ namespace ScenarioSystem.View
 
         #endregion
 
+        #region Setup
+
+        public void Configure(TMP_Text text, bool animate = true)
+        {
+            speakerNameText = text;
+            animateName = animate;
+            if (speakerNameText == null) return;
+
+            _originalAnchored = speakerNameText.rectTransform.anchoredPosition;
+            _originalCaptured = true;
+        }
+
+        #endregion
+
         #region Unity Lifecycle
 
         private void Awake()

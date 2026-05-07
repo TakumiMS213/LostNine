@@ -9,12 +9,31 @@ namespace System_Script.Flow
     {
         [Tooltip("Name of the scene to load.")]
         public string sceneName;
+        [Tooltip("Use SceneTransition if one exists in the scene.")]
+        public bool useSceneTransition = true;
+        [Tooltip("Use the simple black fade instead of labeled MultiEasing transitions.")]
+        public bool useSimpleFade;
 
         public override async void Execute(GameFlowDirector director)
         {
             if (!string.IsNullOrEmpty(sceneName))
             {
-                Debug.Log($"[SceneLoadStep] Loading scene: {sceneName}");
+                if (useSceneTransition && global::SceneTransition.Instance != null)
+                {
+                    Debug.Log($"[SceneLoadStep] Transitioning to scene: {sceneName}");
+                    if (useSimpleFade)
+                    {
+                        global::SceneTransition.Instance.TransitionToSimple(sceneName);
+                    }
+                    else
+                    {
+                        global::SceneTransition.Instance.TransitionTo(sceneName);
+                    }
+
+                    return;
+                }
+
+                Debug.Log($"[SceneLoadStep] Loading scene directly: {sceneName}");
                 
                 // Using SceneManager directly. could use UniTask's LoadSceneAsync for await support.
                 await SceneManager.LoadSceneAsync(sceneName).ToUniTask();

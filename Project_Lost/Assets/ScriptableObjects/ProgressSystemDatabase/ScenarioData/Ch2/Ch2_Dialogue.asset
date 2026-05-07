@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 255a7499b43a740c38b9715c41cd038a, type: 3}
+  m_Name: Ch2_Dialogue
+  m_EditorClassIdentifier: 
+  scenarioId: Ch2_Dialogue
+  showMainWindow: 1
+  actions:
+  - {fileID: 11400000, guid: f146ef37397974dce8fe39bb05bc5d0a, type: 2}
+  - {fileID: 11400000, guid: 96f300603b9634d519eb523a12a3649f, type: 2}
+  - {fileID: 11400000, guid: 597149dd444d40fbb5b98c9aa9fbcbab, type: 2}
+  - {fileID: 11400000, guid: b2015826a2bc54834a2a1f0904f1a0de, type: 2}
+  - {fileID: 11400000, guid: a7f0843314d2109499fc7d7b9f5f1c54, type: 2}
+  nextScenario: {fileID: 0}
+  loop: 0

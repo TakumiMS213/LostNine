@@ -9935,6 +9935,9 @@ MonoBehaviour:
   - targetChapter: 1
     targetPhase: 2
     sequence: {fileID: 11400000, guid: cad9efc2b74464f01b7a0711246e347e, type: 2}
+  - targetChapter: 2
+    targetPhase: 2
+    sequence: {fileID: 11400000, guid: 452c461ba49e747f69f04c9220ce0970, type: 2}
 --- !u!4 &1483384232
 Transform:
   m_ObjectHideFlags: 0
@@ -10847,6 +10850,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1709242807}
   - component: {fileID: 1709242806}
+  - component: {fileID: 1889242806}
   m_Layer: 0
   m_Name: MoveFilms
   m_TagString: Untagged
@@ -10864,8 +10868,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 765fcade7516e8d49823f5604504fea7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   label: FadeIn
   targets:
   - {fileID: 424732641}
@@ -11811,6 +11815,40 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1889242806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1709242805}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 765fcade7516e8d49823f5604504fea7, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  label: FadeOut
+  targets:
+  - {fileID: 424732641}
+  - {fileID: 1056684718}
+  - {fileID: 146289549}
+  - {fileID: 1963014591}
+  - {fileID: 1413379670}
+  - {fileID: 1331639625}
+  - {fileID: 1330008146}
+  - {fileID: 1048830885}
+  - {fileID: 1601736772}
+  - {fileID: 708134278}
+  - {fileID: 2020681911}
+  - {fileID: 688456300}
+  - {fileID: 159357180}
+  - {fileID: 1475390667}
+  enableRepeat: 0
+  repeatDelay: 1.15
+  repeatCount: 1
+  seSource: {fileID: 1731320824}
+  seClip: {fileID: 8300000, guid: 6f6d12120e8b971409ca370cc1490d75, type: 3}
+  totalDuration: 1.2
 --- !u!1 &1905180025
 GameObject:
   m_ObjectHideFlags: 0
@@ -12571,6 +12609,9 @@ MonoBehaviour:
   enableSkipMode: 1
   skipKey: 55
   skipTypingSpeed: 0.001
+  enableAutoAdvance: 1
+  autoAdvanceInterval: 0.06
+  autoAdvanceInitialDelay: 0.08
   keywordHandler: {fileID: 68159617}
 --- !u!1 &2020681911
 GameObject:
@@ -13564,6 +13605,55 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   keywordHandler: {fileID: 68159617}
   keyWordDatabase: {fileID: 11400000, guid: 0f7ab7d5fa0f4e4f91858d10a88f0fe0, type: 2}
+--- !u!1 &2109000020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2109000022}
+  - component: {fileID: 2109000021}
+  m_Layer: 0
+  m_Name: SceneTransition
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2109000021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2109000020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f22449c0d4ca7740ad14d76e69762f3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  fadeOverlay: {fileID: 0}
+  fadeDuration: 0.5
+  fadeColor: {r: 0, g: 0, b: 0, a: 1}
+  fadeOutLabel: FadeOut
+  fadeInLabel: FadeIn
+--- !u!4 &2109000022
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2109000020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2109000101
 GameObject:
   m_ObjectHideFlags: 0
@@ -13725,3 +13815,4 @@ SceneRoots:
   - {fileID: 905247421}
   - {fileID: 2109000002}
   - {fileID: 2109000012}
+  - {fileID: 2109000022}
