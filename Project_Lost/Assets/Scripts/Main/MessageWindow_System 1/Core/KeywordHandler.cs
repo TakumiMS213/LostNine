@@ -285,6 +285,9 @@ namespace MessageWindowSystem.Core
             if (!IsDummyKeyword(linkID))
             {
                 shouldAddProgressAfterScenario = ProgressManager.Instance != null;
+
+                // 記憶の欠片システムへキーワード取得を通知（キーワードごとに1個ずつ生成）
+                MemoryFragmentSystem.Instance?.AddFragmentForKeyword(linkID);
             }
             else
             {

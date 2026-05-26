@@ -319,6 +319,10 @@ MonoBehaviour:
   targetSizeDelta: {x: 0, y: 0}
   sizeDuration: 0.6
   sizeEase: 27
+  enableRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0}
+  rotateDuration: 0.6
+  rotateEase: 27
 --- !u!114 &99270656
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -648,6 +652,50 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1920, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &249718540
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 249718542}
+  - component: {fileID: 249718541}
+  m_Layer: 0
+  m_Name: AudioProxy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &249718541
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249718540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a596b339e8645bc47970f68065257af4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &249718542
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249718540}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.3544693, y: 2.8576698, z: 90}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &315569192
 GameObject:
   m_ObjectHideFlags: 0
@@ -757,9 +805,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speakerNameText: {fileID: 99270656}
   dialogueText: {fileID: 1259076805}
-  portraitImage: {fileID: 1064006425}
   windowRoot: {fileID: 0}
+  backgroundStillImage: {fileID: 0}
+  objectsToHideOnStill: []
+  portraitImage: {fileID: 1064006425}
+  portraitLeftAnchor: {fileID: 0}
+  portraitCenterAnchor: {fileID: 0}
+  portraitRightAnchor: {fileID: 0}
+  ghostPortraitImage: {fileID: 0}
+  enableGhostPortrait: 1
+  ghostPortraitAlpha: 0.3
   typingSpeed: 0.05
+  enableSkipMode: 1
+  skipKey: 55
+  skipTypingSpeed: 0.001
   animateName: 1
   nameSlideDistance: 1920
   nameSlideDuration: 0.35
@@ -768,11 +827,11 @@ MonoBehaviour:
   portraitJumpHeight: 10
   portraitJumpDuration: 0.3
   portraitJumpEase: 30
-  enableSkipMode: 1
-  skipKey: 55
-  skipTypingSpeed: 0.001
-  comuStartandEndManager: {fileID: 0}
-  chargeDuration: 1
+  choiceButtons: []
+  choiceButtonTexts: []
+  scenarioDatabase: {fileID: 0}
+  keywordHandler: {fileID: 0}
+  showDebugGUI: 0
 --- !u!114 &466528017
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -801,9 +860,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flashOverlay: {fileID: 205090628}
   fadeOverlay: {fileID: 0}
+  centerImage: {fileID: 0}
   seAudioSource: {fileID: 0}
   bgmAudioSource: {fileID: 0}
-  centerImage: {fileID: 0}
   chargeSE: {fileID: 0}
   developCompleteSE: {fileID: 0}
   developShakeStrength: 3
@@ -840,8 +899,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   comuStartUI: {fileID: 1631939338}
   comuEndUI: {fileID: 1630679692}
-  Desk: {fileID: 0}
-  fadeFlame: {fileID: 0}
+  desk: {fileID: 0}
+  messageWindow: {fileID: 0}
+  messageWindowBackGround: {fileID: 0}
+  NamePlate: {fileID: 0}
+  NamePlateBackGround: {fileID: 0}
+  fadeFrame: {fileID: 0}
+  Memorizer: {fileID: 0}
+  LostNote: {fileID: 0}
+  ToggleEffect: {fileID: 0}
+  ObjectiveDisplay: {fileID: 0}
+  Portrait: {fileID: 0}
+  unclickableOverlay: {fileID: 0}
+  unclickableSE: {fileID: 0}
+  messageWindowIndexStarter: {fileID: 0}
+  useProgressBasedId: 1
+  startScenarioId: 
+  endScenarioId: 
 --- !u!1 &491478280
 GameObject:
   m_ObjectHideFlags: 0
@@ -1444,6 +1518,10 @@ MonoBehaviour:
   targetSizeDelta: {x: 0, y: 0}
   sizeDuration: 0.6
   sizeEase: 27
+  enableRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0}
+  rotateDuration: 0.6
+  rotateEase: 27
 --- !u!114 &1064006427
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1626,6 +1704,10 @@ MonoBehaviour:
   targetSizeDelta: {x: 705, y: 300}
   sizeDuration: 0.6
   sizeEase: 27
+  enableRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0}
+  rotateDuration: 0.6
+  rotateEase: 27
 --- !u!222 &1259076807
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1885,6 +1967,10 @@ MonoBehaviour:
   targetSizeDelta: {x: 1920, y: 300}
   sizeDuration: 0.6
   sizeEase: 11
+  enableRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0}
+  rotateDuration: 0.6
+  rotateEase: 27
 --- !u!114 &1630679694
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1990,6 +2076,10 @@ MonoBehaviour:
   targetSizeDelta: {x: 1920, y: 300}
   sizeDuration: 0.6
   sizeEase: 11
+  enableRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0}
+  rotateDuration: 0.6
+  rotateEase: 27
 --- !u!114 &1631939340
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2114,6 +2204,10 @@ MonoBehaviour:
   targetSizeDelta: {x: 0, y: 0}
   sizeDuration: 0.6
   sizeEase: 27
+  enableRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0}
+  rotateDuration: 0.6
+  rotateEase: 27
 --- !u!114 &1747861106
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2220,6 +2314,10 @@ MonoBehaviour:
   targetSizeDelta: {x: 705, y: 300}
   sizeDuration: 0.6
   sizeEase: 27
+  enableRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0}
+  rotateDuration: 0.6
+  rotateEase: 27
 --- !u!114 &1975278497
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2382,6 +2480,10 @@ MonoBehaviour:
   targetSizeDelta: {x: 705, y: 300}
   sizeDuration: 0.6
   sizeEase: 27
+  enableRotation: 0
+  targetRotation: {x: 0, y: 0, z: 0}
+  rotateDuration: 0.6
+  rotateEase: 27
 --- !u!114 &2086077045
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2542,3 +2644,4 @@ SceneRoots:
   - {fileID: 126677559}
   - {fileID: 508678602}
   - {fileID: 1344135163}
+  - {fileID: 249718542}

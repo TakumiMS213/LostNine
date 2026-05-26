@@ -239,15 +239,17 @@ namespace Tuning.Core
 
             if (leftTarget != null)
             {
-                float x = Mathf.Sin(time) * 50f + _currentSettings.leftTargetPosition.x;
-                float y = Mathf.Cos(time * 0.7f) * 50f + _currentSettings.leftTargetPosition.y;
+                float amp = _currentSettings.targetMoveAmplitude;
+                float x = Mathf.Sin(time) * amp + _currentSettings.leftTargetPosition.x;
+                float y = Mathf.Cos(time * 0.7f) * amp + _currentSettings.leftTargetPosition.y;
                 leftTarget.anchoredPosition = new Vector2(x, y);
             }
 
             if (rightTarget != null)
             {
-                float x = Mathf.Cos(time * 0.8f) * 50f + _currentSettings.rightTargetPosition.x;
-                float y = Mathf.Sin(time * 1.1f) * 50f + _currentSettings.rightTargetPosition.y;
+                float amp = _currentSettings.targetMoveAmplitude;
+                float x = Mathf.Cos(time * 0.8f) * amp + _currentSettings.rightTargetPosition.x;
+                float y = Mathf.Sin(time * 1.1f) * amp + _currentSettings.rightTargetPosition.y;
                 rightTarget.anchoredPosition = new Vector2(x, y);
             }
         }
@@ -284,8 +286,8 @@ namespace Tuning.Core
             _totalSync = _leftSync * _rightSync;
 
             // Check target entry for feedback
-            bool leftNowInTarget = _leftSync > 0.9f;
-            bool rightNowInTarget = _rightSync > 0.9f;
+            bool leftNowInTarget = _leftSync > _currentSettings.inTargetFeedbackThreshold;
+            bool rightNowInTarget = _rightSync > _currentSettings.inTargetFeedbackThreshold;
 
             if (leftNowInTarget && !_leftInTarget)
                 feedback?.OnPointInTarget(0);
@@ -327,7 +329,7 @@ namespace Tuning.Core
             else
             {
                 _currentInertia = Mathf.Lerp(_currentInertia, _currentSettings.baseInertia, _currentSettings.penaltyRecoverySpeed * Time.deltaTime);
-                _overheatTimer = Mathf.Max(0f, _overheatTimer - Time.deltaTime * 0.5f);
+                _overheatTimer = Mathf.Max(0f, _overheatTimer - Time.deltaTime * _currentSettings.overheatCooldownRate);
             }
 
             // タイマーUI更新
@@ -451,7 +453,7 @@ namespace Tuning.Core
         {
             if (_totalSync >= _currentSettings.syncThresholdForStability)
             {
-                _stabilityGauge += _totalSync * Time.deltaTime;
+                _stabilityGauge += _totalSync * _currentSettings.stabilityGainRate * Time.deltaTime;
             }
             else
             {
@@ -489,8 +491,8 @@ namespace Tuning.Core
 
         private System.Collections.IEnumerator RestartSequence()
         {
-            // 2秒待機
-            yield return new WaitForSeconds(2f);
+            // ゲームオーバー後待機（SOで設定可能）
+            yield return new WaitForSeconds(_currentSettings.gameOverRestartDelay);
 
             // 黒フェードアウト
             bool fadeDone = false;

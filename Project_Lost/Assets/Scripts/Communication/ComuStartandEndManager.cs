@@ -31,6 +31,12 @@ public class ComuStartandEndManager : MonoBehaviour
     [SerializeField] private GameObject ToggleEffect;
     [SerializeField] private GameObject ObjectiveDisplay;
 
+    [Header("Background Animations")]
+    [Tooltip("会話終了時に Play() を起動するテキスト背景 GameObject")]
+    [SerializeField] private GameObject backGround_Text;
+    [Tooltip("会話終了時に Play() を起動するスピーカー名背景 GameObject")]
+    [SerializeField] private GameObject backGround_SpeakerName;
+
     [SerializeField] private GameObject Portrait;
     [Tooltip("Overlay displayed when portrait is unclickable in scenario")]
     [SerializeField] private GameObject unclickableOverlay;
@@ -86,6 +92,53 @@ public class ComuStartandEndManager : MonoBehaviour
             _originalFontSize = fontSizeTarget.fontSize;
         if (portraitSpriteTarget != null)
             _originalSprite = portraitSpriteTarget.sprite;
+    }
+
+    // ── Unity Lifecycle ──────────────────────────────────────────
+
+    private bool _subscribedToThreshold = false;
+
+    private void OnEnable()
+    {
+        SubscribeThresholdEvent();
+    }
+
+    private void Start()
+    {
+        // OnEnable 時に ProgressManager.Instance がまだ null だった場合のフォールバック
+        SubscribeThresholdEvent();
+
+        // シーン再読込時にすでに達成済みなら即有効化
+        if (ProgressManager.Instance != null && ProgressManager.Instance.AllKeywordsCollected)
+            ActivateMemorizer();
+    }
+
+    private void OnDisable()
+    {
+        if (ProgressManager.Instance != null && _subscribedToThreshold)
+        {
+            ProgressManager.Instance.OnKeywordThresholdReached -= ActivateMemorizer;
+            _subscribedToThreshold = false;
+        }
+    }
+
+    private void SubscribeThresholdEvent()
+    {
+        if (_subscribedToThreshold) return;
+        if (ProgressManager.Instance == null) return;
+
+        ProgressManager.Instance.OnKeywordThresholdReached += ActivateMemorizer;
+        _subscribedToThreshold = true;
+    }
+
+    /// <summary>キーワードを3つ発見した時点でメモライザーを有効化する。</summary>
+    private void ActivateMemorizer()
+    {
+        if (Memorizer != null)
+        {
+            Debug.Log("[ComuStartandEndManager] ActivateMemorizer: Memorizer.SetActive(true)");
+            Memorizer.SetActive(true);
+        }
     }
 
     public void ComuStart(string scenarioId) => StartComuFlow(scenarioId).Forget();
@@ -428,6 +481,10 @@ public class ComuStartandEndManager : MonoBehaviour
         _logic.IsAnimating = false;
         SetPortraitInteractable(true);
 
+        // 会話終了後、背景パネルの退場アニメーションを起動
+        PlayWithChildren(backGround_Text);
+        PlayWithChildren(backGround_SpeakerName);
+
         if (!string.IsNullOrEmpty(Endid))
             messageWindowIndexStarter.StartScenarioById(Endid);
     }
@@ -453,6 +510,19 @@ public class ComuStartandEndManager : MonoBehaviour
             if (move.isMoved)
                 move.SetToOriginal();
         }
+    }
+
+    /// <summary>
+    /// 対象 GameObject 自身と、すべての子孫にある MoveOnClickandReturn の Play() を呼ぶ。
+    /// GetComponentsInChildren は自身も含むため、GetComponents との二重呼び出しは不要。
+    /// </summary>
+    private static void PlayWithChildren(GameObject root)
+    {
+        if (root == null) return;
+
+        // includeInactive: true で非表示オブジェクトも対象（自身も含む）
+        foreach (var moc in root.GetComponentsInChildren<MoveOnClickandReturn>(includeInactive: true))
+            moc.Play();
     }
 
     public void SetPortraitInteractable(bool interactable, bool updateOverlay = false)
