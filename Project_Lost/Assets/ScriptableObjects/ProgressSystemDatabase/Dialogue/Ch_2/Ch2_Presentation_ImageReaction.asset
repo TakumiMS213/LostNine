@@ -13,27 +13,27 @@ MonoBehaviour:
   m_Name: Ch2_Presentation_ImageReaction
   m_EditorClassIdentifier: 
   entries:
-  - speakerName: "\u30D2\u30A4\u30E9\u30AE"
-    text: "\u300C\u6CE5\u306E\u4ED8\u3044\u305F\u8449\u3063\u3071\u300D....\u3067\u3059\u304B\uFF1F"
-    portrait: {fileID: 21300000, guid: e737cd1ec1da2df4190bdc1966909c8f, type: 3}
-    portraitPosition: 2
-    typingSpeed: 0
-    nameSlideDirection: 0
-    voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}
   - speakerName: "\u30EA\u30C9"
-    text: "...\u3048\uFF1F"
-    portrait: {fileID: 21300000, guid: 4b3a70eb92a7f7149b01cc2968185357, type: 3}
-    portraitPosition: 0
+    text: "\u4F55\u3060\u3044\u3053\u308C\u306F\u3002\u30DC\u30AF\u306B\u3053\u3093\u306A\u6C5A\u3044\u30B4\u30DF\u3092\u8FD4\u3059\u306A\u3093\u3066\u5931\u793C\u3058\u3083\u306A\u3044\u304B\uFF01"
+    portrait: {fileID: 21300000, guid: d81d794e3f1b3064db4509b0df92be92, type: 3}
+    portraitPosition: 1
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}
+    backgroundImage: {fileID: 21300000, guid: 46ba3d3eeddf56c4a98e1affe0a01baa, type: 3}
   - speakerName: "\u30EA\u30C9"
-    text: "\u6CE5\u306E\u4ED8\u3044\u305F\u8449\u3063\u3071....\uFF1F\u306A\u306B\u305D\u308C....?"
-    portrait: {fileID: 21300000, guid: 4b3a70eb92a7f7149b01cc2968185357, type: 3}
-    portraitPosition: 0
+    text: "\u30DC\u30AF\u306F\u9AD8\u8CB4\u306A\u30EF\u30BF\u30EA\u30C9\u30EA\u3060\u3088\uFF01\uFF1F\u3000\u3053\u3093\u306A\u5730\u9762\u306E\u6B20\u7247\u3001\u89E6\u308A\u305F\u304F\u3082\u306A\u3044\uFF01"
+    portrait: {fileID: 21300000, guid: d81d794e3f1b3064db4509b0df92be92, type: 3}
+    portraitPosition: 1
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}
+    backgroundImage: {fileID: 21300000, guid: 46ba3d3eeddf56c4a98e1affe0a01baa, type: 3}
+  - speakerName: "\u30EA\u30C9"
+    text: "\u2026\u2026\u306A\u306E\u306B\u3001\u3069\u3046\u3057\u3066\u3002\u5302\u3044\u304C\u3001\u8449\u8108\u304C\u3001\u6CE5\u306E\u51B7\u305F\u3055\u304C\u2026\u2026\u3002"
+    portrait: {fileID: 21300000, guid: 4b3a70eb92a7f7149b01cc2968185357, type: 3}
+    portraitPosition: 1
+    typingSpeed: 0.04
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 21300000, guid: 46ba3d3eeddf56c4a98e1affe0a01baa, type: 3}

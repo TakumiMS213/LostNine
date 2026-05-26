@@ -10,13 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 255a7499b43a740c38b9715c41cd038a, type: 3}
-  m_Name: Ch2_Epilogue
+  m_Name: Ch2_Presentation_Truth
   m_EditorClassIdentifier: 
-  scenarioId: Ch2_Epilogue
+  scenarioId: Ch2_Presentation_Truth
   showMainWindow: 1
   actions:
-  - {fileID: 11400000, guid: f2504ded8bab4533b4313db6c52bd36a, type: 2}
-  - {fileID: 11400000, guid: 8d50b942f005c44989db11a89d9828ce, type: 2}
-  - {fileID: 11400000, guid: 5f2341f1c502946ce8f9d4cff3f346d6, type: 2}
-  nextScenario: {fileID: 0}
+  - {fileID: 11400000, guid: d794e04a60df749c9961fc3c5b6e1cb2, type: 2}
+  - {fileID: 11400000, guid: 0b31c8d4fdc1b4dd2b4c304de2bc38eb, type: 2}
+  nextScenario: {fileID: 11400000, guid: 341dfdf4dd65468e93a60905bdd045e3, type: 2}
   loop: 0

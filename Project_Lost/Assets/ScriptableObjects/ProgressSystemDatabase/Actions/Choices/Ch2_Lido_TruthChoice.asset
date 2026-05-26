@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d7cdbc545fce44b6bfe8e304df00acc, type: 3}
+  m_Name: Ch2_Lido_TruthChoice
+  m_EditorClassIdentifier: 
+  choices:
+  - choiceText: "\u771F\u5B9F\u3092\u4F1D\u3048\u308B"
+    nextScenario: {fileID: 11400000, guid: 1d71bee1607b441db89608a73a0c2d1e, type: 2}
+    choiceId: truth
+  - choiceText: "\u771F\u5B9F\u3092\u4F1D\u3048\u306A\u3044"
+    nextScenario: {fileID: 11400000, guid: 06d2e2482243e40c187fea7e067401e3, type: 2}
+    choiceId: kind_lie

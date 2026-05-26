@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d77a5bd30c5e49789c68064f1113d9c, type: 3}
   m_Name: Ch2_KeyWord_2
   m_EditorClassIdentifier: 
-  text: "\"地面を這う\"...."
-  speakerName: "ヒイラギ"
-  portrait: {fileID: 21300000, guid: a3a23cdd243ef5d4582280f5a9d0c6e1, type: 3}
+  text: "\u3010\u5730\u9762\u3092\u9019\u3046\u3011\n\u4E8C\u8DB3\u3067\u6B69\u304F\u76F8\u624B\u306B\u3082\u3001\u30EA\u30C9\u306F\u300E\u9019\u3046\u300F\u3068\u3044\u3046\u8A00\u8449\u3092\u4F7F\u3046\u3002\n\u7A7A\u304B\u5730\u9762\u304B\u3002\u305D\u306E\u4E8C\u629E\u3060\u3051\u3067\u4E16\u754C\u3092\u898B\u3066\u3044\u308B\u3002"
+  speakerName: "\u30D2\u30A4\u30E9\u30AE"
+  portrait: {fileID: 21300000, guid: 978560c834e86ef409145f97e580475c, type: 3}
   portraitPosition: 2
   displayDuration: 0

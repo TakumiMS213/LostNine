@@ -14,50 +14,66 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entries:
   - speakerName: "\u30EA\u30C9"
-    text: "\u30DC\u30AF\u304C\u597D\u304D\u306A\u306E\u306F\u3001\u3084\u3063\u3071\u308A\u7A7A\u3092<link=\"Ch2_Data1\">\u81EA\u7531</link>\u306B\u98DB\u3073\u56DE\u308B\u3053\u3068\uFF01"
+    text: "\u30DC\u30AF\u304C\u597D\u304D\u306A\u306E\u306F\u3001\u3084\u3063\u3071\u308A\u7A7A\u3092<link=\"Ch2_Data1\">-\u81EA\u7531-</link>\u306B\u98DB\u3073\u56DE\u308B\u3053\u3068\uFF01"
     portrait: {fileID: 21300000, guid: 18f1e5e075c94174f8da7df44219d63f, type: 3}
-    portraitPosition: 0
+    portraitPosition: 1
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}
+    backgroundImage: {fileID: 21300000, guid: 46ba3d3eeddf56c4a98e1affe0a01baa, type: 3}
   - speakerName: "\u30EA\u30C9"
-    text: "\u3053\u306E\u8FBA\u306F\u68EE\u3070\u3063\u304B\u308A\u3067\u52D5\u304D\u306B\u304F\u3044\u3051\u3069..."
+    text: "\u9AD8\u304F\u98DB\u3079\u3070\u3001\u5730\u9762\u306E\u3053\u3068\u306A\u3093\u3066\u898B\u306A\u304F\u3066\u6E08\u3080\u3002\u6CE5\u3082\u3001\u8449\u3063\u3071\u3082\u3001\u3042\u306E\u4F4E\u3055\u3082\u3002"
     portrait: {fileID: 21300000, guid: 4b3a70eb92a7f7149b01cc2968185357, type: 3}
-    portraitPosition: 0
+    portraitPosition: 1
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}
+    backgroundImage: {fileID: 21300000, guid: 46ba3d3eeddf56c4a98e1affe0a01baa, type: 3}
   - speakerName: "\u30EA\u30C9"
-    text: "\u7A7A\u306B\u306F\u30DC\u30AF\u3092\u906E\u308B\u3082\u306E\u306F\u4F55\u3082\u306A\u3044\uFF01"
-    portrait: {fileID: 21300000, guid: 18f1e5e075c94174f8da7df44219d63f, type: 3}
-    portraitPosition: 0
+    text: "\u305F\u3060<link=\"Ch2_Data2\">-\u5730\u9762\u3092\u9019\u3046-</link>\u3060\u3051\u306E\u4EBA\u305F\u3061\u304C\u53EF\u54C0\u305D\u3046\u3060\u3088\u306D\u3002"
+    portrait: {fileID: 21300000, guid: d81d794e3f1b3064db4509b0df92be92, type: 3}
+    portraitPosition: 1
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}
-  - speakerName: "\u30EA\u30C9"
-    text: "\u3069\u3053\u307E\u3067\u3082\u81EA\u7531\u306B\u98DB\u3073\u7ACB\u3066\u308B\u7FFC\u304C\u8A87\u308A\u306A\u3093\u3060\uFF01"
-    portrait: {fileID: 21300000, guid: 18f1e5e075c94174f8da7df44219d63f, type: 3}
-    portraitPosition: 0
+    backgroundImage: {fileID: 21300000, guid: 46ba3d3eeddf56c4a98e1affe0a01baa, type: 3}
+  - speakerName: "\u30D2\u30A4\u30E9\u30AE"
+    text: "\u4EBA\u306B\u5BFE\u3057\u3066\u300E\u9019\u3046\u300F\u2026\u2026\uFF1F"
+    portrait: {fileID: 21300000, guid: 978560c834e86ef409145f97e580475c, type: 3}
+    portraitPosition: 2
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}
+    backgroundImage: {fileID: 21300000, guid: 46ba3d3eeddf56c4a98e1affe0a01baa, type: 3}
   - speakerName: "\u30EA\u30C9"
-    text: "\u305F\u3060<link=\"Ch2_Data2\">\u5730\u9762\u3092\u9019\u3046</link>\u3060\u3051\u306E\u4EBA\u305F\u3061\u304C\u53EF\u54C0\u305D\u3046\u3060\u3088\u306D...."
+    text: "\u5909\u3067\u3059\u304B\uFF1F\u3000\u7A7A\u3092\u98DB\u3079\u306A\u3044\u306A\u3089\u3001\u307F\u3093\u306A\u540C\u3058\u3067\u3057\u3087\u3046\u3002\u60E8\u3081\u306B\u571F\u306E\u4E0A\u3092\u9032\u3080\u3060\u3051\u3067\u3002"
+    portrait: {fileID: 21300000, guid: d81d794e3f1b3064db4509b0df92be92, type: 3}
+    portraitPosition: 1
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 21300000, guid: 46ba3d3eeddf56c4a98e1affe0a01baa, type: 3}
+  - speakerName: "\u30EA\u30C9"
+    text: "\u68EE\u306E\u4E2D\u307F\u305F\u3044\u306A<link=\"Ch2_Data3\">-\u6697\u304F\u3066\u30B8\u30E1\u30B8\u30E1-</link>\u3057\u305F\u5834\u6240\u306A\u3093\u3066\u3001\u4E00\u756A\u5ACC\u3044\u3067\u3059\u3002"
     portrait: {fileID: 21300000, guid: 4b3a70eb92a7f7149b01cc2968185357, type: 3}
-    portraitPosition: 0
+    portraitPosition: 1
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}
+    backgroundImage: {fileID: -3590566777017096083, guid: ffe0f79a1be1bc745ba03d7de9427399, type: 3}
   - speakerName: "\u30EA\u30C9"
-    text: "\u68EE\u306E\u4E2D\u307F\u305F\u3044\u306A<link=\"Ch2_Data3\">\u6697\u304F\u3066\u30B8\u30E1\u30B8\u30E1</link>\u3057\u305F\u5834\u6240\u306A\u3093\u3066\u3001\u4E00\u756A\u5ACC\u3044\u3060\u306D\uFF01"
-    portrait: {fileID: 21300000, guid: 18f1e5e075c94174f8da7df44219d63f, type: 3}
-    portraitPosition: 0
+    text: "\u8449\u3063\u3071\u306E\u88CF\u3082\u3001\u6E7F\u3063\u305F\u571F\u3082\u3001\u4E0A\u304B\u3089\u5DEE\u3059\u5F71\u3082\u2026\u2026\u601D\u3044\u51FA\u3057\u305F\u304F\u306A\u3044\u3002"
+    portrait: {fileID: 21300000, guid: d81d794e3f1b3064db4509b0df92be92, type: 3}
+    portraitPosition: 1
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}
-    backgroundImage: {fileID: 0}
+    backgroundImage: {fileID: -3590566777017096083, guid: ffe0f79a1be1bc745ba03d7de9427399, type: 3}
+  - speakerName: "\u30D2\u30A4\u30E9\u30AE"
+    text: "\u30EA\u30C9\u3055\u3093\u306E\u8A00\u8449\u3001\u597D\u304D\u306A\u3082\u306E\u3088\u308A\u5ACC\u3044\u306A\u3082\u306E\u306E\u307B\u3046\u304C\u5F37\u304F\u6B8B\u3063\u3066\u308B\u2026\u2026\u3002"
+    portrait: {fileID: 21300000, guid: f3f65e03f4cbec441b408057920c5ed9, type: 3}
+    portraitPosition: 2
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    backgroundImage: {fileID: 21300000, guid: 46ba3d3eeddf56c4a98e1affe0a01baa, type: 3}
