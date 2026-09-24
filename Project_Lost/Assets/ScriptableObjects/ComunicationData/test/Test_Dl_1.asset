@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c6a52df638d8d2543ae417551adce791, type: 3}
+  m_Name: Test_Dl_1
+  m_EditorClassIdentifier: 
+  scenarioId: Ch1_Dialogue
+  nextScenario: {fileID: 11400000, guid: d3df080c4aa3ac842a3bf25ca5e186f9, type: 2}
+  enableKeywords: 0
+  enablePortraitClick: 1
+  loopScenario: 0
+  toggleComuOnEnd: 1
+  updateProgressOnEnd: 1
+  progressAction: 2
+  targetChapter: 1
+  targetPhase: 2
+  lines:
+  - speakerName: "\u30D2\u30A4\u30E9\u30AE"
+    portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
+    text: "\u4ECA\u306F\u30C0\u30A4\u30A2\u30ED\u30B0\u30D5\u30A7\u30FC\u30BA\u3067\u3059\n\u4E00\u65E6\u4F1A\u8A71\u3092\u805E\u304F\u30D5\u30A7\u30FC\u30BA\u3067\u3059"
+    effects: []
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    choices: []
+    portraitPosition: 0
+    interruptScenario: {fileID: 0}
+    backgroundImage: {fileID: 0}
+  - speakerName: "\u30D2\u30A4\u30E9\u30AE"
+    portrait: {fileID: 21300000, guid: d4a4cbdc576484544a0d2f50c078e9a8, type: 3}
+    text: "\u80CC\u666F\u5207\u308A\u66FF\u3048\u306E\u30C6\u30B9\u30C8\u3092\u631F\u307F\u307E\u3059"
+    effects: []
+    typingSpeed: 0
+    nameSlideDirection: 0
+    voiceClip: {fileID: 0}
+    choices: []
+    portraitPosition: 0
+    interruptScenario: {fileID: 0}
+    backgroundImage: {fileID: -5122596200239726157, guid: c625c6ca06de0bb4cbc2f6e5118320db, type: 3}

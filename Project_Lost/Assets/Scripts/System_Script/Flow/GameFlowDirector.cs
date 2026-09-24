@@ -67,7 +67,12 @@ namespace System_Script.Flow
         }
 
         /// <summary>
-        /// キーワード獲得数がしきい値に達した時、現在の章のシークエンスを起動する。
+        /// キーワード獲得数がしきい値に達した時に呼ばれる。
+        /// overrideSequences に明示的な登録がある場合のみシーケンスを起動する。
+        ///
+        /// ※ startingSequence へのフォールバックは行わない。
+        ///   Extractionフェーズ等でoverrideが未登録の場合、GFDは何もしない。
+        ///   （欠片演出とD&D解放は MemoryFragmentSystem / DragToSceneItem が担当）
         /// </summary>
         private void OnKeywordThresholdReached()
         {
@@ -80,17 +85,12 @@ namespace System_Script.Flow
             var overrideSeq = GetOverrideSequence();
             if (overrideSeq != null)
             {
-                Debug.Log($"[GameFlowDirector] Keyword threshold reached. Launching sequence for Chapter {ProgressManager.Instance.CurrentChapter}.");
+                Debug.Log($"[GameFlowDirector] Keyword threshold reached. Launching override sequence for Ch{ProgressManager.Instance.CurrentChapter}-{ProgressManager.Instance.CurrentPhase}.");
                 PlaySequence(overrideSeq);
-            }
-            else if (startingSequence != null)
-            {
-                Debug.Log("[GameFlowDirector] Keyword threshold reached. No override found, using default sequence.");
-                PlaySequence(startingSequence);
             }
             else
             {
-                Debug.LogWarning("[GameFlowDirector] Keyword threshold reached but no sequence found to play.");
+                Debug.Log($"[GameFlowDirector] Keyword threshold reached but no override found for Ch{ProgressManager.Instance?.CurrentChapter}-{ProgressManager.Instance?.CurrentPhase}. No sequence played.");
             }
         }
 
@@ -115,6 +115,30 @@ namespace System_Script.Flow
             
             Debug.Log($"[GameFlowDirector] No override found for Ch{currentChapter} - {currentPhase}.");
             return null;
+        }
+
+        /// <summary>
+        /// 現在の Chapter / Phase に対応するシーケンスを探して再生する。
+        /// overrideSequences から一致するものを返し、なければ startingSequence を使う。
+        /// MainSceneFlowController から呼ぶことで、9章すべての分岐をここ1か所で管理できる。
+        /// </summary>
+        /// <returns>対応するシーケンスが見つかり再生を開始した場合 true</returns>
+        public bool PlaySequenceForCurrentProgress()
+        {
+            var seq = GetOverrideSequence();
+            if (seq != null)
+            {
+                PlaySequence(seq);
+                return true;
+            }
+            if (startingSequence != null)
+            {
+                Debug.Log("[GameFlowDirector] PlaySequenceForCurrentProgress: using startingSequence fallback.");
+                PlaySequence(startingSequence);
+                return true;
+            }
+            Debug.LogWarning("[GameFlowDirector] PlaySequenceForCurrentProgress: No sequence found.");
+            return false;
         }
 
         /// <summary>

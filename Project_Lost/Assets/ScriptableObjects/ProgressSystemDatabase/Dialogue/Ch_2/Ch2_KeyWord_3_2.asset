@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d77a5bd30c5e49789c68064f1113d9c, type: 3}
   m_Name: Ch2_KeyWord_3_2
   m_EditorClassIdentifier: 
-  text: "\u68EE\u307F\u305F\u3044\u306A\u5834\u6240\u304C\u5FC3\u5E95\u82E6\u624B\u3001\u3068\u3044\u3046\u3053\u3068\u3060\u3088\u306D....\u3002"
+  text: "\u30EA\u30C9\u3055\u3093\u306F\u68EE\u3092\u5ACC\u3063\u3066\u3044\u308B\u3093\u3058\u3083\u306A\u3044\u3002\n\u68EE\u306E\u4E2D\u3067\u3001\u8449\u3092\u9F67\u308A\u3001\u6CE5\u306B\u307E\u307F\u308C\u3066\u3044\u305F\u81EA\u5206\u3092\u6050\u308C\u3066\u3044\u308B\u2026\u2026\uFF1F"
   speakerName: "\u30D2\u30A4\u30E9\u30AE"
-  portrait: {fileID: 21300000, guid: a3a23cdd243ef5d4582280f5a9d0c6e1, type: 3}
+  portrait: {fileID: 21300000, guid: f3f65e03f4cbec441b408057920c5ed9, type: 3}
   portraitPosition: 2
   displayDuration: 0

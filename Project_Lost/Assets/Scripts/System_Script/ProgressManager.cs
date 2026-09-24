@@ -97,11 +97,14 @@ public class ProgressManager : MonoBehaviour
         
         if (nextPhase == 0)
         {
+            // 章が変わるときだけキーワード進捗をリセット
             _currentChapter++;
+            ResetKeywordProgress();
         }
+        // ※ 同じ章内のフェーズ進行ではキーワード進捗を維持する
+        //   (Extraction→Tuning→Fixation→Presentation で AllKeywordsCollected を保つ)
         
         _currentPhase = (GamePhase)nextPhase;
-        ResetKeywordProgress();
         OnProgressChanged?.Invoke();
     }
 
@@ -169,7 +172,8 @@ public class ProgressManager : MonoBehaviour
         _currentKeywordProgress++;
         Debug.Log($"[ProgressManager] Keyword '{keywordId}' added. Progress: {_currentKeywordProgress}/{_keywordThreshold}");
 
-        if (_currentKeywordProgress >= _keywordThreshold)
+        // 閾値ジャスト到達時のみ発火（超過後の追加では発火しない）
+        if (_currentKeywordProgress == _keywordThreshold)
         {
             Debug.Log($"[ProgressManager] Keyword threshold reached! ({_currentKeywordProgress}/{_keywordThreshold})");
             OnKeywordThresholdReached?.Invoke();

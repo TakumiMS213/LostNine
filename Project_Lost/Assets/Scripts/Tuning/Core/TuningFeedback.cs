@@ -83,6 +83,33 @@ namespace Tuning.Core
         [Tooltip("NGゾーン滞在時のノイズビジュアライザー")]
         [SerializeField] private Tuning.Visuals.NoiseVisualizer ngNoise;
 
+        [Header("ターゲット点滅演出")]
+        [Tooltip("左ターゲットの CanvasGroup（点滅対象）")]
+        [SerializeField] private CanvasGroup leftTargetGroup;
+
+        [Tooltip("右ターゲットの CanvasGroup（点滅対象）")]
+        [SerializeField] private CanvasGroup rightTargetGroup;
+
+        [Tooltip("点滅が開始されるまでのターゲット外滞在時間（秒）")]
+        [SerializeField] private float blinkStartDelay = 3f;
+
+        [Tooltip("点滅が最大速度に達するまでの時間（秒）")]
+        [SerializeField] private float blinkRampDuration = 5f;
+
+        [Tooltip("最大点滅速度（Hz）")]
+        [SerializeField] private float blinkMaxFrequency = 6f;
+
+        [Tooltip("最小点滅速度（Hz、遅い段階）")]
+        [SerializeField] private float blinkMinFrequency = 1f;
+
+        [Tooltip("点滅の最小透明度（0=完全消灯, 0.3=薄く残る）")]
+        [Range(0f, 1f)]
+        [SerializeField] private float blinkMinAlpha = 0.15f;
+
+        // ── 点滅の内部状態 ──
+        private float _leftOutOfTargetTime  = 0f;
+        private float _rightOutOfTargetTime = 0f;
+
         [Header("成功演出")]
         [Tooltip("成功時に再生するSE")]
         [SerializeField] private AudioClip successSE;
@@ -135,6 +162,7 @@ namespace Tuning.Core
             UpdateWaveform(rightWaveform, rightSync, stability, rightLocked);
 
             ApplyShake(totalSync, stability);
+            UpdateTargetBlink(leftLocked, rightLocked);
         }
 
         private void UpdateWaveform(Tuning.Visuals.WaveformVisualizer wave, float sync, float stability, bool isLocked)
@@ -151,6 +179,45 @@ namespace Tuning.Core
             wave.Thickness = Mathf.Lerp(wave.Thickness, targetThickness, Time.deltaTime * 10f);
         }
 
+        /// <summary>
+        /// ターゲット外の累積時間に応じてターゲット円を点滅させる
+        /// </summary>
+        private void UpdateTargetBlink(bool leftLocked, bool rightLocked)
+        {
+            UpdateSingleTargetBlink(leftTargetGroup,  leftLocked,  ref _leftOutOfTargetTime);
+            UpdateSingleTargetBlink(rightTargetGroup, rightLocked, ref _rightOutOfTargetTime);
+        }
+
+        private void UpdateSingleTargetBlink(CanvasGroup group, bool isLocked, ref float outTimer)
+        {
+            if (group == null) return;
+
+            if (isLocked)
+            {
+                // ターゲット内：タイマーリセット + 非表示に戻す
+                outTimer = 0f;
+                group.alpha = Mathf.Lerp(group.alpha, 0f, Time.deltaTime * 5f);
+                return;
+            }
+
+            // ターゲット外：累積カウント
+            outTimer += Time.deltaTime;
+
+            if (outTimer < blinkStartDelay)
+            {
+                // ヒント表示前：完全非表示
+                group.alpha = 0f;
+                return;
+            }
+
+            // blinkStartDelay 〜 blinkStartDelay+blinkRampDuration で周波数が上昇
+            float rampT     = Mathf.Clamp01((outTimer - blinkStartDelay) / blinkRampDuration);
+            float frequency = Mathf.Lerp(blinkMinFrequency, blinkMaxFrequency, rampT);
+
+            // Sin波で点滅（0〜1 に正規化）
+            float sinVal    = (Mathf.Sin(Time.time * frequency * Mathf.PI * 2f) + 1f) * 0.5f;
+            group.alpha     = Mathf.Lerp(blinkMinAlpha, 1f, sinVal);
+        }
 
 
         /// <summary>
@@ -379,6 +446,12 @@ namespace Tuning.Core
                 c.a = 0f;
                 flashOverlay.color = c;
             }
+
+            // ターゲット点滅をリセット（普段は非表示）
+            _leftOutOfTargetTime  = 0f;
+            _rightOutOfTargetTime = 0f;
+            if (leftTargetGroup  != null) leftTargetGroup.alpha  = 0f;
+            if (rightTargetGroup != null) rightTargetGroup.alpha = 0f;
         }
     }
 }

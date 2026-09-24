@@ -15,6 +15,7 @@ MonoBehaviour:
   targetTolerance: 3
   isMovingTarget: 0
   targetMoveSpeed: 0.8
+  targetMoveAmplitude: 50
   leftTargetPosition: {x: 0, y: 0}
   rightTargetPosition: {x: 0, y: 0}
   isInvertedLeft: 0
@@ -24,11 +25,15 @@ MonoBehaviour:
   leftMaxSpeed: 600
   rightMoveForce: 300
   rightMaxSpeed: 600
-  baseInertia: 2
+  baseInertia: 1
   ngZonePenaltyRate: 2
   penaltyRecoverySpeed: 1
   overheatThreshold: 5
+  overheatCooldownRate: 0.5
+  gameOverRestartDelay: 2
   ngZoneSize: {x: 80, y: 80}
   targetSafeMargin: 100
   syncThresholdForStability: 0.8
+  stabilityGainRate: 1
   stabilityDecayRate: 0.2
+  inTargetFeedbackThreshold: 0.9
