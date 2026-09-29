@@ -32,7 +32,9 @@ namespace ScenarioSystem.Adapter
         #region IDialogueProvider Implementation
 
         public TMP_Text DialogueText => dialogueText;
-        public string CurrentText => _currentText;
+        public string CurrentText => ClueManager.Instance != null
+            ? ClueManager.Instance.ApplyKeywordColors(_currentText)
+            : _currentText;
         public bool IsWindowActive => _isWindowActive;
         public bool IsTyping => _isTyping;
 

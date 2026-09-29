@@ -1670,8 +1670,8 @@ MonoBehaviour:
   m_text: "<b><color=#fff700>\uFF1C\u5B9A\u7740\uFF1E-Consolidation-</color></b>
     START<i>\uFF01</i>"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
-  m_sharedMaterial: {fileID: -6663560369686292098, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  m_sharedMaterial: {fileID: -6663560369686292098, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1826,7 +1826,7 @@ MonoBehaviour:
   resultImageSize: {x: 750, y: 500}
   resultTextOffset: {x: 0, y: -330}
   resultTextFontSize: 80
-  resultTextFont: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  resultTextFont: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   resultTextColor: {r: 1, g: 1, b: 1, a: 1}
   resultHeaderText: "\u7279\u5B9A\u3057\u305F\u305F\u306A\u304F\u3057\u3082\u306E"
   resultHeaderOffset: {x: 0, y: 330}
@@ -1926,7 +1926,7 @@ MonoBehaviour:
   delaySeconds: 0
   maxWaitFrames: 10
   typingSpeed: 0.05
-  fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   advanceIndicatorSprite: {fileID: 21300000, guid: 9581870bad71d4c08952aebdef723892, type: 3}
   advanceIndicatorSize: {x: 32, y: 32}
   advanceIndicatorOffset: {x: -44, y: 34}

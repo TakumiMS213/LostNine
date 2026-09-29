@@ -32,7 +32,7 @@ MonoBehaviour:
   - speakerName: "ヒイラギ"
     text: "....え？"
     portrait: {fileID: 21300000, guid: 08f06e70be29a8844ad85a9db05083a6, type: 3}
-    portraitPosition: 2
+    portraitPosition: 0
     typingSpeed: 0
     nameSlideDirection: 0
     voiceClip: {fileID: 0}

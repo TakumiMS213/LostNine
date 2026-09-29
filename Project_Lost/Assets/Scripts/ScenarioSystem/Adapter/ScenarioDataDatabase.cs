@@ -28,13 +28,11 @@ namespace ScenarioSystem.Adapter
             _map = new Dictionary<string, ScenarioData>();
             foreach (var scenario in allScenarios)
             {
-                if (scenario != null && !string.IsNullOrEmpty(scenario.scenarioId))
-                {
-                    if (!_map.ContainsKey(scenario.scenarioId))
-                        _map.Add(scenario.scenarioId, scenario);
-                    else
-                        Debug.LogWarning($"[ScenarioDataDatabase] Duplicate ID: {scenario.scenarioId} in {scenario.name}");
-                }
+                if (scenario == null || string.IsNullOrEmpty(scenario.scenarioId))
+                    continue;
+
+                if (!_map.TryAdd(scenario.scenarioId, scenario))
+                    Debug.LogWarning($"[ScenarioDataDatabase] Duplicate ID: {scenario.scenarioId} in {scenario.name}");
             }
         }
 

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2db6ca3f045c745ec8612dc14004a3de, type: 3}
   m_Name: Stage_1
   m_EditorClassIdentifier: 
+  activeBlockCount: 1
   targetTolerance: 3
   isMovingTarget: 0
   targetMoveSpeed: 0.8
@@ -25,6 +26,7 @@ MonoBehaviour:
   leftMaxSpeed: 600
   rightMoveForce: 300
   rightMaxSpeed: 600
+  useInertia: 0
   baseInertia: 1
   ngZonePenaltyRate: 2
   penaltyRecoverySpeed: 1

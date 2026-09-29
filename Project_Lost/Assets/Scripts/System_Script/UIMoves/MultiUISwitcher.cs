@@ -13,23 +13,22 @@ public class MultiUISwitcher : MonoBehaviour
 
     public void ShowPanels(int groupIndex)
     {
-        if (!IsValidGroup(groupIndex)) return;
-
-        foreach (var panel in panelGroups[groupIndex].panels)
-        {
-            if (panel != null)
-                panel.SetActive(true);
-        }
+        SetPanelsActive(groupIndex, true);
     }
 
     public void HidePanels(int groupIndex)
+    {
+        SetPanelsActive(groupIndex, false);
+    }
+
+    private void SetPanelsActive(int groupIndex, bool active)
     {
         if (!IsValidGroup(groupIndex)) return;
 
         foreach (var panel in panelGroups[groupIndex].panels)
         {
             if (panel != null)
-                panel.SetActive(false);
+                panel.SetActive(active);
         }
     }
 

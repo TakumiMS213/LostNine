@@ -83,7 +83,9 @@ namespace ScenarioSystem.View
         {
             ScenarioEventBus.OnDialogueRequested += HandleDialogue;
             ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibility;
+            ScenarioEventBus.OnKeywordColorsChanged += RefreshKeywordColors;
             SceneManager.sceneLoaded += HandleSceneLoaded;
+            RefreshKeywordColors();
         }
 
         private void Start()
@@ -95,6 +97,7 @@ namespace ScenarioSystem.View
         {
             ScenarioEventBus.OnDialogueRequested -= HandleDialogue;
             ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibility;
+            ScenarioEventBus.OnKeywordColorsChanged -= RefreshKeywordColors;
             SceneManager.sceneLoaded -= HandleSceneLoaded;
             ResetAutoAdvanceState();
         }
@@ -194,6 +197,25 @@ namespace ScenarioSystem.View
             ResetAutoAdvanceState();
         }
 
+        private static string ApplyKeywordColors(string text)
+        {
+            return ClueManager.Instance != null ? ClueManager.Instance.ApplyKeywordColors(text) : text;
+        }
+
+        private void RefreshKeywordColors()
+        {
+            if (dialogueText == null || _currentFullText == null) return;
+
+            string text = ApplyKeywordColors(_currentFullText);
+            if (dialogueText.text == text) return;
+
+            // 色の更新でタイピング進捗や完了通知を変更しない。
+            int visibleCharacters = dialogueText.maxVisibleCharacters;
+            dialogueText.text = text;
+            dialogueText.maxVisibleCharacters = visibleCharacters;
+            dialogueText.ForceMeshUpdate();
+        }
+
         #endregion
 
         #region Typing
@@ -201,19 +223,28 @@ namespace ScenarioSystem.View
         private IEnumerator TypeText(string text, float speed)
         {
             _isTyping = true;
-            dialogueText.text = text;
+            dialogueText.text = ApplyKeywordColors(text);
             dialogueText.maxVisibleCharacters = 0;
             dialogueText.ForceMeshUpdate();
 
             int total = dialogueText.textInfo.characterCount;
+            float waitDuration = speed;
+            var wait = new WaitForSeconds(waitDuration);
             for (int i = 0; i <= total; i++)
             {
                 float step = (enableSkipMode && IsSkipHeld())
                     ? skipTypingSpeed
                     : speed;
 
+                // 同じ待機時間は再利用し、スキップ速度の変更にも追従する。
+                if (step != waitDuration)
+                {
+                    waitDuration = step;
+                    wait = new WaitForSeconds(waitDuration);
+                }
+
                 dialogueText.maxVisibleCharacters = i;
-                yield return new WaitForSeconds(step);
+                yield return wait;
             }
 
             FinishTyping();
@@ -225,7 +256,7 @@ namespace ScenarioSystem.View
 
             if (dialogueText != null && _currentFullText != null)
             {
-                dialogueText.text = _currentFullText;
+                dialogueText.text = ApplyKeywordColors(_currentFullText);
                 dialogueText.maxVisibleCharacters = _currentFullText.Length;
             }
 

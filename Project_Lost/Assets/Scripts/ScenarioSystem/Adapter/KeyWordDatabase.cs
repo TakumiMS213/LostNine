@@ -31,11 +31,7 @@ namespace ScenarioSystem.Adapter
                 if (string.IsNullOrEmpty(keywordId))
                     continue;
 
-                if (!_map.ContainsKey(keywordId))
-                {
-                    _map.Add(keywordId, note);
-                }
-                else
+                if (!_map.TryAdd(keywordId, note))
                 {
                     Debug.LogWarning($"[KeyWordDatabase] Duplicate ID: {keywordId} in {note.name}");
                 }
@@ -44,14 +40,8 @@ namespace ScenarioSystem.Adapter
 
         public LostNoteData GetById(string id)
         {
-            if (_map == null) BuildMap();
-
-            string keywordId = id?.Trim();
-            if (!string.IsNullOrEmpty(keywordId) && _map.TryGetValue(keywordId, out var note))
-                return note;
-
-            Debug.LogWarning($"[KeyWordDatabase] LostNoteData '{id}' not found.");
-            return null;
+            TryGetById(id, out var note);
+            return note;
         }
 
         public bool TryGetById(string id, out LostNoteData note)

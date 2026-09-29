@@ -80,7 +80,9 @@ namespace ScenarioSystem.View
                     onComplete?.Invoke();
 
                     var pm = ProgressManager.Instance;
-                    if (pm != null && !pm.AllKeywordsCollected)
+                    // 抽出フェーズ中だけ、従来どおり抽出用シナリオへ戻す。
+                    // 他フェーズでメモライザーを使った場合は現在の進行を維持する。
+                    if (pm != null && pm.CurrentPhase == GamePhase.Extraction && !pm.AllKeywordsCollected)
                         MessageWindowFacade.Instance.StartScenarioById($"Ch{pm.CurrentChapter}_Extraction");
                 });
             }

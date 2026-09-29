@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -9,6 +10,8 @@ using UnityEngine.SceneManagement;
 public class ProgressManager : MonoBehaviour
 {
     public static ProgressManager Instance { get; private set; }
+
+    private static readonly int PhaseCount = Enum.GetValues(typeof(GamePhase)).Length;
 
     [Header("Current Progress")]
     [SerializeField] private int _currentChapter = 1;
@@ -20,6 +23,13 @@ public class ProgressManager : MonoBehaviour
 
     [Tooltip("シークエンス起動に必要なキーワード数")]
     [SerializeField] private int _keywordThreshold = 3;
+
+    [Header("Memorizer")]
+    [Tooltip("カチョウのチュートリアル完了後に有効になるメモライザー解放フラグ")]
+    [SerializeField] private bool _isMemorizerUnlocked;
+
+    [Tooltip("SHIFTで切り替えるメモライザー起動フラグ。フレームUIはこの値を参照する")]
+    [SerializeField] private bool _isMemorizerActive;
 
     private HashSet<string> _extractedKeywords = new HashSet<string>();
     private string _pendingStoryScenarioId;
@@ -49,6 +59,8 @@ public class ProgressManager : MonoBehaviour
     public int MaxChapter => _maxChapter;
     public bool IsLastChapter => _currentChapter >= _maxChapter;
     public bool AllKeywordsCollected => _currentKeywordProgress >= _keywordThreshold;
+    public bool IsMemorizerUnlocked => _isMemorizerUnlocked;
+    public bool IsMemorizerActive => _isMemorizerActive;
     public string MainSceneName => mainSceneName;
     public string TitleSceneName => titleSceneName;
     public string StorySceneName => storySceneName;
@@ -60,12 +72,17 @@ public class ProgressManager : MonoBehaviour
     /// </summary>
     public event Action OnKeywordThresholdReached;
 
+    /// <summary>メモライザーの起動状態が変わった時に発火する。フレームUIの表示切替に使用できる。</summary>
+    public event Action<bool> OnMemorizerStateChanged;
+
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            RefreshMemorizerUnlockFromProgress();
+            SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             Debug.Log("[ProgressManager] Initialized and marked DontDestroyOnLoad.");
         }
         else
@@ -73,6 +90,28 @@ public class ProgressManager : MonoBehaviour
             Debug.LogWarning("[ProgressManager] Duplicate instance detected. Destroying this gameObject.");
             Destroy(gameObject);
         }
+    }
+
+    private void Update()
+    {
+        if (!_isMemorizerUnlocked || SceneManager.GetActiveScene().name != mainSceneName)
+            return;
+
+        var keyboard = Keyboard.current;
+        if (keyboard != null &&
+            (keyboard.leftShiftKey.wasPressedThisFrame || keyboard.rightShiftKey.wasPressedThisFrame))
+        {
+            ToggleMemorizer();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance != this)
+            return;
+
+        SceneManager.activeSceneChanged -= HandleActiveSceneChanged;
+        Instance = null;
     }
 
     /// <summary>
@@ -83,6 +122,7 @@ public class ProgressManager : MonoBehaviour
         Debug.Log($"[ProgressManager] SetProgress: {_currentChapter}-{_currentPhase} -> {chapter}-{phase}");
         _currentChapter = chapter;
         _currentPhase = phase;
+        RefreshMemorizerUnlockFromProgress();
         ResetKeywordProgress();
         OnProgressChanged?.Invoke();
     }
@@ -92,8 +132,7 @@ public class ProgressManager : MonoBehaviour
     /// </summary>
     public void AdvancePhase()
     {
-        int phaseCount = Enum.GetValues(typeof(GamePhase)).Length;
-        int nextPhase = ((int)_currentPhase + 1) % phaseCount;
+        int nextPhase = ((int)_currentPhase + 1) % PhaseCount;
         
         if (nextPhase == 0)
         {
@@ -105,6 +144,7 @@ public class ProgressManager : MonoBehaviour
         //   (Extraction→Tuning→Fixation→Presentation で AllKeywordsCollected を保つ)
         
         _currentPhase = (GamePhase)nextPhase;
+        RefreshMemorizerUnlockFromProgress();
         OnProgressChanged?.Invoke();
     }
 
@@ -115,6 +155,7 @@ public class ProgressManager : MonoBehaviour
     {
         _currentChapter++;
         _currentPhase = GamePhase.Prologue;
+        RefreshMemorizerUnlockFromProgress();
         ResetKeywordProgress();
         OnProgressChanged?.Invoke();
     }
@@ -130,13 +171,11 @@ public class ProgressManager : MonoBehaviour
         Debug.Log($"[ProgressManager] StartFromChapter: Overriding progress to Chapter {chapter}, Prologue");
         _currentChapter = Mathf.Clamp(chapter, 1, _maxChapter);
         _currentPhase = GamePhase.Prologue;
+        SetMemorizerUnlocked(_currentChapter > 1);
         _currentKeywordProgress = 0;
         OnProgressChanged?.Invoke();
 
-        if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionTo(storySceneName);
-        else
-            SceneManager.LoadScene(storySceneName);
+        TransitionToScene(storySceneName);
     }
 
     /// <summary>
@@ -151,10 +190,28 @@ public class ProgressManager : MonoBehaviour
     {
         _pendingStoryScenarioId = null;
 
-        if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionToSimple(mainSceneName);
-        else
-            SceneManager.LoadScene(mainSceneName);
+        TransitionToScene(mainSceneName, simple: true);
+    }
+
+    /// <summary>解放済みの場合だけメモライザーの起動状態を変更する。</summary>
+    public bool SetMemorizerActive(bool active)
+    {
+        if (active && !_isMemorizerUnlocked)
+            return false;
+
+        if (_isMemorizerActive == active)
+            return true;
+
+        _isMemorizerActive = active;
+        Debug.Log($"[ProgressManager] Memorizer {(active ? "activated" : "deactivated")}.");
+        OnMemorizerStateChanged?.Invoke(active);
+        return true;
+    }
+
+    /// <summary>メモライザーの起動状態を反転する。</summary>
+    public bool ToggleMemorizer()
+    {
+        return SetMemorizerActive(!_isMemorizerActive);
     }
 
     /// <summary>
@@ -162,13 +219,12 @@ public class ProgressManager : MonoBehaviour
     /// </summary>
     public bool AddKeyword(string keywordId)
     {
-        if (_extractedKeywords.Contains(keywordId))
+        if (!_extractedKeywords.Add(keywordId))
         {
             Debug.Log($"[ProgressManager] Keyword '{keywordId}' already extracted. Ignored.");
             return false;
         }
 
-        _extractedKeywords.Add(keywordId);
         _currentKeywordProgress++;
         Debug.Log($"[ProgressManager] Keyword '{keywordId}' added. Progress: {_currentKeywordProgress}/{_keywordThreshold}");
 
@@ -217,10 +273,7 @@ public class ProgressManager : MonoBehaviour
         ApplyChapterFromScenarioId(normalizedScenarioId);
         Debug.Log($"[ProgressManager] Queued story scenario: {normalizedScenarioId}");
 
-        if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionTo(storySceneName);
-        else
-            SceneManager.LoadScene(storySceneName);
+        TransitionToScene(storySceneName);
 
         onComplete?.Invoke();
     }
@@ -245,10 +298,7 @@ public class ProgressManager : MonoBehaviour
         _pendingStoryScenarioId = normalizedScenarioId;
         Debug.Log($"[ProgressManager] Queued progress scenario in Story: {normalizedScenarioId}");
 
-        if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionTo(storySceneName);
-        else
-            SceneManager.LoadScene(storySceneName);
+        TransitionToScene(storySceneName);
     }
 
     public void StartScenarioFromMainById(string scenarioId)
@@ -264,14 +314,12 @@ public class ProgressManager : MonoBehaviour
         _pendingMainScenarioId = normalizedScenarioId;
         ApplyChapterFromScenarioId(normalizedScenarioId);
         _currentPhase = GamePhase.Dialogue;
+        RefreshMemorizerUnlockFromProgress();
         ResetKeywordProgress();
         OnProgressChanged?.Invoke();
         Debug.Log($"[ProgressManager] Queued main scenario: {normalizedScenarioId}");
 
-        if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionTo(mainSceneName);
-        else
-            SceneManager.LoadScene(mainSceneName);
+        TransitionToScene(mainSceneName);
     }
 
     public bool TryConsumeMainScenarioId(out string scenarioId)
@@ -281,6 +329,21 @@ public class ProgressManager : MonoBehaviour
         return !string.IsNullOrEmpty(scenarioId);
     }
 
+    private static void TransitionToScene(string sceneName, bool simple = false)
+    {
+        var transition = SceneTransition.Instance;
+        if (transition == null)
+        {
+            SceneManager.LoadScene(sceneName);
+            return;
+        }
+
+        if (simple)
+            transition.TransitionToSimple(sceneName);
+        else
+            transition.TransitionTo(sceneName);
+    }
+
     private void ApplyChapterFromScenarioId(string scenarioId)
     {
         if (!TryParseChapterFromScenarioId(scenarioId, out int chapter))
@@ -288,6 +351,7 @@ public class ProgressManager : MonoBehaviour
 
         _currentChapter = Mathf.Clamp(chapter, 1, _maxChapter);
         _currentPhase = GamePhase.Prologue;
+        RefreshMemorizerUnlockFromProgress();
         ResetKeywordProgress();
         OnProgressChanged?.Invoke();
     }
@@ -308,6 +372,25 @@ public class ProgressManager : MonoBehaviour
         return chapter > 0;
     }
 
+    private void RefreshMemorizerUnlockFromProgress()
+    {
+        if (_currentChapter > 1 || (_currentChapter == 1 && _currentPhase != GamePhase.Prologue))
+            SetMemorizerUnlocked(true);
+    }
+
+    private void SetMemorizerUnlocked(bool unlocked)
+    {
+        _isMemorizerUnlocked = unlocked;
+        if (!unlocked)
+            SetMemorizerActive(false);
+    }
+
+    private void HandleActiveSceneChanged(Scene previous, Scene next)
+    {
+        if (next.name != mainSceneName)
+            SetMemorizerActive(false);
+    }
+
     /// <summary>
     /// チャプター選択シーンへ遷移する。
     /// Epilogue終了後に呼び出す想定。
@@ -315,10 +398,7 @@ public class ProgressManager : MonoBehaviour
     public void GoToChapterSelect()
     {
         Debug.Log($"[ProgressManager] GoToChapterSelect: Chapter {_currentChapter} complete.");
-        if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionToSimple(chapterSelectSceneName);
-        else
-            SceneManager.LoadScene(chapterSelectSceneName);
+        TransitionToScene(chapterSelectSceneName, simple: true);
     }
 
     /// <summary>
@@ -326,10 +406,7 @@ public class ProgressManager : MonoBehaviour
     /// </summary>
     public void GoToTitle()
     {
-        if (SceneTransition.Instance != null)
-            SceneTransition.Instance.TransitionToSimple(titleSceneName);
-        else
-            SceneManager.LoadScene(titleSceneName);
+        TransitionToScene(titleSceneName, simple: true);
     }
 }
 

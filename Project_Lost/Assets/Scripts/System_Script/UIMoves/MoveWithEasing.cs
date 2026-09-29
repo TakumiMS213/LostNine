@@ -64,52 +64,8 @@ namespace Main.UIMoves
             }
 
             // 移動後に透明度を設定（CanvasGroup または UI Graphic / TextMeshPro / SpriteRenderer をサポート）
-            // Fade は移動シーケンスの最後に付ける（揺れがある場合は揺れの後に実行される）
-            var cg = obj.GetComponent<CanvasGroup>();
-            if (cg != null)
-            {
-                seq.Append(cg.DOFade(options.endAlpha, options.fadeDuration));
-            }
-            else
-            {
-                var graphics = obj.GetComponentsInChildren<Graphic>(true);
-                if (graphics != null && graphics.Length > 0)
-                {
-                    // 同時に複数の Graphic をフェードさせる
-                    var fadeSeq = DOTween.Sequence();
-                    foreach (var g in graphics)
-                    {
-                        fadeSeq.Join(g.DOFade(options.endAlpha, options.fadeDuration));
-                    }
-                    seq.Append(fadeSeq);
-                }
-                else
-                {
-                    var tmpros = obj.GetComponentsInChildren<TextMeshProUGUI>(true);
-                    if (tmpros != null && tmpros.Length > 0)
-                    {
-                        var fadeSeq = DOTween.Sequence();
-                        foreach (var t in tmpros)
-                        {
-                            fadeSeq.Join(t.DOFade(options.endAlpha, options.fadeDuration));
-                        }
-                        seq.Append(fadeSeq);
-                    }
-                    else
-                    {
-                        var srs = obj.GetComponentsInChildren<SpriteRenderer>(true);
-                        if (srs != null && srs.Length > 0)
-                        {
-                            var fadeSeq = DOTween.Sequence();
-                            foreach (var sr in srs)
-                            {
-                                fadeSeq.Join(sr.DOFade(options.endAlpha, options.fadeDuration));
-                            }
-                            seq.Append(fadeSeq);
-                        }
-                    }
-                }
-            }
+            // 揺れは独立した Sequence。フェードとの並行実行を維持する。
+            AppendFade(seq, obj, options);
 
             // 透明度指定が無い(デフォルト 1)か、フェード対象が見つからない場合は何もしない
 
@@ -157,6 +113,15 @@ namespace Main.UIMoves
             }
 
             // フェード処理は MoveTo と同じロジックを使う
+            AppendFade(seq, obj, options);
+
+            seq.OnComplete(() => onComplete?.Invoke());
+            return seq;
+        }
+
+        /// <summary>移動後のフェードを追加する。対象の優先順位と子 Sequence の構造を維持する。</summary>
+        private static void AppendFade(Sequence seq, GameObject obj, MoveOptions options)
+        {
             var cg = obj.GetComponent<CanvasGroup>();
             if (cg != null)
             {
@@ -167,6 +132,7 @@ namespace Main.UIMoves
                 var graphics = obj.GetComponentsInChildren<Graphic>(true);
                 if (graphics != null && graphics.Length > 0)
                 {
+                    // 同時に複数の Graphic をフェードさせる
                     var fadeSeq = DOTween.Sequence();
                     foreach (var g in graphics)
                     {
@@ -201,9 +167,6 @@ namespace Main.UIMoves
                     }
                 }
             }
-
-            seq.OnComplete(() => onComplete?.Invoke());
-            return seq;
         }
 
         // 3Dアンカーポジションは2Dプロジェクトの想定では不要のため削除しました。

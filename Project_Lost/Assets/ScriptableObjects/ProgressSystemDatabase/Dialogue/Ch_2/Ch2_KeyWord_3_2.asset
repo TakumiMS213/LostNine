@@ -15,5 +15,5 @@ MonoBehaviour:
   text: "\u30EA\u30C9\u3055\u3093\u306F\u68EE\u3092\u5ACC\u3063\u3066\u3044\u308B\u3093\u3058\u3083\u306A\u3044\u3002\n\u68EE\u306E\u4E2D\u3067\u3001\u8449\u3092\u9F67\u308A\u3001\u6CE5\u306B\u307E\u307F\u308C\u3066\u3044\u305F\u81EA\u5206\u3092\u6050\u308C\u3066\u3044\u308B\u2026\u2026\uFF1F"
   speakerName: "\u30D2\u30A4\u30E9\u30AE"
   portrait: {fileID: 21300000, guid: f3f65e03f4cbec441b408057920c5ed9, type: 3}
-  portraitPosition: 2
+  portraitPosition: 0
   displayDuration: 0

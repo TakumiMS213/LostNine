@@ -26,6 +26,7 @@ namespace Tuning.Visuals
         [SerializeField] private int resolution = 100;
 
         private float _offset;
+        private WaveformVisualizer _scrollReference;
 
         public float Frequency
         {
@@ -63,6 +64,22 @@ namespace Tuning.Visuals
             SetVerticesDirty();
         }
 
+        /// <summary>
+        /// 2本の波形を完全に重ねるため、スクロール位置を基準波形へ合わせる。
+        /// </summary>
+        public void MatchScrollOffset(WaveformVisualizer reference)
+        {
+            if (reference == null) return;
+            _offset = reference._offset;
+            SetVerticesDirty();
+        }
+
+        public void FollowScrollOffset(WaveformVisualizer reference)
+        {
+            _scrollReference = reference;
+            MatchScrollOffset(reference);
+        }
+
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -91,23 +108,23 @@ namespace Tuning.Visuals
             UIVertex vertex = UIVertex.simpleVert;
             vertex.color = color;
 
+            // 隣り合う線分の共有点は一度だけ計算する。
+            Vector2 previousPoint = GetWavePoint(0, segments, startX, step);
             for (int i = 0; i < segments - 1; i++)
             {
-                float x1 = startX + i * step;
-                float x2 = startX + (i + 1) * step;
-
-                // Normalize x to 0-1 for frequency calculation, add offset
-                float normalizedX1 = (float)i / (segments - 1);
-                float normalizedX2 = (float)(i + 1) / (segments - 1);
-
-                float y1 = Mathf.Sin((normalizedX1 * frequency) + _offset + phaseOffset) * amplitude;
-                float y2 = Mathf.Sin((normalizedX2 * frequency) + _offset + phaseOffset) * amplitude;
-
-                Vector2 p1 = new Vector2(x1, y1);
-                Vector2 p2 = new Vector2(x2, y2);
-
-                AddSegment(vh, p1, p2, thickness, vertex);
+                Vector2 nextPoint = GetWavePoint(i + 1, segments, startX, step);
+                AddSegment(vh, previousPoint, nextPoint, thickness, vertex);
+                previousPoint = nextPoint;
             }
+        }
+
+        private Vector2 GetWavePoint(int index, int segments, float startX, float step)
+        {
+            float x = startX + index * step;
+            float normalizedX = (float)index / (segments - 1);
+            float scrollOffset = _scrollReference != null ? _scrollReference._offset : _offset;
+            float y = Mathf.Sin((normalizedX * frequency) + scrollOffset + phaseOffset) * amplitude;
+            return new Vector2(x, y);
         }
 
         private void AddSegment(VertexHelper vh, Vector2 p1, Vector2 p2, float width, UIVertex v)

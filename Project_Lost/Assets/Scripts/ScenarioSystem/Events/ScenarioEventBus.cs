@@ -66,6 +66,9 @@ namespace ScenarioSystem.Events
         /// <summary>キーワードがクリックされた（View → Presenter/Adapter への通知）。</summary>
         public static event Action<string> OnKeywordClicked;
 
+        /// <summary>保存されたキーワード色が変化した。Viewは元テキストから表示を更新する。</summary>
+        public static event Action OnKeywordColorsChanged;
+
         // ──────────────────────────────
         //  Scenario Lifecycle
         // ──────────────────────────────
@@ -141,6 +144,9 @@ namespace ScenarioSystem.Events
         public static void RaiseKeywordClicked(string keywordId)
             => OnKeywordClicked?.Invoke(keywordId);
 
+        public static void RaiseKeywordColorsChanged()
+            => OnKeywordColorsChanged?.Invoke();
+
         public static void RaiseScenarioStarted(ScenarioData scenario)
             => OnScenarioStarted?.Invoke(scenario);
 
@@ -189,6 +195,7 @@ namespace ScenarioSystem.Events
             OnComuToggleInstantRequested = null;
             OnKeywordStateChanged = null;
             OnKeywordClicked = null;
+            OnKeywordColorsChanged = null;
             OnScenarioStarted = null;
             OnScenarioEnded = null;
             OnWindowVisibilityChanged = null;

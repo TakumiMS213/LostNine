@@ -56,10 +56,10 @@ namespace Tuning.Core
         [SerializeField] private Image overheatTimerImage;
 
         [Header("ビジュアル（波形）")]
-        [Tooltip("左側の波形ビジュアライザー")]
+        [Tooltip("操作結果に応じて基準波形へ近づく赤い波形")]
         [SerializeField] private Tuning.Visuals.WaveformVisualizer leftWaveform;
 
-        [Tooltip("右側の波形ビジュアライザー")]
+        [Tooltip("正解を示す固定の青い基準波形")]
         [SerializeField] private Tuning.Visuals.WaveformVisualizer rightWaveform;
 
         [Tooltip("最小周波数（同期率0%時）")]
@@ -79,6 +79,12 @@ namespace Tuning.Core
 
         [Tooltip("ターゲットロック時の線の太さ加算値（1つにつき）")]
         [SerializeField] private float thicknessBoostPerLock = 3f;
+
+        [Tooltip("正解から遠い時の赤い波形の位相差")]
+        [SerializeField] private float unmatchedPhaseOffset = Mathf.PI;
+
+        [Tooltip("登場アニメーション中にブロックのシェイクを停止する時間")]
+        [SerializeField, Min(0f)] private float entranceShakeDelay = 0.45f;
 
         [Tooltip("NGゾーン滞在時のノイズビジュアライザー")]
         [SerializeField] private Tuning.Visuals.NoiseVisualizer ngNoise;
@@ -122,6 +128,8 @@ namespace Tuning.Core
         [SerializeField] private AudioSource seSource;
 
         private float _targetCutoff;
+        private bool _usesRightBlock = true;
+        private float _shakeEnabledAt;
 
         private void Awake()
         {
@@ -132,8 +140,7 @@ namespace Tuning.Core
                 flashOverlay.color = c;
             }
 
-            if (leftWaveform != null) leftWaveform.PhaseOffset = 0f;
-            if (rightWaveform != null) rightWaveform.PhaseOffset = Mathf.PI;
+            ConfigureReferenceWaveform();
         }
 
         private void Start()
@@ -142,41 +149,94 @@ namespace Tuning.Core
             //if (rightPointVisual != null) _rightInitPos = rightPointVisual.anchoredPosition;
         }
 
-        /// <summary>
-        /// 同期率、安定度、ロック状態に基づいて演出を更新
-        /// </summary>
-        /// <summary>
-        /// 同期率、安定度、ロック状態に基づいて演出を更新
-        /// </summary>
-        public void OnSyncUpdate(float leftSync, float rightSync, float totalSync, float stability, bool leftLocked, bool rightLocked)
+        public void ConfigureBlockLayout(int blockCount, Vector2 leftBlockPosition, Vector2 rightBlockPosition)
         {
-            if (lowPassFilter == null) return;
+            _usesRightBlock = blockCount > 1;
+            _leftInitPos = leftBlockPosition;
+            _rightInitPos = rightBlockPosition;
+            _shakeEnabledAt = Time.time + entranceShakeDelay;
 
-            _targetCutoff = Mathf.Lerp(minCutoff, maxCutoff, totalSync);
-            lowPassFilter.cutoffFrequency = Mathf.Lerp(lowPassFilter.cutoffFrequency, _targetCutoff, Time.deltaTime * 5f);
+            if (rightWaveform != null)
+                rightWaveform.gameObject.SetActive(true);
+        }
+
+        /// <summary>
+        /// 同期率、ブロック全体での近さ、安定度、ロック状態に基づいて演出を更新する。
+        /// </summary>
+        public void OnSyncUpdate(
+            float totalSync,
+            float stability,
+            bool leftLocked,
+            bool rightLocked,
+            float leftBlockProximity,
+            float rightBlockProximity)
+        {
+            if (lowPassFilter != null)
+            {
+                _targetCutoff = Mathf.Lerp(minCutoff, maxCutoff, totalSync);
+                lowPassFilter.cutoffFrequency = Mathf.Lerp(lowPassFilter.cutoffFrequency, _targetCutoff, Time.deltaTime * 5f);
+            }
 
             if (noiseOverlay != null)
                 noiseOverlay.alpha = 1f - totalSync;
 
-            UpdateWaveform(leftWaveform, leftSync, stability, leftLocked);
-            UpdateWaveform(rightWaveform, rightSync, stability, rightLocked);
+            bool allBlocksLocked = leftLocked && (!_usesRightBlock || rightLocked);
+            float alignment = _usesRightBlock
+                ? Mathf.Min(leftBlockProximity, rightBlockProximity)
+                : leftBlockProximity;
+            if (allBlocksLocked)
+                alignment = 1f;
+
+            UpdateWaveforms(alignment, allBlocksLocked);
 
             ApplyShake(totalSync, stability);
-            UpdateTargetBlink(leftLocked, rightLocked);
+            UpdateTargetBlink(leftLocked, _usesRightBlock && rightLocked);
         }
 
-        private void UpdateWaveform(Tuning.Visuals.WaveformVisualizer wave, float sync, float stability, bool isLocked)
+        private void UpdateWaveforms(float alignment, bool allBlocksLocked)
         {
-            if (wave == null) return;
+            ConfigureReferenceWaveform();
+            if (leftWaveform == null) return;
 
-            // 同期率 -> 周波数（細かい波へ）
-            wave.Frequency = Mathf.Lerp(minWaveFreq, maxWaveFreq, sync);
-            // 安定度 -> 振幅（大きな波へ）
-            wave.Amplitude = Mathf.Lerp(minWaveAmp, maxWaveAmp, stability);
-            
-            // ターゲットロック -> 線の太さ
-            float targetThickness = baseThickness + (isLocked ? thicknessBoostPerLock : 0f);
-            wave.Thickness = Mathf.Lerp(wave.Thickness, targetThickness, Time.deltaTime * 10f);
+            // 青を正解の基準として固定し、赤だけをブロック全体での近さに応じて近づける。
+            float targetFrequency = Mathf.Lerp(minWaveFreq, maxWaveFreq, alignment);
+            float targetAmplitude = Mathf.Lerp(minWaveAmp, maxWaveAmp, alignment);
+            float targetPhase = Mathf.Lerp(unmatchedPhaseOffset, 0f, alignment);
+            float interpolation = 1f - Mathf.Exp(-6f * Time.deltaTime);
+
+            if (allBlocksLocked)
+            {
+                leftWaveform.Frequency = maxWaveFreq;
+                leftWaveform.Amplitude = maxWaveAmp;
+                leftWaveform.PhaseOffset = 0f;
+            }
+            else
+            {
+                leftWaveform.Frequency = Mathf.Lerp(leftWaveform.Frequency, targetFrequency, interpolation);
+                leftWaveform.Amplitude = Mathf.Lerp(leftWaveform.Amplitude, targetAmplitude, interpolation);
+                leftWaveform.PhaseOffset = Mathf.Lerp(leftWaveform.PhaseOffset, targetPhase, interpolation);
+            }
+            leftWaveform.Thickness = Mathf.Lerp(
+                leftWaveform.Thickness,
+                baseThickness + (allBlocksLocked ? thicknessBoostPerLock : 0f),
+                1f - Mathf.Exp(-10f * Time.deltaTime));
+
+            if (rightWaveform != null)
+            {
+                leftWaveform.ScrollSpeed = rightWaveform.ScrollSpeed;
+                leftWaveform.FollowScrollOffset(rightWaveform);
+            }
+        }
+
+        private void ConfigureReferenceWaveform()
+        {
+            if (rightWaveform == null) return;
+
+            rightWaveform.gameObject.SetActive(true);
+            rightWaveform.Frequency = maxWaveFreq;
+            rightWaveform.Amplitude = maxWaveAmp;
+            rightWaveform.PhaseOffset = 0f;
+            rightWaveform.Thickness = baseThickness;
         }
 
         /// <summary>
@@ -185,7 +245,16 @@ namespace Tuning.Core
         private void UpdateTargetBlink(bool leftLocked, bool rightLocked)
         {
             UpdateSingleTargetBlink(leftTargetGroup,  leftLocked,  ref _leftOutOfTargetTime);
-            UpdateSingleTargetBlink(rightTargetGroup, rightLocked, ref _rightOutOfTargetTime);
+            if (_usesRightBlock)
+            {
+                UpdateSingleTargetBlink(rightTargetGroup, rightLocked, ref _rightOutOfTargetTime);
+            }
+            else
+            {
+                _rightOutOfTargetTime = 0f;
+                if (rightTargetGroup != null)
+                    rightTargetGroup.alpha = 0f;
+            }
         }
 
         private void UpdateSingleTargetBlink(CanvasGroup group, bool isLocked, ref float outTimer)
@@ -301,20 +370,20 @@ namespace Tuning.Core
             if (overheatTimerBar != null)
                 overheatTimerBar.gameObject.SetActive(false);
 
-            // 波形を最大状態にする
+            // 成功時は赤と青の波形を完全に重ねる。
             if (leftWaveform != null)
             {
                 leftWaveform.Frequency = maxWaveFreq;
                 leftWaveform.Amplitude = maxWaveAmp;
                 leftWaveform.PhaseOffset = 0f;
-                leftWaveform.ResetWave();
             }
             if (rightWaveform != null)
             {
                 rightWaveform.Frequency = maxWaveFreq;
                 rightWaveform.Amplitude = maxWaveAmp;
-                rightWaveform.PhaseOffset = Mathf.PI;
+                rightWaveform.PhaseOffset = 0f;
                 rightWaveform.ResetWave();
+                leftWaveform?.FollowScrollOffset(rightWaveform);
             }
 
             // 成功演出アニメーション（MoveOnClickandReturn）
@@ -387,36 +456,27 @@ namespace Tuning.Core
 
         private void ApplyShake(float sync, float stability)
         {
+            if (Time.time < _shakeEnabledAt) return;
+
             // 同期率が低い時のシェイク + 安定度が低い時のシェイク
             // 安定度が高まるにつれてシェイクが収まっていく
             float baseShake = (1f - sync) * 3f;
             float instabilityShake = (1f - stability) * maxStabilityShake;
-            
             float totalShake = baseShake + instabilityShake;
 
-            if (leftPointVisual != null)
-            {
-                Vector2 currentPos = leftPointVisual.anchoredPosition;
-                Vector2 random = Random.insideUnitCircle * totalShake;
-                
-                // 初期位置に戻ろうとする力（ばねのような挙動）
-                Vector2 restoringForce = (_leftInitPos - currentPos) * centeringSpeed;
+            ApplyShakeTo(leftPointVisual, _leftInitPos, totalShake);
 
-                Vector2 move = (random + restoringForce) * Time.deltaTime * 30f;
-                leftPointVisual.anchoredPosition += move;
-            }
+            if (_usesRightBlock)
+                ApplyShakeTo(rightPointVisual, _rightInitPos, totalShake);
+        }
 
-            if (rightPointVisual != null)
-            {
-                Vector2 currentPos = rightPointVisual.anchoredPosition;
-                Vector2 random = Random.insideUnitCircle * totalShake;
+        private void ApplyShakeTo(RectTransform visual, Vector2 center, float strength)
+        {
+            if (visual == null) return;
 
-                // 初期位置に戻ろうとする力
-                Vector2 restoringForce = (_rightInitPos - currentPos) * centeringSpeed;
-
-                Vector2 move = (random + restoringForce) * Time.deltaTime * 30f;
-                rightPointVisual.anchoredPosition += move;
-            }
+            Vector2 target = center + Random.insideUnitCircle * strength;
+            float interpolation = 1f - Mathf.Exp(-centeringSpeed * Time.deltaTime);
+            visual.anchoredPosition = Vector2.Lerp(visual.anchoredPosition, target, interpolation);
         }
         public void ResetFeedback()
         {
@@ -435,9 +495,21 @@ namespace Tuning.Core
             if (noiseOverlay != null)
                 noiseOverlay.alpha = 1f; // Initial state (low sync)
 
-            // 位相オフセットをリセット（確実に適用するためここで再設定）
-            if (leftWaveform != null) leftWaveform.PhaseOffset = 0f;
-            if (rightWaveform != null) rightWaveform.PhaseOffset = Mathf.PI;
+            // 赤はずれた状態、青は正解の基準としてリセットする。
+            if (leftWaveform != null)
+            {
+                leftWaveform.Frequency = minWaveFreq;
+                leftWaveform.Amplitude = minWaveAmp;
+                leftWaveform.PhaseOffset = unmatchedPhaseOffset;
+                leftWaveform.Thickness = baseThickness;
+                leftWaveform.ResetWave();
+            }
+            if (rightWaveform != null)
+            {
+                ConfigureReferenceWaveform();
+                rightWaveform.ResetWave();
+                leftWaveform?.FollowScrollOffset(rightWaveform);
+            }
 
             if (flashOverlay != null)
             {

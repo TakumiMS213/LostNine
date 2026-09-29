@@ -36,13 +36,10 @@ namespace ScenarioSystem.Adapter
                 if (data == null)
                     continue;
 
-                if (_cache.ContainsKey(data.Chapter))
+                if (!_cache.TryAdd(data.Chapter, data))
                 {
                     Debug.LogWarning($"[LostNoteCharacterDatabase] Duplicate chapter '{data.Chapter}' ignored. First data is used.");
-                    continue;
                 }
-
-                _cache.Add(data.Chapter, data);
             }
         }
     }

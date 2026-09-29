@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -22,7 +21,7 @@ namespace MessageWindowSystem.Core
         #region Serialized Fields
 
         [Header("Dialogue Provider")]
-        [Tooltip("IDialogueProvider 実装。未設定時は旧 MessageWindowManager.Instance にフォールバック。")]
+        [Tooltip("IDialogueProvider 実装。未設定時はシーン内の DialogueProviderAdapter を使用。")]
         [SerializeField] private MonoBehaviour dialogueProviderSource;
 
         [Header("Charge Settings")]
@@ -59,6 +58,7 @@ namespace MessageWindowSystem.Core
         #region Public Properties
 
         public bool IsKeywordEnabled => _isKeywordEnabled;
+        public bool IsKeywordExtractionAvailable => _isKeywordEnabled && IsMemorizerActive;
         public bool IsCharging => _isCharging;
 
         #endregion
@@ -82,6 +82,13 @@ namespace MessageWindowSystem.Core
         /// <summary>指定IDがダミーキーワードかどうかを判定する。</summary>
         public static bool IsDummyKeyword(string id) => !string.IsNullOrEmpty(id) && id.StartsWith(DummyPrefix);
 
+        private static bool IsMemorizerActive => ProgressManager.Instance != null
+            && ProgressManager.Instance.IsMemorizerActive;
+
+        private bool CanInteractWithKeyword(string id) => IsKeywordExtractionAvailable
+            && !string.IsNullOrWhiteSpace(id)
+            && (ClueManager.Instance == null || !ClueManager.Instance.IsDiscovered(id));
+
         #endregion
 
         #region Public API
@@ -95,7 +102,12 @@ namespace MessageWindowSystem.Core
         }
 
         /// <summary>Sets keyword enabled state at runtime.</summary>
-        public void SetKeywordEnabled(bool enable) => _isKeywordEnabled = enable;
+        public void SetKeywordEnabled(bool enable)
+        {
+            _isKeywordEnabled = enable;
+            if (!enable)
+                CancelCharge();
+        }
 
         #endregion
 
@@ -108,6 +120,9 @@ namespace MessageWindowSystem.Core
 
         private void Update()
         {
+            if (_isCharging && !IsMemorizerActive)
+                CancelCharge();
+
             UpdateCursorHover();
         }
 
@@ -124,59 +139,22 @@ namespace MessageWindowSystem.Core
         /// <summary>Checks if the text contains any TMP link tags.</summary>
         public bool HasKeywordsInText(string text)
         {
-            if (string.IsNullOrEmpty(text)) return false;
-            return Regex.IsMatch(text, @"<(?:a\s+href|link)\s*=\s*"".*?""\s*>", RegexOptions.Singleline);
+            return KeywordTextFormatter.ContainsKeywords(text);
         }
 
-        /// <summary>Sets the color of a keyword link across all lines in the scenario.</summary>
+        /// <summary>表示中かどうかにかかわらず、IDごとの表示色を保存する。</summary>
         public void SetLinkColor(string id, string colorHex)
         {
-            var provider = GetProvider();
-            if (provider == null || provider.DialogueText == null || string.IsNullOrEmpty(id)) return;
-
-            string currentText = provider.CurrentText;
-            if (string.IsNullOrEmpty(currentText)) return;
-
-            string pattern = BuildLinkPattern(id);
-            if (!Regex.IsMatch(currentText, pattern)) return;
-
-            string newText = Regex.Replace(currentText, pattern, m =>
-            {
-                string stripped = StripColorTags(m.Groups[1].Value);
-                return $"<link=\"{id}\"><color={colorHex}>{stripped}</color></link>";
-            }, RegexOptions.Singleline);
-
-            if (currentText != newText)
-            {
-                provider.UpdateCurrentText(newText);
-            }
+            if (ClueManager.Instance != null)
+                ClueManager.Instance.SetKeywordColor(id, colorHex);
+            else
+                Debug.LogWarning("[KeywordHandler] ClueManager is required to retain keyword colors.");
         }
 
-        /// <summary>Resets a keyword's visual and discovery state.</summary>
+        /// <summary>状態と色をリセットする。表示は元の会話テキストから再生成される。</summary>
         public void ResetKeywordState(string id)
         {
-            if (string.IsNullOrEmpty(id)) return;
             ClueManager.Instance?.ResetKeywordStatus(id);
-
-            var provider = GetProvider();
-            if (provider == null) return;
-
-            string currentText = provider.CurrentText;
-            if (string.IsNullOrEmpty(currentText)) return;
-
-            string pattern = BuildLinkPattern(id);
-            if (!Regex.IsMatch(currentText, pattern)) return;
-
-            string newText = Regex.Replace(currentText, pattern, m =>
-            {
-                string stripped = StripColorTags(m.Groups[1].Value);
-                return $"<link=\"{id}\">{stripped}</link>";
-            }, RegexOptions.Singleline);
-
-            if (currentText != newText)
-            {
-                provider.UpdateCurrentText(newText);
-            }
         }
 
         /// <summary>Triggers a shake effect on the dialogue text.</summary>
@@ -195,7 +173,7 @@ namespace MessageWindowSystem.Core
             _shouldBlockNext = false;
 
             var provider = GetProvider();
-            if (provider == null || !provider.IsWindowActive || provider.IsTyping || !_isKeywordEnabled)
+            if (provider == null || !provider.IsWindowActive || provider.IsTyping || !IsKeywordExtractionAvailable)
                 return;
 
             var dialogueText = provider.DialogueText;
@@ -205,8 +183,11 @@ namespace MessageWindowSystem.Core
             int linkIndex = TMP_TextUtilities.FindIntersectingLink(dialogueText, eventData.position, uiCamera);
             if (linkIndex == -1) return;
 
+            string linkID = dialogueText.textInfo.linkInfo[linkIndex].GetLinkID().Trim('"');
+            if (_isCharging || !CanInteractWithKeyword(linkID)) return;
+
             _shouldBlockNext = true;
-            _chargingLinkID = dialogueText.textInfo.linkInfo[linkIndex].GetLinkID().Trim('"');
+            _chargingLinkID = linkID;
             _isCharging = true;
             _chargeCoroutine = StartCoroutine(ChargeRoutine(dialogueText, linkIndex, _chargingLinkID));
         }
@@ -274,12 +255,24 @@ namespace MessageWindowSystem.Core
             RestoreVertices(dialogueText, startCharIdx, charCount, originalVertices);
 
             _isCharging = false;
+            _chargeCoroutine = null;
+            _chargingLinkID = null;
             EffectManager.Instance?.StopChargeSE();
+
+            // 長押し中に別経路で発見された場合も、取得処理を繰り返さない。
+            if (!CanInteractWithKeyword(linkID))
+            {
+                dialogueText.ForceMeshUpdate();
+                SetKeywordHover(false);
+                yield break;
+            }
+
+            // 通知先から再入しても再クリックされないよう、先に状態を確定する。
+            ClueManager.Instance?.ProcessKeywordClick(linkID);
             EffectManager.Instance?.PlayDevelopmentEffect();
 
             // Fire events
             OnKeywordClicked?.Invoke(linkID);
-            ClueManager.Instance?.ProcessKeywordClick(linkID);
 
             bool shouldAddProgressAfterScenario = false;
             if (!IsDummyKeyword(linkID))
@@ -295,9 +288,7 @@ namespace MessageWindowSystem.Core
             }
 
             // キーワード抽出完了後、ClickArea を再有効化・カーソルをリセット
-            if (clickAreaGraphic != null) clickAreaGraphic.raycastTarget = true;
-            _isHoveringLink = false;
-            CursorManager.Instance?.ResetToDefault();
+            SetKeywordHover(false);
 
             if (shouldAddProgressAfterScenario)
             {
@@ -390,31 +381,23 @@ namespace MessageWindowSystem.Core
         /// <summary>
         /// 毎フレーム、マウスが TMP リンクタグ上にあるかチェックし、
         /// CursorManager 経由でカーソル画像を切り替える。
-        /// 当たり／ハズレ／ダミーに関係なく全リンクに反応する。
+        /// 未発見で操作可能なリンクに反応する。
         /// </summary>
         private void UpdateCursorHover()
         {
             if (CursorManager.Instance == null || keywordHoverCursor == null) return;
 
             var provider = GetProvider();
-            if (provider == null || !provider.IsWindowActive || provider.IsTyping)
+            if (provider == null || !provider.IsWindowActive || provider.IsTyping || !IsKeywordExtractionAvailable)
             {
-                if (_isHoveringLink)
-                {
-                    _isHoveringLink = false;
-                    CursorManager.Instance.ResetToDefault();
-                }
+                SetKeywordHover(false);
                 return;
             }
 
             var dialogueText = provider.DialogueText;
             if (dialogueText == null)
             {
-                if (_isHoveringLink)
-                {
-                    _isHoveringLink = false;
-                    CursorManager.Instance.ResetToDefault();
-                }
+                SetKeywordHover(false);
                 return;
             }
 
@@ -424,23 +407,24 @@ namespace MessageWindowSystem.Core
             Camera uiCamera = GetUICamera(dialogueText);
             int linkIndex = TMP_TextUtilities.FindIntersectingLink(dialogueText, mousePos, uiCamera);
 
-            if (linkIndex != -1)
+            bool canHover = linkIndex != -1
+                && CanInteractWithKeyword(dialogueText.textInfo.linkInfo[linkIndex].GetLinkID().Trim('"'));
+            SetKeywordHover(canHover);
+        }
+
+        private void SetKeywordHover(bool hovering)
+        {
+            if (clickAreaGraphic != null) clickAreaGraphic.raycastTarget = !hovering;
+            if (_isHoveringLink == hovering) return;
+
+            _isHoveringLink = hovering;
+            if (hovering)
             {
-                if (!_isHoveringLink)
-                {
-                    _isHoveringLink = true;
-                    CursorManager.Instance.SetCursor(keywordHoverCursor, keywordHoverHotspot);
-                    if (clickAreaGraphic != null) clickAreaGraphic.raycastTarget = false;
-                }
+                CursorManager.Instance?.SetCursor(keywordHoverCursor, keywordHoverHotspot);
             }
             else
             {
-                if (_isHoveringLink)
-                {
-                    _isHoveringLink = false;
-                    CursorManager.Instance.ResetToDefault();
-                    if (clickAreaGraphic != null) clickAreaGraphic.raycastTarget = true;
-                }
+                CursorManager.Instance?.ResetToDefault();
             }
         }
 
@@ -451,7 +435,7 @@ namespace MessageWindowSystem.Core
         /// <summary>
         /// IDialogueProvider を解決する。
         /// SerializedField から注入されていればそれを使い、
-        /// なければ旧 MessageWindowManager.Instance にフォールバック。
+        /// なければシーン内の DialogueProviderAdapter を使用する。
         /// </summary>
         private IDialogueProvider GetProvider()
         {
@@ -486,15 +470,7 @@ namespace MessageWindowSystem.Core
             return canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera ? canvas.worldCamera : null;
         }
 
-        private static string BuildLinkPattern(string id) => $@"<(?:a\s+href|link)\s*=\s*""{Regex.Escape(id)}""\s*>(.*?)</(?:a|link)>";
-        private static string StripColorTags(string content) => Regex.Replace(content, "</?color[^>]*>", "");
-
         #endregion
 
-        #region Legacy Wrapper
-
-        // Legacy wrapper removed
-
-        #endregion
     }
 }

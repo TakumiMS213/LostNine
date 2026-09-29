@@ -178,8 +178,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Button
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
-  m_sharedMaterial: {fileID: -6663560369686292098, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  m_sharedMaterial: {fileID: -6663560369686292098, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3751,8 +3751,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "<color=#00ff7b><i><b>\u30BD\u30D5\u30C8</b></i></color><color=#ff0000><u>\u30E1\u30C7\u30A3\u30A2</u></color><color=#0091ff><size=120%><s>\u7814\u7A76\u4F1A</s></size></color>"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
-  m_sharedMaterial: {fileID: -6663560369686292098, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  m_sharedMaterial: {fileID: -6663560369686292098, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3776,8 +3776,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 70
-  m_fontSizeBase: 70
+  m_fontSize: 63
+  m_fontSizeBase: 63
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -4564,8 +4564,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u6642\u8A08\u982D\u306E\u30BF\u30AD\u30B7\u30FC\u30C9"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
-  m_sharedMaterial: {fileID: -6663560369686292098, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  m_sharedMaterial: {fileID: -6663560369686292098, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4776,8 +4776,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Button
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
-  m_sharedMaterial: {fileID: -6663560369686292098, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  m_sharedMaterial: {fileID: -6663560369686292098, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

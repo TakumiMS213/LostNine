@@ -24,21 +24,22 @@ public class UISwitcher : MonoBehaviour
     // 表示ボタンに割り当てる
     public void ShowPanel(int index)
     {
-        if (_panels != null && index >= 0 && index < _panels.Length)
-        {
-            if (_panels[index].panel != null)
-                _panels[index].panel.SetActive(true);
-        }
+        SetPanelActive(index, true);
     }
 
     // 非表示ボタンに割り当てる
     public void HidePanel(int index)
     {
-        if (_panels != null && index >= 0 && index < _panels.Length)
-        {
-            if (_panels[index].panel != null)
-                _panels[index].panel.SetActive(false);
-        }
+        SetPanelActive(index, false);
+    }
+
+    private void SetPanelActive(int index, bool active)
+    {
+        if (_panels == null || index < 0 || index >= _panels.Length) return;
+
+        var panel = _panels[index].panel;
+        if (panel != null)
+            panel.SetActive(active);
     }
 
     public void HideAllPanels()

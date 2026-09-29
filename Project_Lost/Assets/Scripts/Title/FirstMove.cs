@@ -26,8 +26,32 @@ public class FirstMove : MonoBehaviour
     {
         if (rect == null) rect = GetComponent<RectTransform>();
         if (originalPos == Vector2.zero && rect != null) originalPos = rect.anchoredPosition; // Auto-init if needed
-        
+
+        rect.DOKill();
         rect.anchoredPosition = originalPos + new Vector2(0, offsetY); // 画面下へずらす
-        rect.DOAnchorPos(originalPos, duration).SetEase(ease);
+        rect.DOAnchorPos(originalPos, duration).SetEase(ease).SetLink(gameObject);
+    }
+
+    /// <summary>
+    /// レイアウト変更後の登場先を更新する。
+    /// </summary>
+    public void SetDestination(Vector2 destination, bool replay)
+    {
+        if (rect == null) rect = GetComponent<RectTransform>();
+        if (rect == null) return;
+
+        rect.DOKill();
+        originalPos = destination;
+
+        if (replay && isActiveAndEnabled)
+            Play();
+        else
+            rect.anchoredPosition = originalPos;
+    }
+
+    private void OnDisable()
+    {
+        if (rect != null)
+            rect.DOKill();
     }
 }

@@ -749,8 +749,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uFF1C\u5B9A\u7740\uFF1E"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
-  m_sharedMaterial: {fileID: -6663560369686292098, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  m_sharedMaterial: {fileID: -6663560369686292098, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -3146,8 +3146,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "<color=#fff700>\uFF1C\u8ABF\u5F8B\uFF1E</color>\u6210\u529F<i>\uFF01</i>"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
-  m_sharedMaterial: {fileID: -6663560369686292098, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  m_sharedMaterial: {fileID: -6663560369686292098, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4167,8 +4167,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "<b><color=#fff700>\uFF1C\u8ABF\u5F8B\uFF1E-Tuning-</color></b> START<i>\uFF01</i>"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
-  m_sharedMaterial: {fileID: -6663560369686292098, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  m_sharedMaterial: {fileID: -6663560369686292098, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4608,7 +4608,7 @@ MonoBehaviour:
   delaySeconds: 0
   maxWaitFrames: 10
   typingSpeed: 0.05
-  fontAsset: {fileID: 11400000, guid: fabb2de75ad1f4c9693c4c9a2b684fd0, type: 2}
+  fontAsset: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   advanceIndicatorSprite: {fileID: 21300000, guid: 9581870bad71d4c08952aebdef723892, type: 3}
   advanceIndicatorSize: {x: 32, y: 32}
   advanceIndicatorOffset: {x: -44, y: 34}
@@ -4772,6 +4772,8 @@ MonoBehaviour:
   maxWaveAmp: 60
   baseThickness: 2
   thicknessBoostPerLock: 2
+  unmatchedPhaseOffset: 3.1415927
+  entranceShakeDelay: 0.45
   ngNoise: {fileID: 75176661}
   successSE: {fileID: 8300000, guid: 626acfbd8ded07641a3cffabf5174a6d, type: 3}
   successMoveVisual: {fileID: 1840856341}
@@ -4803,6 +4805,7 @@ MonoBehaviour:
   rightPoint: {fileID: 1854057841}
   leftTarget: {fileID: 943558290}
   rightTarget: {fileID: 574190916}
+  pointSizeMultiplier: 1.5
   leftBoundsArea: {fileID: 1547265831}
   rightBoundsArea: {fileID: 1135566284}
   leftNgZoneArea: {fileID: 1378041622}

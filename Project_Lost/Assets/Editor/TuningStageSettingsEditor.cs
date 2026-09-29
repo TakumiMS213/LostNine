@@ -34,6 +34,7 @@ public class TuningStageSettingsEditor : Editor
 
     // ── SerializedProperty キャッシュ ─────────────────
     // Target
+    private SerializedProperty _activeBlockCount;
     private SerializedProperty _targetTolerance;
     private SerializedProperty _isMovingTarget;
     private SerializedProperty _targetMoveSpeed;
@@ -51,6 +52,7 @@ public class TuningStageSettingsEditor : Editor
     private SerializedProperty _rightMoveForce;
     private SerializedProperty _rightMaxSpeed;
     // Inertia
+    private SerializedProperty _useInertia;
     private SerializedProperty _baseInertia;
     // Penalty
     private SerializedProperty _ngZonePenaltyRate;
@@ -70,6 +72,7 @@ public class TuningStageSettingsEditor : Editor
 
     private void OnEnable()
     {
+        _activeBlockCount            = serializedObject.FindProperty("activeBlockCount");
         _targetTolerance             = serializedObject.FindProperty("targetTolerance");
         _isMovingTarget              = serializedObject.FindProperty("isMovingTarget");
         _targetMoveSpeed             = serializedObject.FindProperty("targetMoveSpeed");
@@ -86,6 +89,7 @@ public class TuningStageSettingsEditor : Editor
         _rightMoveForce              = serializedObject.FindProperty("rightMoveForce");
         _rightMaxSpeed               = serializedObject.FindProperty("rightMaxSpeed");
 
+        _useInertia                  = serializedObject.FindProperty("useInertia");
         _baseInertia                 = serializedObject.FindProperty("baseInertia");
 
         _ngZonePenaltyRate           = serializedObject.FindProperty("ngZonePenaltyRate");
@@ -170,6 +174,7 @@ public class TuningStageSettingsEditor : Editor
     // ─────────────────────────────────────────────────
     private void DrawTarget()
     {
+        EditorGUILayout.PropertyField(_activeBlockCount);
         EditorGUILayout.PropertyField(_targetTolerance);
         EditorGUILayout.PropertyField(_isMovingTarget);
         if (_isMovingTarget.boolValue)
@@ -216,7 +221,16 @@ public class TuningStageSettingsEditor : Editor
 
     private void DrawInertia()
     {
-        EditorGUILayout.PropertyField(_baseInertia);
+        EditorGUILayout.PropertyField(_useInertia);
+        using (new EditorGUI.DisabledScope(!_useInertia.boolValue))
+            EditorGUILayout.PropertyField(_baseInertia);
+
+        if (!_useInertia.boolValue)
+        {
+            EditorGUILayout.HelpBox("慣性なし：入力に対して点が直接移動します。", MessageType.Info);
+            return;
+        }
+
         string label = _baseInertia.floatValue < 5f  ? "　スライド寄り" :
                        _baseInertia.floatValue < 15f ? "　標準" : "　ピタ止まり";
         DrawBar(_baseInertia.floatValue, 0.1f, 30f, Color.Lerp(new Color(0.3f, 0.8f, 1f), new Color(1f, 0.6f, 0.1f), (_baseInertia.floatValue - 0.1f) / 29.9f), label);
@@ -301,7 +315,9 @@ public class TuningStageSettingsEditor : Editor
             DrawPreviewBar("スピード感",  speedScore);
 
             // ③ 操作難度：inertia(低=滑る=難) + interference
-            float inertiaHard = 1f - Mathf.Clamp01((s.baseInertia - 0.1f) / 29.9f);
+            float inertiaHard = s.useInertia
+                ? 1f - Mathf.Clamp01((s.baseInertia - 0.1f) / 29.9f)
+                : 0f;
             float controlHard = (inertiaHard + s.interferenceStrength) * 0.5f;
             DrawPreviewBar("操作難度",    controlHard);
 

@@ -73,7 +73,7 @@ public class ComuStartandEndManager : MonoBehaviour
     [Tooltip("コミュニケーション切り替え時にフォントサイズを変更する TMP_Text。")]
     [SerializeField] private TMP_Text fontSizeTarget;
     [Tooltip("コミュニケーション開始時のフォントサイズ。")]
-    [SerializeField] private float comuFontSize = 70f;
+    [SerializeField] private float comuFontSize = 63f;
 
     private readonly ComuLogic _logic = new ComuLogic();
 
@@ -276,6 +276,15 @@ public class ComuStartandEndManager : MonoBehaviour
     /// </summary>
     private void ApplyShapeToggle(bool allowAnimation)
     {
+        ApplyShapeState(!_logic.IsInCommunication, allowAnimation);
+    }
+
+    /// <summary>
+    /// UI形状を指定された会話状態へ確定する。
+    /// アニメーション時も現在位置を確認し、同じ状態への再適用で反転させない。
+    /// </summary>
+    private void ApplyShapeState(bool isInCommunication, bool allowAnimation)
+    {
         if (shapeAnimators != null)
         {
             foreach (var animator in shapeAnimators)
@@ -284,37 +293,21 @@ public class ComuStartandEndManager : MonoBehaviour
 
                 if (allowAnimation)
                 {
-                    animator.Play();
+                    if (animator.isMoved != isInCommunication)
+                        animator.Play();
                 }
+                else if (isInCommunication)
+                    animator.SetToTarget();
                 else
-                {
-                    // Play() のトグル動作を再現: 未移動→ターゲット、移動済→元に戻す
-                    if (!animator.isMoved)
-                        animator.SetToTarget();
-                    else
-                        animator.SetToOriginal();
-                }
+                    animator.SetToOriginal();
             }
         }
 
-        // スプライト切り替え
         if (portraitSpriteTarget != null && comuSprite != null)
-        {
-            // IsInCommunication はまだ更新前なので、false = これから Start（comuSprite を設定）
-            if (!_logic.IsInCommunication)
-                portraitSpriteTarget.sprite = comuSprite;
-            else
-                portraitSpriteTarget.sprite = _originalSprite;
-        }
+            portraitSpriteTarget.sprite = isInCommunication ? comuSprite : _originalSprite;
 
-        // フォントサイズ切り替え
         if (fontSizeTarget != null)
-        {
-            if (!_logic.IsInCommunication)
-                fontSizeTarget.fontSize = comuFontSize;
-            else
-                fontSizeTarget.fontSize = _originalFontSize;
-        }
+            fontSizeTarget.fontSize = isInCommunication ? comuFontSize : _originalFontSize;
     }
 
     #endregion
@@ -468,7 +461,7 @@ public class ComuStartandEndManager : MonoBehaviour
         await UniTask.Delay(500);
         NamePlate.SetActive(true);
         messageWindow.SetActive(true);
-        messageWindow.GetComponent<TMP_Text>().fontSize = 45;
+        messageWindow.GetComponent<TMP_Text>().fontSize = 40.5f;
         messageWindowBackGround.SetActive(true);
         NamePlateBackGround.SetActive(true);
         fadeFrame.gameObject.SetActive(false);
@@ -505,6 +498,8 @@ public class ComuStartandEndManager : MonoBehaviour
     /// </summary>
     private void SetDeskInstant()
     {
+        if (desk == null) return;
+
         if (desk.TryGetComponent<MoveOnClickandReturn>(out var move))
         {
             if (move.isMoved)
