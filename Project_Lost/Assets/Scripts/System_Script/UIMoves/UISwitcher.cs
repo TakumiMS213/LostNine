@@ -12,6 +12,7 @@ public class UISwitcher : MonoBehaviour
     }
 
     [SerializeField] private PanelData[] _panels;
+    public event System.Action OnPanelClosed;
 
     private void Update()
     {
@@ -39,7 +40,11 @@ public class UISwitcher : MonoBehaviour
 
         var panel = _panels[index].panel;
         if (panel != null)
+        {
+            bool wasActive = panel.activeSelf;
             panel.SetActive(active);
+            if (wasActive && !active) OnPanelClosed?.Invoke();
+        }
     }
 
     public void HideAllPanels()
@@ -60,7 +65,7 @@ public class UISwitcher : MonoBehaviour
             if (_panels[i].panel != null && _panels[i].panel.activeSelf && _panels[i].hideOnEsc)
             {
                 SystemScript.EscapeQuitHandler.SuppressQuitForCurrentFrame();
-                _panels[i].panel.SetActive(false);
+                SetPanelActive(i, false);
             }
         }
     }

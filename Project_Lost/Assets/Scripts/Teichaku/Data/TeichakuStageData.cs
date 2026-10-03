@@ -9,6 +9,15 @@ namespace Teichaku.Data
     [CreateAssetMenu(fileName = "TeichakuStageData", menuName = "Teichaku/Stage Data")]
     public class TeichakuStageData : ScriptableObject
     {
+        [Header("なくしもの（盤面編集の下絵・クリア結果）")]
+        public Sprite lostThingImage;
+        public string lostThingName;
+
+        [Header("盤面の密度")]
+        [Tooltip("マスの希望サイズ。大きな盤面は表示領域へ収まるよう自動縮小する")]
+        [Min(24f)] public float preferredTileSize = 160f;
+        [Min(0f)] public float tileSpacing = 8f;
+
         [Header("グリッドサイズ")]
         [Tooltip("横方向のタイル数")]
         public int width = 3;
@@ -32,7 +41,7 @@ namespace Teichaku.Data
         {
             if (x < 0 || x >= width || y < 0 || y >= height) return false;
             int index = y * width + x;
-            if (index < 0 || index >= tileActive.Length) return false;
+            if (tileActive == null || index < 0 || index >= tileActive.Length) return false;
             return tileActive[index];
         }
 
@@ -44,9 +53,10 @@ namespace Teichaku.Data
             get
             {
                 int count = 0;
-                for (int i = 0; i < tileActive.Length; i++)
+                for (int y = 0; y < height; y++)
                 {
-                    if (tileActive[i]) count++;
+                    for (int x = 0; x < width; x++)
+                        if (IsTileActive(x, y)) count++;
                 }
                 return count;
             }
@@ -57,6 +67,8 @@ namespace Teichaku.Data
         /// </summary>
         public void ResizeGrid(int newWidth, int newHeight)
         {
+            newWidth = Mathf.Clamp(newWidth, 1, 20);
+            newHeight = Mathf.Clamp(newHeight, 1, 20);
             bool[] newArray = new bool[newWidth * newHeight];
 
             // 既存データを可能な限りコピー
@@ -66,7 +78,7 @@ namespace Teichaku.Data
                 {
                     int oldIndex = y * width + x;
                     int newIndex = y * newWidth + x;
-                    if (oldIndex < tileActive.Length)
+                    if (tileActive != null && oldIndex < tileActive.Length)
                     {
                         newArray[newIndex] = tileActive[oldIndex];
                     }
@@ -76,6 +88,24 @@ namespace Teichaku.Data
             width = newWidth;
             height = newHeight;
             tileActive = newArray;
+        }
+
+        public bool TryGetActiveBounds(out RectInt bounds)
+        {
+            int minX = width, minY = height, maxX = -1, maxY = -1;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (!IsTileActive(x, y)) continue;
+                    minX = Mathf.Min(minX, x);
+                    minY = Mathf.Min(minY, y);
+                    maxX = Mathf.Max(maxX, x);
+                    maxY = Mathf.Max(maxY, y);
+                }
+            }
+            bounds = maxX < 0 ? new RectInt() : new RectInt(minX, minY, maxX - minX + 1, maxY - minY + 1);
+            return maxX >= 0;
         }
     }
 }

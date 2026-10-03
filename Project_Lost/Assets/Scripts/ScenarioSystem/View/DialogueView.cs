@@ -54,6 +54,10 @@ namespace ScenarioSystem.View
         private bool _wasSkipHeld;
         private float _nextAutoAdvanceTime;
         private GameObject _advanceIndicatorObject;
+        private bool _isWindowVisible = true;
+        private bool _isWaitingForChoice;
+        private bool _hasApplicationFocus = true;
+        private bool _isApplicationPaused;
 
         #endregion
 
@@ -71,7 +75,7 @@ namespace ScenarioSystem.View
             dialogueText = text;
             windowRoot = root;
             defaultTypingSpeed = typingSpeed;
-            keywordHandler = null;
+            keywordHandler = text != null ? text.GetComponent<MessageWindowSystem.Core.KeywordHandler>() : null;
             EnsureAdvanceIndicator();
         }
 
@@ -84,6 +88,9 @@ namespace ScenarioSystem.View
             ScenarioEventBus.OnDialogueRequested += HandleDialogue;
             ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibility;
             ScenarioEventBus.OnKeywordColorsChanged += RefreshKeywordColors;
+            ScenarioEventBus.OnScenarioStarted += HandleScenarioBoundary;
+            ScenarioEventBus.OnScenarioEnded += HandleScenarioBoundary;
+            ScenarioEventBus.OnChoicesRequested += HandleChoicesRequested;
             SceneManager.sceneLoaded += HandleSceneLoaded;
             RefreshKeywordColors();
         }
@@ -98,18 +105,24 @@ namespace ScenarioSystem.View
             ScenarioEventBus.OnDialogueRequested -= HandleDialogue;
             ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibility;
             ScenarioEventBus.OnKeywordColorsChanged -= RefreshKeywordColors;
+            ScenarioEventBus.OnScenarioStarted -= HandleScenarioBoundary;
+            ScenarioEventBus.OnScenarioEnded -= HandleScenarioBoundary;
+            ScenarioEventBus.OnChoicesRequested -= HandleChoicesRequested;
             SceneManager.sceneLoaded -= HandleSceneLoaded;
+            CancelTyping();
             ResetAutoAdvanceState();
         }
 
         private void OnApplicationFocus(bool hasFocus)
         {
+            _hasApplicationFocus = hasFocus;
             if (!hasFocus)
                 ResetAutoAdvanceState();
         }
 
         private void OnApplicationPause(bool pauseStatus)
         {
+            _isApplicationPaused = pauseStatus;
             if (pauseStatus)
                 ResetAutoAdvanceState();
         }
@@ -152,6 +165,14 @@ namespace ScenarioSystem.View
         /// </summary>
         public void OnUserInput()
         {
+            if (!_isWindowVisible || (windowRoot != null && !windowRoot.activeInHierarchy)
+                || _isWaitingForChoice)
+                return;
+
+            // 長押し抽出とCtrl送りを競合させず、抽出を始めたクリックも消費する。
+            if (keywordHandler != null && (keywordHandler.IsCharging || keywordHandler.ConsumeBlockNext()))
+                return;
+
             if (_isTyping)
             {
                 // タイピング中ならスキップ（全文表示）
@@ -159,10 +180,6 @@ namespace ScenarioSystem.View
             }
             else
             {
-                // キーワードクリック中なら advance をブロック
-                if (keywordHandler != null && keywordHandler.ConsumeBlockNext())
-                    return;
-
                 // タイピング完了済みなら次へ進むリクエスト
                 ScenarioEventBus.RaiseAdvanceRequested();
             }
@@ -176,7 +193,17 @@ namespace ScenarioSystem.View
         {
             if (dialogueText == null) return;
 
-            _currentFullText = data.Text;
+            _isWaitingForChoice = false;
+            _currentFullText = data.Text ?? string.Empty;
+            if (data.Instant)
+            {
+                CancelTyping();
+                dialogueText.text = ApplyKeywordColors(_currentFullText);
+                dialogueText.maxVisibleCharacters = int.MaxValue;
+                dialogueText.ForceMeshUpdate();
+                return;
+            }
+
             float speed = data.TypingSpeed > 0 ? data.TypingSpeed : defaultTypingSpeed;
 
             if (_typingCoroutine != null) StopCoroutine(_typingCoroutine);
@@ -185,11 +212,29 @@ namespace ScenarioSystem.View
 
         private void HandleWindowVisibility(bool visible)
         {
+            _isWindowVisible = visible;
+            if (!visible)
+            {
+                CancelTyping();
+                ResetAutoAdvanceState();
+            }
+
             if (windowRoot != null)
                 windowRoot.SetActive(visible);
+        }
 
-            if (!visible)
-                ResetAutoAdvanceState();
+        private void HandleScenarioBoundary(Model.ScenarioData _)
+        {
+            CancelTyping();
+            _isWaitingForChoice = false;
+            ResetAutoAdvanceState();
+        }
+
+        private void HandleChoicesRequested(System.Collections.Generic.List<ChoiceEntry> choices)
+        {
+            CancelTyping();
+            _isWaitingForChoice = choices != null && choices.Count > 0;
+            ResetAutoAdvanceState();
         }
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -257,7 +302,7 @@ namespace ScenarioSystem.View
             if (dialogueText != null && _currentFullText != null)
             {
                 dialogueText.text = ApplyKeywordColors(_currentFullText);
-                dialogueText.maxVisibleCharacters = _currentFullText.Length;
+                dialogueText.maxVisibleCharacters = int.MaxValue;
             }
 
             FinishTyping();
@@ -270,8 +315,18 @@ namespace ScenarioSystem.View
             ScenarioEventBus.RaiseTypingCompleted();
         }
 
+        private void CancelTyping()
+        {
+            if (_typingCoroutine != null) StopCoroutine(_typingCoroutine);
+            _typingCoroutine = null;
+            _isTyping = false;
+        }
+
         private bool IsSkipHeld()
         {
+            if (!_hasApplicationFocus || _isApplicationPaused)
+                return false;
+
             var keyboard = Keyboard.current;
             if (keyboard == null)
                 return false;

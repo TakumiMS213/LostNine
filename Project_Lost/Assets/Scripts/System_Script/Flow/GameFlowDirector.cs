@@ -32,9 +32,13 @@ namespace System_Script.Flow
         private StorySequence _currentSequence;
         private int _currentStepIndex = 0;
         private bool _isPlaying = false;
+        private ProgressManager _progressManager;
+        private bool _keywordCompletionPending;
+        private int _keywordCompletionChapter = -1;
 
         private void Start()
         {
+            SubscribeProgressManager();
             if (playOnStart)
             {
                 // check for overrides first
@@ -52,18 +56,64 @@ namespace System_Script.Flow
 
         private void OnEnable()
         {
-            if (ProgressManager.Instance != null)
-            {
-                ProgressManager.Instance.OnKeywordThresholdReached += OnKeywordThresholdReached;
-            }
+            SubscribeProgressManager();
         }
 
         private void OnDisable()
         {
-            if (ProgressManager.Instance != null)
+            UnsubscribeProgressManager();
+            _keywordCompletionPending = false;
+        }
+
+        private void SubscribeProgressManager()
+        {
+            if (_progressManager == ProgressManager.Instance && _progressManager != null) return;
+            UnsubscribeProgressManager();
+            _progressManager = ProgressManager.Instance;
+            if (_progressManager == null) return;
+            _progressManager.OnKeywordThresholdReached += OnKeywordThresholdReached;
+            _progressManager.OnProgressChanged += HandleProgressChanged;
+            HandleProgressChanged();
+        }
+
+        private void UnsubscribeProgressManager()
+        {
+            if (_progressManager != null)
             {
-                ProgressManager.Instance.OnKeywordThresholdReached -= OnKeywordThresholdReached;
+                _progressManager.OnKeywordThresholdReached -= OnKeywordThresholdReached;
+                _progressManager.OnProgressChanged -= HandleProgressChanged;
             }
+            _progressManager = null;
+        }
+
+        private void HandleProgressChanged()
+        {
+            if (_progressManager == null) return;
+            // 同じ章をLOADし直した場合も、リセット後は完了演出をもう一度再生する。
+            if (!_progressManager.AllKeywordsCollected)
+                _keywordCompletionChapter = -1;
+            _keywordCompletionPending = _progressManager.AllKeywordsCollected
+                && _progressManager.CurrentPhase == GamePhase.Extraction
+                && _keywordCompletionChapter != _progressManager.CurrentChapter;
+        }
+
+        private void LateUpdate()
+        {
+            if (_progressManager != ProgressManager.Instance) SubscribeProgressManager();
+            if (!_keywordCompletionPending || _progressManager == null || _isPlaying) return;
+            if (!_progressManager.AllKeywordsCollected || _progressManager.CurrentPhase != GamePhase.Extraction)
+            {
+                _keywordCompletionPending = false;
+                return;
+            }
+
+            // 進行更新のイベント配信・そのアクションの完了処理が終わってから開始する。
+            // Dialogue中に集め終えていても、その会話はExtraction到達まで維持する。
+            _keywordCompletionPending = false;
+            var sequence = GetOverrideSequence();
+            if (sequence == null) return;
+            _keywordCompletionChapter = _progressManager.CurrentChapter;
+            PlaySequence(sequence);
         }
 
         /// <summary>
@@ -76,22 +126,7 @@ namespace System_Script.Flow
         /// </summary>
         private void OnKeywordThresholdReached()
         {
-            if (_isPlaying)
-            {
-                Debug.LogWarning("[GameFlowDirector] Sequence already playing, ignoring keyword threshold.");
-                return;
-            }
-
-            var overrideSeq = GetOverrideSequence();
-            if (overrideSeq != null)
-            {
-                Debug.Log($"[GameFlowDirector] Keyword threshold reached. Launching override sequence for Ch{ProgressManager.Instance.CurrentChapter}-{ProgressManager.Instance.CurrentPhase}.");
-                PlaySequence(overrideSeq);
-            }
-            else
-            {
-                Debug.Log($"[GameFlowDirector] Keyword threshold reached but no override found for Ch{ProgressManager.Instance?.CurrentChapter}-{ProgressManager.Instance?.CurrentPhase}. No sequence played.");
-            }
+            HandleProgressChanged();
         }
 
         private StorySequence GetOverrideSequence()

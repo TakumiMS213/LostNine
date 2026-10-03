@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using ScenarioSystem.Adapter;
 using ScenarioSystem.Events;
+using ScenarioSystem.Model;
 
 namespace System_Script
 {
@@ -46,7 +47,7 @@ namespace System_Script
 
             string scenarioId = ProgressManager.Instance.TryConsumeStoryScenarioId(out var requestedScenarioId)
                 ? requestedScenarioId
-                : $"Ch{ProgressManager.Instance.CurrentChapter}_Story";
+                : ScenarioKey.ForPurpose(ProgressManager.Instance.CurrentChapter, ScenarioPurpose.Story);
             Debug.Log($"[StorySceneDirector] 自動再生開始: {scenarioId}");
             
             MessageWindowFacade.Instance.StartScenarioById(scenarioId);

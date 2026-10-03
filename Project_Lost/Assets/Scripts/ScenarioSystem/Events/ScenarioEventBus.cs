@@ -225,6 +225,8 @@ namespace ScenarioSystem.Events
         public readonly NameSlideDirection NameSlideDirection;
         public readonly AudioClip VoiceClip;
         public readonly Sprite BackgroundImage;
+        /// <summary>割り込み復帰時など、タイプ演出なしで元の全文を復元する。</summary>
+        public readonly bool Instant;
 
         public DialogueEventData(
             string speakerName,
@@ -235,6 +237,21 @@ namespace ScenarioSystem.Events
             NameSlideDirection nameSlideDirection,
             AudioClip voiceClip,
             Sprite backgroundImage)
+            : this(speakerName, text, portrait, portraitPosition, typingSpeed,
+                nameSlideDirection, voiceClip, backgroundImage, false)
+        {
+        }
+
+        public DialogueEventData(
+            string speakerName,
+            string text,
+            Sprite portrait,
+            PortraitPosition portraitPosition,
+            float typingSpeed,
+            NameSlideDirection nameSlideDirection,
+            AudioClip voiceClip,
+            Sprite backgroundImage,
+            bool instant)
         {
             SpeakerName = speakerName;
             Text = text;
@@ -244,7 +261,12 @@ namespace ScenarioSystem.Events
             NameSlideDirection = nameSlideDirection;
             VoiceClip = voiceClip;
             BackgroundImage = backgroundImage;
+            Instant = instant;
         }
+
+        public DialogueEventData WithInstantDisplay() => new(
+            SpeakerName, Text, Portrait, PortraitPosition, TypingSpeed,
+            NameSlideDirection, VoiceClip, BackgroundImage, true);
 
         /// <summary>DialogueEntry から DialogueEventData を生成するファクトリ。</summary>
         public static DialogueEventData FromEntry(DialogueEntry entry)

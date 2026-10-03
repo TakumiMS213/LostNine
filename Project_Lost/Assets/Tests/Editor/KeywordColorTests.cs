@@ -7,6 +7,8 @@ using TMPro;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -152,15 +154,183 @@ public class KeywordColorTests
         Set(_progress, "_isMemorizerUnlocked", false);
         Set(_progress, "_isMemorizerActive", false);
 
-        Assert.That(Call(_progress, "ToggleMemorizer"), Is.False);
+        Assert.That(Call(_progress, "SetMemorizerActive", true), Is.False);
         Call(_progress, "AdvancePhase");
         Assert.That(_progress.GetType().GetProperty("IsMemorizerUnlocked").GetValue(_progress), Is.True);
-        Assert.That(Call(_progress, "ToggleMemorizer"), Is.True);
+        Assert.That(Call(_progress, "SetMemorizerActive", true), Is.True);
         Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.True);
 
         Call(_progress, "SetMemorizerUnlocked", false);
         Assert.That(_progress.GetType().GetProperty("IsMemorizerUnlocked").GetValue(_progress), Is.False);
         Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.False);
+    }
+
+    [Test]
+    public void MemorizerFollowsEitherShiftAndOnlyNotifiesOnStateChanges()
+    {
+        var previousKeyboard = Keyboard.current;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        try
+        {
+            Set(_progress, "mainSceneName", SceneManager.GetActiveScene().name);
+            Set(_progress, "_isMemorizerActive", false);
+            var changes = new List<bool>();
+            _progress.GetType().GetEvent("OnMemorizerStateChanged").AddEventHandler(_progress,
+                new Action<bool>(changes.Add));
+
+            void UpdateKeys(params Key[] keys)
+            {
+                InputSystem.QueueStateEvent(keyboard, new KeyboardState(keys));
+                InputSystem.Update();
+                Call(_progress, "Update");
+            }
+
+            UpdateKeys(Key.LeftShift);
+            Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.True);
+            UpdateKeys(Key.LeftShift);
+            UpdateKeys(Key.LeftShift, Key.RightShift);
+            UpdateKeys(Key.RightShift);
+            Assert.That(changes, Is.EqualTo(new[] { true }), "Either Shift must keep it active without restarting effects.");
+            UpdateKeys();
+            UpdateKeys();
+            Assert.That(changes, Is.EqualTo(new[] { true, false }));
+            UpdateKeys(Key.RightShift);
+            Assert.That(changes, Is.EqualTo(new[] { true, false, true }));
+
+            Call(_progress, "OnApplicationFocus", false);
+            Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.False);
+            UpdateKeys(Key.RightShift);
+            Assert.That(changes, Is.EqualTo(new[] { true, false, true, false }));
+            Call(_progress, "OnApplicationFocus", true);
+            UpdateKeys(Key.RightShift);
+            Set(_progress, "mainSceneName", "NotTheActiveScene");
+            UpdateKeys(Key.RightShift);
+            Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.False);
+            Set(_progress, "mainSceneName", SceneManager.GetActiveScene().name);
+            Set(_progress, "_isMemorizerUnlocked", false);
+            UpdateKeys(Key.RightShift);
+            Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.False);
+        }
+        finally
+        {
+            InputSystem.RemoveDevice(keyboard);
+            if (previousKeyboard != null && previousKeyboard.added) previousKeyboard.MakeCurrent();
+        }
+    }
+
+    private (Component handler, Component provider, TMP_Text text) CreateAnimatedText(string source)
+    {
+        var (_, text) = CreateView();
+        text.rectTransform.sizeDelta = new Vector2(1800, 300);
+        text.text = source;
+        text.maxVisibleCharacters = int.MaxValue;
+        text.ForceMeshUpdate();
+        var provider = Create("ScenarioSystem.Adapter.DialogueProviderAdapter");
+        Set(provider, "dialogueText", text);
+        Set(provider, "_isWindowActive", true);
+        var handler = Create("MessageWindowSystem.Core.KeywordHandler");
+        Set(handler, "_provider", provider);
+        Set(handler, "_isKeywordEnabled", true);
+        _subscribers.Add(handler);
+        return (handler, provider, text);
+    }
+
+    private static Vector3[] CharacterVertices(TMP_Text text, int index)
+    {
+        var character = text.textInfo.characterInfo[index];
+        var vertices = new Vector3[4];
+        Array.Copy(text.textInfo.meshInfo[character.materialReferenceIndex].vertices, character.vertexIndex, vertices, 0, 4);
+        return vertices;
+    }
+
+    [Test]
+    public void MemorizerShakesOnlyKeywordsWithoutDriftAndRestoresThemOnRelease()
+    {
+        var (handler, _, text) = CreateAnimatedText("normal <link=key>word</link> normal");
+        int keyword = text.textInfo.linkInfo[0].linkTextfirstCharacterIndex;
+        var normal = CharacterVertices(text, 0);
+        var original = CharacterVertices(text, keyword);
+        var position = text.rectTransform.anchoredPosition;
+        for (int i = 0; i < 100; i++) Call(handler, "LateUpdate");
+
+        Assert.That(CharacterVertices(text, 0), Is.EqualTo(normal));
+        var shaken = CharacterVertices(text, keyword);
+        Assert.That(shaken, Is.Not.EqualTo(original));
+        Assert.That(Vector3.Distance(shaken[0], original[0]), Is.LessThanOrEqualTo(1.25f * Mathf.Sqrt(2f) + .001f));
+        Assert.That(text.rectTransform.anchoredPosition, Is.EqualTo(position));
+        Set(_progress, "_isMemorizerActive", false);
+        Call(handler, "LateUpdate");
+        Assert.That(CharacterVertices(text, keyword), Is.EqualTo(original));
+        Assert.That(text.text, Is.EqualTo("normal <link=key>word</link> normal"));
+    }
+
+    [Test]
+    public void ShakeTracksRedisplayAndColorUpdatesWithoutRevealingUntypedText()
+    {
+        var (handler, _, text) = CreateAnimatedText(Source);
+        Call(handler, "LateUpdate");
+        Call(_clues, "DiscoverKeyword", "key");
+        text.text = Format(Source);
+        text.maxVisibleCharacters = 8;
+        text.ForceMeshUpdate();
+        int keyword = text.textInfo.linkInfo[0].linkTextfirstCharacterIndex;
+        var hidden = CharacterVertices(text, keyword + 2);
+        Call(handler, "LateUpdate");
+        Assert.That(text.text, Is.EqualTo(Yellow));
+        Assert.That(text.maxVisibleCharacters, Is.EqualTo(8));
+        Assert.That(CharacterVertices(text, keyword + 2), Is.EqualTo(hidden));
+        var character = text.textInfo.characterInfo[keyword];
+        Assert.That(text.textInfo.meshInfo[character.materialReferenceIndex].colors32[character.vertexIndex],
+            Is.EqualTo(new Color32(255, 255, 0, 255)));
+        Assert.That(Call(handler, "CanInteractWithKeyword", "key"), Is.False);
+
+        text.text = "a much shorter line";
+        text.maxVisibleCharacters = int.MaxValue;
+        Call(handler, "LateUpdate");
+        Assert.That(text.textInfo.linkCount, Is.Zero);
+        text.text = Format(Source);
+        Call(handler, "LateUpdate");
+        Assert.That(text.text, Is.EqualTo(Yellow));
+        Assert.That(text.textInfo.linkCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void ShakeComposesWithChargeAndReleasingShiftCancelsCharge()
+    {
+        var (handler, _, text) = CreateAnimatedText("normal <link=key>word</link>");
+        int keyword = text.textInfo.linkInfo[0].linkTextfirstCharacterIndex;
+        var original = CharacterVertices(text, keyword);
+        Set(handler, "_isCharging", true);
+        Set(handler, "_chargingLinkID", "key");
+        Set(handler, "_chargingLinkIndex", 0);
+        Set(handler, "_chargeProgress", .5f);
+        Call(handler, "LateUpdate");
+        var charged = CharacterVertices(text, keyword);
+        Assert.That(Vector3.Distance(charged[0], charged[2]) / Vector3.Distance(original[0], original[2]),
+            Is.EqualTo(1.375f).Within(.001f));
+
+        Set(_progress, "_isMemorizerActive", false);
+        Call(handler, "Update");
+        Call(handler, "LateUpdate");
+        Assert.That(handler.GetType().GetProperty("IsCharging").GetValue(handler), Is.False);
+        Assert.That(CharacterVertices(text, keyword), Is.EqualTo(original));
+        Assert.That(Call(_clues, "IsDiscovered", "key"), Is.False);
+    }
+
+    [Test]
+    public void HidingTheWindowAndDisablingTheHandlerRestoreTheText()
+    {
+        var (handler, provider, text) = CreateAnimatedText("normal <link=key>word</link>");
+        int keyword = text.textInfo.linkInfo[0].linkTextfirstCharacterIndex;
+        var original = CharacterVertices(text, keyword);
+        Call(handler, "LateUpdate");
+        Set(provider, "_isWindowActive", false);
+        Call(handler, "LateUpdate");
+        Assert.That(CharacterVertices(text, keyword), Is.EqualTo(original));
+        Set(provider, "_isWindowActive", true);
+        Call(handler, "LateUpdate");
+        Call(handler, "OnDisable");
+        Assert.That(CharacterVertices(text, keyword), Is.EqualTo(original));
     }
 
     [Test]

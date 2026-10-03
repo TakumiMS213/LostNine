@@ -45,6 +45,7 @@ namespace ScenarioSystem.View
 
         private void HandleDialogue(DialogueEventData data)
         {
+            if (data.Instant) return;
             _log.Add((data.SpeakerName ?? string.Empty, data.Text ?? string.Empty));
         }
 

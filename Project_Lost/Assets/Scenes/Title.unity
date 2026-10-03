@@ -10768,6 +10768,9 @@ MonoBehaviour:
   _currentPhase: 0
   _currentKeywordProgress: 0
   _keywordThreshold: 3
+  memorizerFrameSprite: {fileID: 21300000, guid: d5b1e418dc0964c19b9f7c46f62e0263, type: 3}
+  memorizerStatusFont: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  memorizerStatusDuration: 0.5
   _maxChapter: 9
   mainSceneName: Main
   chapterSelectSceneName: ChapterSelect
@@ -15718,7 +15721,7 @@ MonoBehaviour:
   moveSound: {fileID: 1741184404}
   selectSound: {fileID: 1442643377}
   soundVolume: 0.1
-  uiSwitcher: {fileID: 0}
+  uiSwitcher: {fileID: 1681343025}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

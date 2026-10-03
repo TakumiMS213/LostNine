@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &22510856
 RectTransform:
   m_ObjectHideFlags: 0
@@ -166,8 +166,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0}
   m_RaycastTarget: 1
@@ -236,8 +236,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 419264763ed514ad0a3ce420d4a0b914, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   choiceButtons:
   - {fileID: 1270441814}
   - {fileID: 919323745}
@@ -292,8 +292,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0.61834896, g: 0.372686, b: 0.6320754, a: 1}
   m_RaycastTarget: 1
@@ -347,7 +347,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 68159608}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -356,8 +356,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -11.17, y: 0.81}
-  m_SizeDelta: {x: 624.33, y: 269.22}
+  m_AnchoredPosition: {x: 0, y: -25}
+  m_SizeDelta: {x: 880, y: 210}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &68159610
 CanvasRenderer:
@@ -380,7 +380,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.13333334, g: 0.13333334, b: 0.13333334, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -396,8 +396,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4280427042
+  m_fontColor: {r: 0.13333334, g: 0.13333334, b: 0.13333334, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -453,7 +453,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 34.04953, y: 10.75251, z: 25.089233, w: 0.00000027412244}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -504,7 +504,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 014543c82c1750e488d27972efda96b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogueProviderSource: {fileID: 1525768865}
+  dialogueProviderSource: {fileID: 1525768868}
   chargeDuration: 1
   keywordHoverCursor: {fileID: 2800000, guid: b94e9e5796f4b4900aafb1a19d6a0016, type: 3}
   keywordHoverHotspot: {x: 0, y: 0}
@@ -824,7 +824,6 @@ GameObject:
   - component: {fileID: 127721640}
   - component: {fileID: 127721644}
   - component: {fileID: 127721642}
-  - component: {fileID: 127721641}
   m_Layer: 5
   m_Name: DialogueText
   m_TagString: Untagged
@@ -924,23 +923,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &127721641
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 127721639}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 014543c82c1750e488d27972efda96b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  dialogueProviderSource: {fileID: 0}
-  chargeDuration: 1
-  keywordHoverCursor: {fileID: 0}
-  keywordHoverHotspot: {x: 0, y: 0}
-  clickAreaGraphic: {fileID: 0}
 --- !u!114 &127721642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2559,7 +2541,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 443148454}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.8, y: 0.8, z: 1}
   m_ConstrainProportionsScale: 0
@@ -2569,8 +2551,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -625, y: 320}
-  m_SizeDelta: {x: 720, y: 90}
+  m_AnchoredPosition: {x: 6.1035e-05, y: -155}
+  m_SizeDelta: {x: 1074.52, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &443148456
 MonoBehaviour:
@@ -2635,8 +2617,8 @@ MonoBehaviour:
   targetScale: {x: 1, y: 1, z: 1}
   scaleDuration: 0.6
   scaleEase: 27
-  enableSize: 0
-  targetSizeDelta: {x: 1920, y: 340}
+  enableSize: 1
+  targetSizeDelta: {x: 720, y: 90}
   sizeDuration: 0.6
   sizeEase: 27
   enableRotation: 0
@@ -2677,6 +2659,15 @@ MonoBehaviour:
   _currentPhase: 0
   _currentKeywordProgress: 0
   _keywordThreshold: 3
+  _isMemorizerUnlocked: 0
+  _isMemorizerActive: 0
+  memorizerFrameSprite: {fileID: 21300000, guid: d5b1e418dc0964c19b9f7c46f62e0263, type: 3}
+  memorizerStatusFont: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  memorizerFrameStartScale: 1.35
+  memorizerFrameEnterDuration: 0.35
+  memorizerStatusDuration: 0.5
+  memorizerStatusJumpHeight: 28
+  memorizerTintColor: {r: 0.35, g: 0.25, b: 0.75, a: 0.12}
   _maxChapter: 9
   mainSceneName: Main
   chapterSelectSceneName: ChapterSelect
@@ -3010,7 +3001,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 582567341}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3019,7 +3010,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 39.999992, y: 19.999994}
+  m_AnchoredPosition: {x: -137.26001, y: 19.9999943}
   m_SizeDelta: {x: 800, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &582567343
@@ -4762,10 +4753,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 833961244}
-        m_TargetAssemblyTypeName: MessageWindowSystem.Core.OverlayMessageWindowManager,
-          Assembly-CSharp
-        m_MethodName: Next
+      - m_Target: {fileID: 1038166078}
+        m_TargetAssemblyTypeName: ScenarioSystem.View.OverlayView, Assembly-CSharp
+        m_MethodName: OnUserInput
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5082,7 +5072,6 @@ GameObject:
   - component: {fileID: 833961247}
   - component: {fileID: 833961246}
   - component: {fileID: 833961245}
-  - component: {fileID: 833961244}
   m_Layer: 5
   m_Name: Canvas_OverlayMessageWindow
   m_TagString: Untagged
@@ -5090,70 +5079,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &833961244
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 833961243}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b3a0aa7a4251a9479ba6e864c9ae535, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speakerNameText: {fileID: 895689130}
-  dialogueText: {fileID: 127721640}
-  windowRoot: {fileID: 833961243}
-  backgroundStillImage: {fileID: 0}
-  objectsToHideOnStill: []
-  clickBlockerRoot: {fileID: 1447119383}
-  portraitImage: {fileID: 1034317167}
-  portraitLeftAnchor: {fileID: 657684093}
-  portraitCenterAnchor: {fileID: 560864325}
-  portraitRightAnchor: {fileID: 305083506}
-  ghostPortraitImage: {fileID: 2072780917}
-  enableGhostPortrait: 1
-  ghostPortraitAlpha: 0.3
-  typingSpeed: 0.05
-  enableSkipMode: 1
-  skipKey: 55
-  skipTypingSpeed: 0.001
-  animateName: 1
-  nameSlideDistance: 600
-  nameSlideDuration: 0.35
-  nameSlideEase: 9
-  portraitJumpOnText: 1
-  portraitJumpHeight: 50
-  portraitJumpDuration: 0.3
-  portraitJumpEase: 30
-  choiceButtons:
-  - {fileID: 863417764}
-  - {fileID: 1443363241}
-  choiceButtonTexts:
-  - {fileID: 733157417}
-  - {fileID: 1065286044}
-  _currentScenarioData: {fileID: 0}
-  _currentLine:
-    speakerName: 
-    portrait: {fileID: 0}
-    text: 
-    effects: []
-    typingSpeed: 0
-    nameSlideDirection: 0
-    voiceClip: {fileID: 0}
-    choices: []
-    portraitPosition: 0
-    interruptScenario: {fileID: 0}
-    backgroundImage: {fileID: 0}
-  _nameOriginalAnchored: {x: 0, y: 0}
-  _previousSpeakerName: 
-  _previousPortrait: {fileID: 0}
-  _previousPortraitPosition: 0
-  _isTyping: 0
-  _isWindowActive: 0
-  _isWaitingForChoice: 0
-  _nameOriginalCaptured: 0
 --- !u!114 &833961245
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5570,7 +5495,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f38d002dee402a4692b3fadbb808e89, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playOnStart: 1
+  playOnStart: 0
   testScenario: {fileID: 0}
   enableKeywords: 0
 --- !u!4 &905247421
@@ -7925,6 +7850,10 @@ MonoBehaviour:
   desk: {fileID: 1070791074}
   messageWindow: {fileID: 68159608}
   messageWindowBackGround: {fileID: 1905917987}
+  speechBubble: {fileID: 1905917992}
+  speakerNameView: {fileID: 113638834}
+  comuSpeakerNamePosition: {x: 40, y: 20}
+  comuWindowColor: {r: 0.16078432, g: 0.16078432, b: 0.16078432, a: 0.8}
   NamePlate: {fileID: 582567341}
   NamePlateBackGround: {fileID: 443148454}
   fadeFrame: {fileID: 1662669628}
@@ -7932,6 +7861,8 @@ MonoBehaviour:
   LostNote: {fileID: 1371037209}
   ToggleEffect: {fileID: 514678978}
   ObjectiveDisplay: {fileID: 66788214}
+  backGround_Text: {fileID: 0}
+  backGround_SpeakerName: {fileID: 0}
   Portrait: {fileID: 2036071045}
   unclickableOverlay: {fileID: 22510855}
   unclickableSE: {fileID: 8300000, guid: e383b50e4a74d574bb72c4c9e19c07ce, type: 3}
@@ -9076,8 +9007,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1459238984}
-  - {fileID: 443148455}
   - {fileID: 1905917988}
+  - {fileID: 443148455}
   - {fileID: 1055325091}
   - {fileID: 817859197}
   - {fileID: 425524612}
@@ -10260,7 +10191,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   presenter: {fileID: 1525768865}
-  scenarioDatabase: {fileID: 0}
+  scenarioDatabase: {fileID: 11400000, guid: d8f2cc81d47f84484b597cb3aa146dcd, type: 2}
   testScenario: {fileID: 0}
   autoPlay: 0
 --- !u!114 &1525768865
@@ -10872,8 +10803,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 765fcade7516e8d49823f5604504fea7, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   label: FadeIn
   targets:
   - {fileID: 424732641}
@@ -11829,8 +11760,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 765fcade7516e8d49823f5604504fea7, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   label: FadeOut
   targets:
   - {fileID: 424732641}
@@ -11974,6 +11905,8 @@ GameObject:
   - component: {fileID: 1905917990}
   - component: {fileID: 1905917989}
   - component: {fileID: 1905917991}
+  - component: {fileID: 1905917992}
+  - component: {fileID: 1905917993}
   m_Layer: 5
   m_Name: backGround_text
   m_TagString: Untagged
@@ -11998,8 +11931,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -596.25, y: 162}
-  m_SizeDelta: {x: 662.5, y: 282}
+  m_AnchoredPosition: {x: 0, y: -325}
+  m_SizeDelta: {x: 857.3, y: 340}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1905917989
 MonoBehaviour:
@@ -12014,14 +11947,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.16078432, g: 0.16078432, b: 0.16078432, a: 1}
+  m_Color: {r: 0.93333334, g: 0.93333334, b: 0.93333334, a: 0.85882354}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 5610839628777111940, guid: 236aa4756a4074cde9308805f648e3a2, type: 3}
+  m_Sprite: {fileID: 1877859658583343095, guid: e9261b03dfb7e45698eb91f7912dbb63, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -12057,7 +11990,7 @@ MonoBehaviour:
   shakeOnComplete: 0
   shakeStrength: 10
   shakeDuration: 0.25
-  endAlpha: 0.8
+  endAlpha: 1
   fadeDuration: 0.2
   isMoved: 0
   enableScale: 0
@@ -12072,6 +12005,31 @@ MonoBehaviour:
   targetRotation: {x: 0, y: 0, z: 0}
   rotateDuration: 0.6
   rotateEase: 27
+--- !u!114 &1905917992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1905917987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e23bbd000fffd4e4bb707f0e03805cb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerSpeakerName: "\u30D2\u30A4\u30E9\u30AE"
+--- !u!225 &1905917993
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1905917987}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1909549047
 GameObject:
   m_ObjectHideFlags: 0
@@ -13640,8 +13598,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2f22449c0d4ca7740ad14d76e69762f3, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   fadeOverlay: {fileID: 0}
   fadeDuration: 0.5
   fadeColor: {r: 0, g: 0, b: 0, a: 1}

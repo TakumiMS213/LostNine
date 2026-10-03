@@ -31,10 +31,22 @@ namespace ScenarioSystem.View
         private Vector2 _originalAnchored;
         private string _previousSpeakerName;
         private bool _originalCaptured;
+        private Tween _slideTween;
 
         #endregion
 
         #region Setup
+
+        /// <summary>レイアウト変更後の位置を、以降の話者名スライドの着地点にする。</summary>
+        public void SetRestingPosition(Vector2 position)
+        {
+            if (speakerNameText == null) return;
+            _originalAnchored = position;
+            _originalCaptured = true;
+            var rect = speakerNameText.rectTransform;
+            StopSlide();
+            rect.anchoredPosition = position;
+        }
 
         public void Configure(TMP_Text text, bool animate = true)
         {
@@ -67,6 +79,7 @@ namespace ScenarioSystem.View
 
         private void OnDisable()
         {
+            StopSlide();
             ScenarioEventBus.OnDialogueRequested -= HandleDialogue;
             ScenarioEventBus.OnScenarioEnded -= HandleScenarioEnded;
         }
@@ -89,6 +102,7 @@ namespace ScenarioSystem.View
 
         private void HandleScenarioEnded(Model.ScenarioData _)
         {
+            StopSlide();
             _previousSpeakerName = null;
         }
 
@@ -115,10 +129,18 @@ namespace ScenarioSystem.View
             };
 
             float dir = fromRight ? 1f : -1f;
+            StopSlide();
             rt.anchoredPosition = _originalAnchored + new Vector2(dir * slideDistance, 0f);
 
-            rt.DOKill();
-            rt.DOAnchorPos(_originalAnchored, slideDuration).SetEase(slideEase);
+            _slideTween = rt.DOAnchorPos(_originalAnchored, slideDuration).SetEase(slideEase).SetLink(gameObject);
+        }
+
+        private void StopSlide()
+        {
+            _slideTween?.Kill();
+            _slideTween = null;
+            if (speakerNameText != null && _originalCaptured)
+                speakerNameText.rectTransform.anchoredPosition = _originalAnchored;
         }
 
         #endregion

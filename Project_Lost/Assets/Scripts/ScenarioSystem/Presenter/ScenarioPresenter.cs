@@ -19,6 +19,11 @@ namespace ScenarioSystem.Presenter
 
         private readonly ScenarioRuntimeState _state = new();
         private readonly Dictionary<string, IActionExecutor> _executors = new();
+        private int _executionVersion;
+        private DialogueEventData _lastDialogueData;
+        private bool _hasDialogueData;
+        private int _dispatchDepth;
+        private Action _pendingScenarioChange;
 
         #endregion
 
@@ -40,6 +45,7 @@ namespace ScenarioSystem.Presenter
             ScenarioEventBus.OnAdvanceRequested += HandleAdvanceRequested;
             ScenarioEventBus.OnTypingCompleted += HandleTypingCompleted;
             ScenarioEventBus.OnChoiceSelected += HandleChoiceSelected;
+            ScenarioEventBus.OnDialogueRequested += HandleDialogueRequested;
         }
 
         private void OnDisable()
@@ -47,6 +53,11 @@ namespace ScenarioSystem.Presenter
             ScenarioEventBus.OnAdvanceRequested -= HandleAdvanceRequested;
             ScenarioEventBus.OnTypingCompleted -= HandleTypingCompleted;
             ScenarioEventBus.OnChoiceSelected -= HandleChoiceSelected;
+            ScenarioEventBus.OnDialogueRequested -= HandleDialogueRequested;
+            InvalidateExecution();
+            _state.Reset();
+            _hasDialogueData = false;
+            _pendingScenarioChange = null;
         }
 
         #endregion
@@ -88,12 +99,20 @@ namespace ScenarioSystem.Presenter
                 return;
             }
 
+            if (_dispatchDepth > 0)
+            {
+                DeferScenarioChange(() => StartScenario(scenario, onComplete));
+                return;
+            }
+
             // 前のシナリオが再生中なら停止
             if (_state.IsPlaying)
             {
                 Debug.LogWarning($"[ScenarioPresenter] Interrupting current scenario to start: {scenario.name}");
             }
 
+            bool dismissOverlay = _state.IsPlaying && _state.CurrentAction is Model.Actions.OverlayAction;
+            InvalidateExecution();
             _state.Reset();
             _state.CurrentScenario = scenario;
             _state.IsPlaying = true;
@@ -101,11 +120,110 @@ namespace ScenarioSystem.Presenter
 
             Debug.Log($"[ScenarioPresenter] StartScenario: {scenario.name} (ID: {scenario.scenarioId})");
 
-            ScenarioEventBus.RaiseScenarioStarted(scenario);
-            if (scenario.showMainWindow)
-                ScenarioEventBus.RaiseWindowVisibilityChanged(true);
+            int version = _executionVersion;
+            if (dismissOverlay)
+                Dispatch(ScenarioEventBus.RaiseOverlayDismissed);
+            if (version != _executionVersion) return;
+
+            Dispatch(() => ScenarioEventBus.RaiseScenarioStarted(scenario));
+            if (version != _executionVersion) return;
+            Dispatch(() => ScenarioEventBus.RaiseWindowVisibilityChanged(scenario.showMainWindow));
+            if (version != _executionVersion) return;
 
             ExecuteCurrentAction();
+        }
+
+        /// <summary>
+        /// キーワードなどの補足シナリオを再生し、終了後に元の行へ戻る。
+        /// 現在の行より前の進行更新や演出を再実行せず、元の完了通知も維持する。
+        /// </summary>
+        public void PlayTemporaryScenario(ScenarioData scenario, Action onComplete = null)
+        {
+            if (scenario == null)
+            {
+                onComplete?.Invoke();
+                return;
+            }
+
+            if (_dispatchDepth > 0)
+            {
+                DeferScenarioChange(() => PlayTemporaryScenario(scenario, onComplete));
+                return;
+            }
+
+            if (!_state.IsPlaying)
+            {
+                StartScenario(scenario, onComplete);
+                return;
+            }
+
+            var suspendedScenario = _state.CurrentScenario;
+            int suspendedIndex = _state.CurrentActionIndex;
+            int suspendedSubIndex = _state.CurrentSubActionIndex;
+            var suspendedCompletion = _state.OnComplete;
+            bool hadDialogue = _hasDialogueData;
+            var suspendedDialogue = _lastDialogueData;
+
+            StartScenario(scenario, () =>
+            {
+                int version = _executionVersion;
+                onComplete?.Invoke();
+                // 完了通知が別の進行を開始した場合、その進行を優先する。
+                if (_state.IsPlaying || _pendingScenarioChange != null
+                    || version != _executionVersion || suspendedScenario == null)
+                    return;
+
+                InvalidateExecution();
+                _state.CurrentScenario = suspendedScenario;
+                _state.CurrentActionIndex = suspendedIndex;
+                _state.CurrentSubActionIndex = suspendedSubIndex;
+                _state.OnComplete = suspendedCompletion;
+                _state.IsPlaying = true;
+
+                version = _executionVersion;
+                Dispatch(() => ScenarioEventBus.RaiseScenarioStarted(suspendedScenario));
+                if (version != _executionVersion) return;
+                Dispatch(() => ScenarioEventBus.RaiseWindowVisibilityChanged(suspendedScenario.showMainWindow));
+                if (version != _executionVersion) return;
+                if (hadDialogue)
+                {
+                    // 元の本文・話者・立ち絵・背景を全文で復元する。
+                    // 同じ行のタイプ演出とログ追加を繰り返さない。
+                    bool resumeDialogue = _state.CurrentAction is Model.Actions.DialogueAction;
+                    _state.IsTyping = resumeDialogue;
+                    Dispatch(() => ScenarioEventBus.RaiseDialogueRequested(suspendedDialogue.WithInstantDisplay()));
+                    if (version != _executionVersion) return;
+                    // Viewの購読順によらずProviderのtyping状態を確定する。
+                    Dispatch(ScenarioEventBus.RaiseTypingCompleted);
+                    if (version != _executionVersion) return;
+                    if (resumeDialogue) return;
+                }
+                ExecuteCurrentAction();
+            });
+        }
+
+        /// <summary>会話を中止する。完了扱いにせず、後続の進行は実行しない。</summary>
+        public void StopScenario()
+        {
+            if (_dispatchDepth > 0)
+            {
+                DeferScenarioChange(StopScenario);
+                return;
+            }
+
+            var stoppedScenario = _state.CurrentScenario;
+            bool dismissOverlay = _state.CurrentAction is Model.Actions.OverlayAction;
+            InvalidateExecution();
+            _state.Reset();
+            _hasDialogueData = false;
+            Dispatch(() =>
+            {
+                if (dismissOverlay)
+                    ScenarioEventBus.RaiseOverlayDismissed();
+                ScenarioEventBus.RaiseWindowVisibilityChanged(false);
+                if (stoppedScenario != null)
+                    ScenarioEventBus.RaiseScenarioEnded(stoppedScenario);
+            });
         }
 
         /// <summary>
@@ -139,6 +257,8 @@ namespace ScenarioSystem.Presenter
 
         private void ExecuteCurrentAction()
         {
+            if (!_state.IsPlaying) return;
+
             var action = _state.CurrentAction;
 
             if (action == null)
@@ -147,15 +267,28 @@ namespace ScenarioSystem.Presenter
                 return;
             }
 
+            int version = ++_executionVersion;
+            _state.IsTyping = false;
+            _state.IsWaitingForInput = false;
+            _state.IsWaitingForChoice = false;
+            bool completed = false;
+            void Complete()
+            {
+                // 差替え前の待機・演出が後から完了しても、新しい会話を進めない。
+                if (completed || !_state.IsPlaying || version != _executionVersion) return;
+                completed = true;
+                OnActionComplete();
+            }
+
             if (_executors.TryGetValue(action.ActionType, out var executor))
             {
                 Debug.Log($"[ScenarioPresenter] Executing [{_state.CurrentActionIndex}]: {action.name} ({action.ActionType})");
-                executor.Execute(action, _state, OnActionComplete);
+                Dispatch(() => executor.Execute(action, _state, Complete));
             }
             else
             {
                 Debug.LogWarning($"[ScenarioPresenter] No executor found for ActionType: {action.ActionType}. Skipping.");
-                OnActionComplete();
+                Complete();
             }
         }
 
@@ -171,6 +304,8 @@ namespace ScenarioSystem.Presenter
 
         private void AdvanceToNextAction()
         {
+            if (!_state.IsPlaying) return;
+            int version = ++_executionVersion;
             if (_state.CurrentAction is Model.IMultiStepAction multiStep 
                 && _state.CurrentSubActionIndex < multiStep.StepCount - 1)
             {
@@ -181,7 +316,8 @@ namespace ScenarioSystem.Presenter
 
             if (_state.CurrentAction is Model.Actions.OverlayAction)
             {
-                ScenarioEventBus.RaiseOverlayDismissed();
+                Dispatch(ScenarioEventBus.RaiseOverlayDismissed);
+                if (version != _executionVersion) return;
             }
 
             _state.CurrentSubActionIndex = 0;
@@ -191,6 +327,7 @@ namespace ScenarioSystem.Presenter
 
         private void EndScenario()
         {
+            if (!_state.IsPlaying) return;
             var completedScenario = _state.CurrentScenario;
 
             Debug.Log($"[ScenarioPresenter] Scenario ended: {completedScenario?.name}");
@@ -211,17 +348,51 @@ namespace ScenarioSystem.Presenter
 
             // 完全終了
             var onComplete = _state.OnComplete;
-
-            if (completedScenario?.showMainWindow == true)
-            {
-                ScenarioEventBus.RaiseWindowVisibilityChanged(false);
-            }
-            
-            ScenarioEventBus.RaiseScenarioEnded(completedScenario);
-
+            InvalidateExecution();
             _state.Reset();
+            _hasDialogueData = false;
+
+            Dispatch(() =>
+            {
+                if (completedScenario?.showMainWindow == true)
+                    ScenarioEventBus.RaiseWindowVisibilityChanged(false);
+                ScenarioEventBus.RaiseScenarioEnded(completedScenario);
+            });
 
             onComplete?.Invoke();
+        }
+
+        private void InvalidateExecution()
+        {
+            _executionVersion++;
+            StopAllCoroutines();
+        }
+
+        private void DeferScenarioChange(Action change)
+        {
+            InvalidateExecution();
+            _pendingScenarioChange = change;
+        }
+
+        private void Dispatch(Action notification)
+        {
+            _dispatchDepth++;
+            try
+            {
+                notification();
+            }
+            finally
+            {
+                _dispatchDepth--;
+                if (_dispatchDepth == 0)
+                {
+                    // 古いStarted/Endedの全購読者が処理を終えてから差し替える。
+                    // 先に新しいUIを描くと、残りの古い通知がそれを消してしまう。
+                    var pendingChange = _pendingScenarioChange;
+                    _pendingScenarioChange = null;
+                    pendingChange?.Invoke();
+                }
+            }
         }
 
         #endregion
@@ -233,9 +404,17 @@ namespace ScenarioSystem.Presenter
             Advance();
         }
 
-        private void HandleTypingCompleted()
+        private void HandleDialogueRequested(DialogueEventData data)
         {
             if (!_state.IsPlaying) return;
+            _lastDialogueData = data;
+            _hasDialogueData = true;
+        }
+
+        private void HandleTypingCompleted()
+        {
+            if (!_state.IsPlaying || !_state.IsTyping
+                || _state.CurrentAction is not Model.Actions.DialogueAction) return;
 
             _state.IsTyping = false;
             _state.IsWaitingForInput = true;
@@ -245,13 +424,14 @@ namespace ScenarioSystem.Presenter
         {
             if (!_state.IsPlaying || !_state.IsWaitingForChoice) return;
 
-            _state.IsWaitingForChoice = false;
-
             // ChoiceAction から選択肢データを取得
             if (_state.CurrentAction is Model.Actions.ChoiceAction choiceAction
                 && index >= 0
-                && index < choiceAction.choices.Count)
+                && choiceAction.choices != null
+                && index < choiceAction.choices.Count
+                && choiceAction.choices[index] != null)
             {
+                _state.IsWaitingForChoice = false;
                 var selectedChoice = choiceAction.choices[index];
                 Debug.Log($"[ScenarioPresenter] Choice selected [{index}]: {selectedChoice.choiceText}");
 
@@ -260,6 +440,11 @@ namespace ScenarioSystem.Presenter
                     StartScenario(selectedChoice.nextScenario, _state.OnComplete);
                     return;
                 }
+            }
+            else
+            {
+                // 古いボタンや不正なインデックスで会話を終了させない。
+                return;
             }
 
             // 遷移先がない場合はシナリオ終了

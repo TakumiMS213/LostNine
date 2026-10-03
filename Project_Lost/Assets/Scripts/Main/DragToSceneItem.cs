@@ -53,18 +53,24 @@ public class DragToSceneItem : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     private void OnEnable()
     {
         if (ProgressManager.Instance != null)
+        {
             ProgressManager.Instance.OnKeywordThresholdReached += RefreshActivationState;
+            ProgressManager.Instance.OnProgressChanged += RefreshActivationState;
+        }
     }
 
     private void OnDisable()
     {
         if (ProgressManager.Instance != null)
+        {
             ProgressManager.Instance.OnKeywordThresholdReached -= RefreshActivationState;
+            ProgressManager.Instance.OnProgressChanged -= RefreshActivationState;
+        }
     }
 
     private void RefreshActivationState()
     {
-        bool collected = ProgressManager.Instance != null && ProgressManager.Instance.AllKeywordsCollected;
+        bool collected = IsKeywordsCollected();
         if (collected && !_wasKeywordsCollected)
             PlayActivationEffect();
         _wasKeywordsCollected = collected;
@@ -121,7 +127,7 @@ public class DragToSceneItem : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         _isDragging = false;
 
         // ── FIX: RectTransformUtility でPortraitのローカル座標に変換して判定 ──
-        if (IsDroppedOnPortrait(eventData))
+        if (IsKeywordsCollected() && IsDroppedOnPortrait(eventData))
         {
             OnSuccessfulDrop();
         }
@@ -156,7 +162,8 @@ public class DragToSceneItem : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     // ── 判定ヘルパー ──────────────────────────────────────────────
 
     private bool IsKeywordsCollected()
-        => ProgressManager.Instance != null && ProgressManager.Instance.AllKeywordsCollected;
+        => ProgressManager.Instance != null && ProgressManager.Instance.CurrentPhase == GamePhase.Extraction
+            && ProgressManager.Instance.AllKeywordsCollected;
 
     /// <summary>
     /// ドロップ位置がPortraitのRect内かどうかを、スクリーン座標→PortraitローカルUI座標に変換して判定する。

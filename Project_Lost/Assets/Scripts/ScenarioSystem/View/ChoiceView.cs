@@ -19,6 +19,7 @@ namespace ScenarioSystem.View
         [Header("Choice Buttons")]
         [SerializeField] private Button[] choiceButtons;
         [SerializeField] private TMP_Text[] choiceButtonTexts;
+        private int _visibleChoiceCount;
 
         #endregion
 
@@ -32,13 +33,16 @@ namespace ScenarioSystem.View
         private void OnEnable()
         {
             ScenarioEventBus.OnChoicesRequested += HandleChoicesRequested;
+            ScenarioEventBus.OnScenarioStarted += HandleScenarioEnded;
             ScenarioEventBus.OnScenarioEnded += HandleScenarioEnded;
         }
 
         private void OnDisable()
         {
             ScenarioEventBus.OnChoicesRequested -= HandleChoicesRequested;
+            ScenarioEventBus.OnScenarioStarted -= HandleScenarioEnded;
             ScenarioEventBus.OnScenarioEnded -= HandleScenarioEnded;
+            HideAllChoices();
         }
 
         #endregion
@@ -47,15 +51,20 @@ namespace ScenarioSystem.View
 
         private void HandleChoicesRequested(List<ChoiceEntry> choices)
         {
+            HideAllChoices();
             if (choiceButtons == null) return;
+            _visibleChoiceCount = choices != null ? Mathf.Min(choices.Count, choiceButtons.Length) : 0;
 
             for (int i = 0; i < choiceButtons.Length; i++)
             {
-                if (i < choices.Count)
+                if (choiceButtons[i] == null) continue;
+                if (i < _visibleChoiceCount)
                 {
+                    // 全画面の会話送り用ClickAreaより前面でクリックを受け取る。
+                    choiceButtons[i].transform.SetAsLastSibling();
                     choiceButtons[i].gameObject.SetActive(true);
 
-                    if (choiceButtonTexts != null && i < choiceButtonTexts.Length)
+                    if (choiceButtonTexts != null && i < choiceButtonTexts.Length && choiceButtonTexts[i] != null)
                         choiceButtonTexts[i].text = choices[i].choiceText;
 
                     int index = i; // ラムダキャプチャ用
@@ -80,15 +89,20 @@ namespace ScenarioSystem.View
 
         private void OnChoiceButtonClicked(int index)
         {
+            if (index < 0 || index >= _visibleChoiceCount || choiceButtons[index] == null
+                || !choiceButtons[index].isActiveAndEnabled || !choiceButtons[index].IsInteractable())
+                return;
+
             HideAllChoices();
             ScenarioEventBus.RaiseChoiceSelected(index);
         }
 
         private void HideAllChoices()
         {
+            _visibleChoiceCount = 0;
             if (choiceButtons == null) return;
             foreach (var btn in choiceButtons)
-                btn?.gameObject.SetActive(false);
+                if (btn != null) btn.gameObject.SetActive(false);
         }
 
         #endregion

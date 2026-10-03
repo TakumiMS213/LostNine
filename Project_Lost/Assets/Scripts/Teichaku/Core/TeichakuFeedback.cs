@@ -5,6 +5,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using Teichaku.Data;
+using ScenarioSystem.Model;
 
 namespace Teichaku.Core
 {
@@ -75,12 +77,12 @@ namespace Teichaku.Core
         [SerializeField] private float resultTextFontSize = 80f;
         [SerializeField] private TMP_FontAsset resultTextFont;
         [SerializeField] private Color resultTextColor = Color.white;
-        [SerializeField] private string resultHeaderText = "特定したたなくしもの";
+        [SerializeField] private string resultHeaderText = "特定したなくしもの";
         [SerializeField] private Vector2 resultHeaderOffset = new Vector2(0f, 330f);
         [SerializeField] private float resultHeaderFontSizeMultiplier = 1.5f;
 
         [Tooltip("クリア画像の表示時間（秒）")]
-        [SerializeField] private float clearImageDisplayDuration = 2f;
+        [SerializeField] private float clearImageDisplayDuration = 5f;
 
         [Tooltip("クリア画像のフェードイン時間（秒）")]
         [SerializeField] private float clearImageFadeInDuration = 0.3f;
@@ -88,6 +90,15 @@ namespace Teichaku.Core
         [Tooltip("クリア画像のフェードアウト時間（秒）")]
         [SerializeField] private float clearImageFadeOutDuration = 0.3f;
 
+        [Header("結果の後光")]
+        [SerializeField] private Color resultHaloColor = new Color(1f, 0.84f, 0.35f, 1f);
+        [SerializeField] private Vector2 resultHaloSize = new Vector2(1050f, 780f);
+
+        private CanvasGroup _resultGroup;
+        private ResultHaloGraphic _resultHalo;
+        private Coroutine _clearRoutine;
+        private bool _isShowingClear;
+        private TeichakuStageData _resultStageData;
         private Vector2 _gridInitialPos;
         private Image _resultImage;
         private TextMeshProUGUI _resultText;
@@ -157,6 +168,8 @@ namespace Teichaku.Core
         /// </summary>
         public void OnClear()
         {
+            if (_isShowingClear) return;
+            _isShowingClear = true;
             // 画面フラッシュ
             if (flashOverlay != null)
             {
@@ -181,7 +194,7 @@ namespace Teichaku.Core
             Debug.Log("[TeichakuFeedback] Clear flash played.");
 
             // クリア演出画像の表示→シーン遷移
-            StartCoroutine(ClearSequence());
+            _clearRoutine = StartCoroutine(ClearSequence());
         }
 
         /// <summary>
@@ -192,29 +205,35 @@ namespace Teichaku.Core
             EnsureResultViews();
             var result = ResolveClearResult();
 
-            // クリア演出画像が設定されている場合、表示する
-            if (_resultImage != null && _resultText != null && _resultHeaderText != null && result != null)
+            if (result != null)
             {
-                // フェードイン
                 _resultImage.sprite = result.image;
                 _resultImage.enabled = result.image != null;
+                _resultHalo.gameObject.SetActive(result.image != null);
                 _resultHeaderText.text = resultHeaderText;
                 _resultText.text = result.title ?? string.Empty;
+                SetResultAlpha(0f);
 
-                _resultImage.DOFade(1f, clearImageFadeInDuration);
-                _resultHeaderText.DOFade(1f, clearImageFadeInDuration);
-                _resultText.DOFade(1f, clearImageFadeInDuration);
-                yield return new WaitForSeconds(clearImageFadeInDuration);
+                _resultGroup.DOFade(1f, clearImageFadeInDuration).SetUpdate(true);
+                _resultHalo.rectTransform.localRotation = Quaternion.identity;
+                _resultHalo.rectTransform.localScale = Vector3.one;
+                _resultHalo.rectTransform.DORotate(new Vector3(0f, 0f, 18f),
+                    clearImageFadeInDuration + clearImageDisplayDuration).SetEase(Ease.Linear).SetUpdate(true);
 
-                // 一定時間表示
-                yield return new WaitForSeconds(clearImageDisplayDuration);
+                // フェード中もクリックでスキップ可能。クリア時のクリック・押しっぱなしは消費しない。
+                var timer = new ResultDisplayTimer(clearImageFadeInDuration + clearImageDisplayDuration,
+                    Input.GetMouseButton(0));
+                yield return null;
+                while (!timer.IsComplete)
+                {
+                    timer.Advance(Time.unscaledDeltaTime, Input.GetMouseButton(0), Input.GetMouseButtonDown(0));
+                    if (!timer.IsComplete) yield return null;
+                }
 
-                // フェードアウト
-                _resultImage.DOFade(0f, clearImageFadeOutDuration);
-                _resultHeaderText.DOFade(0f, clearImageFadeOutDuration);
-                _resultText.DOFade(0f, clearImageFadeOutDuration);
-                yield return new WaitForSeconds(clearImageFadeOutDuration);
-
+                _resultGroup.DOKill();
+                _resultGroup.DOFade(0f, clearImageFadeOutDuration).SetUpdate(true);
+                yield return new WaitForSecondsRealtime(clearImageFadeOutDuration);
+                _resultHalo.rectTransform.DOKill();
                 Debug.Log("[TeichakuFeedback] Clear result sequence completed.");
             }
 
@@ -223,14 +242,16 @@ namespace Teichaku.Core
             if (pm == null)
             {
                 Debug.LogWarning("[TeichakuFeedback] ProgressManager not found.");
+                _clearRoutine = null;
                 yield break;
             }
 
             pm.SetProgress(pm.CurrentChapter, GamePhase.Presentation);
 
             // PresentationはStoryシーンで再生する
-            string scenarioId = $"Ch{pm.CurrentChapter}_Presentation";
+            string scenarioId = ScenarioKey.ForPhase(pm.CurrentChapter, GamePhase.Presentation);
             pm.StartProgressScenarioInStory(scenarioId);
+            _clearRoutine = null;
         }
 
         /// <summary>
@@ -290,6 +311,7 @@ namespace Teichaku.Core
         /// </summary>
         public void ResetFeedback()
         {
+            StopResultDisplay();
             if (flashOverlay != null)
             {
                 flashOverlay.DOKill();
@@ -305,107 +327,109 @@ namespace Teichaku.Core
             }
         }
 
+        public void SetResultStageData(TeichakuStageData stageData)
+        {
+            StopResultDisplay();
+            _resultStageData = stageData;
+        }
+
         private ChapterClearResult ResolveClearResult()
         {
             int chapter = ProgressManager.Instance != null ? ProgressManager.Instance.CurrentChapter : 0;
-            return chapterClearResults?.Find(result => result != null && result.chapter == chapter);
+            var fallback = chapterClearResults?.Find(result => result != null && result.chapter == chapter);
+            if (_resultStageData == null || (_resultStageData.lostThingImage == null
+                && string.IsNullOrWhiteSpace(_resultStageData.lostThingName))) return fallback;
+            return new ChapterClearResult
+            {
+                chapter = chapter,
+                image = _resultStageData.lostThingImage != null ? _resultStageData.lostThingImage : fallback?.image,
+                title = !string.IsNullOrWhiteSpace(_resultStageData.lostThingName)
+                    ? _resultStageData.lostThingName : fallback?.title
+            };
         }
 
         private void EnsureResultViews()
         {
-            if (_resultImage != null && _resultText != null && _resultHeaderText != null)
-                return;
-
+            if (_resultGroup != null) return;
             Transform parent = clearImage != null && clearImage.transform.parent != null
-                ? clearImage.transform.parent
-                : transform;
+                ? clearImage.transform.parent : transform;
+            var root = new GameObject("ClearResult", typeof(RectTransform), typeof(CanvasGroup));
+            root.layer = parent.gameObject.layer;
+            root.transform.SetParent(parent, false);
+            var rootRect = (RectTransform)root.transform;
+            rootRect.anchorMin = Vector2.zero;
+            rootRect.anchorMax = Vector2.one;
+            rootRect.offsetMin = rootRect.offsetMax = Vector2.zero;
+            _resultGroup = root.GetComponent<CanvasGroup>();
+            _resultGroup.interactable = false;
+            _resultGroup.blocksRaycasts = false;
+            _resultGroup.alpha = 0f;
 
-            if (_resultImage == null)
-            {
-                var imageObject = new GameObject("ClearResultImage", typeof(RectTransform), typeof(Image));
-                imageObject.transform.SetParent(parent, false);
+            // 盤面を落ち着かせ、後光と結果画像を見やすくする。
+            var backdrop = NewResultGraphic<Image>("ClearResultBackdrop", Vector2.zero, Vector2.zero);
+            backdrop.rectTransform.anchorMin = Vector2.zero;
+            backdrop.rectTransform.anchorMax = Vector2.one;
+            backdrop.rectTransform.offsetMin = backdrop.rectTransform.offsetMax = Vector2.zero;
+            backdrop.color = new Color(0f, 0f, 0f, 0.75f);
 
-                var rect = imageObject.GetComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0.5f, 0.5f);
-                rect.anchorMax = new Vector2(0.5f, 0.5f);
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.anchoredPosition = Vector2.zero;
-                rect.sizeDelta = resultImageSize;
+            // 作成順に、後光 → 画像 → 文字を重ねる。
+            _resultHalo = NewResultGraphic<ResultHaloGraphic>("ClearResultHalo", resultHaloSize, Vector2.zero);
+            _resultHalo.color = resultHaloColor;
+            _resultImage = NewResultGraphic<Image>("ClearResultImage", resultImageSize, Vector2.zero);
+            _resultImage.preserveAspect = true;
+            _resultText = NewResultText("ClearResultText", new Vector2(1200f, 160f), resultTextOffset, resultTextFontSize);
+            _resultHeaderText = NewResultText("ClearResultHeaderText", new Vector2(1400f, 180f),
+                resultHeaderOffset, resultTextFontSize * resultHeaderFontSizeMultiplier);
+            var hint = NewResultText("ClearResultSkipHint", new Vector2(360f, 60f),
+                new Vector2(0f, -45f), resultTextFontSize * 0.35f);
+            hint.rectTransform.anchorMin = hint.rectTransform.anchorMax = new Vector2(1f, 1f);
+            hint.rectTransform.pivot = new Vector2(1f, 0.5f);
+            hint.rectTransform.anchoredPosition = new Vector2(-35f, -45f);
+            hint.text = "クリックでスキップ";
+        }
 
-                _resultImage = imageObject.GetComponent<Image>();
-                _resultImage.raycastTarget = false;
-                _resultImage.preserveAspect = true;
-            }
+        private T NewResultGraphic<T>(string objectName, Vector2 size, Vector2 position) where T : Graphic
+        {
+            var view = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(T));
+            view.layer = _resultGroup.gameObject.layer;
+            view.transform.SetParent(_resultGroup.transform, false);
+            var rect = (RectTransform)view.transform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            T graphic = view.GetComponent<T>();
+            graphic.raycastTarget = false;
+            return graphic;
+        }
 
-            if (_resultText == null)
-            {
-                var textObject = new GameObject("ClearResultText", typeof(RectTransform), typeof(TextMeshProUGUI));
-                textObject.transform.SetParent(parent, false);
-
-                var rect = textObject.GetComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0.5f, 0.5f);
-                rect.anchorMax = new Vector2(0.5f, 0.5f);
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.anchoredPosition = resultTextOffset;
-                rect.sizeDelta = new Vector2(1200f, 160f);
-
-                _resultText = textObject.GetComponent<TextMeshProUGUI>();
-                _resultText.alignment = TextAlignmentOptions.Center;
-                _resultText.fontSize = resultTextFontSize;
-                if (resultTextFont != null)
-                {
-                    _resultText.font = resultTextFont;
-                }
-                _resultText.color = resultTextColor;
-                _resultText.raycastTarget = false;
-            }
-
-            if (_resultHeaderText == null)
-            {
-                var textObject = new GameObject("ClearResultHeaderText", typeof(RectTransform), typeof(TextMeshProUGUI));
-                textObject.transform.SetParent(parent, false);
-
-                var rect = textObject.GetComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0.5f, 0.5f);
-                rect.anchorMax = new Vector2(0.5f, 0.5f);
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.anchoredPosition = resultHeaderOffset;
-                rect.sizeDelta = new Vector2(1400f, 180f);
-
-                _resultHeaderText = textObject.GetComponent<TextMeshProUGUI>();
-                _resultHeaderText.alignment = TextAlignmentOptions.Center;
-                _resultHeaderText.fontSize = resultTextFontSize * resultHeaderFontSizeMultiplier;
-                if (resultTextFont != null)
-                {
-                    _resultHeaderText.font = resultTextFont;
-                }
-                _resultHeaderText.color = resultTextColor;
-                _resultHeaderText.raycastTarget = false;
-            }
+        private TextMeshProUGUI NewResultText(string objectName, Vector2 size, Vector2 position, float fontSize)
+        {
+            var text = NewResultGraphic<TextMeshProUGUI>(objectName, size, position);
+            text.alignment = TextAlignmentOptions.Center;
+            text.fontSize = fontSize;
+            if (resultTextFont != null) text.font = resultTextFont;
+            text.color = resultTextColor;
+            return text;
         }
 
         private void SetResultAlpha(float alpha)
         {
-            if (_resultImage != null)
-            {
-                var color = _resultImage.color;
-                color.a = alpha;
-                _resultImage.color = color;
-            }
+            if (_resultGroup != null) _resultGroup.alpha = alpha;
+        }
 
-            if (_resultText != null)
-            {
-                var color = _resultText.color;
-                color.a = alpha;
-                _resultText.color = color;
-            }
+        private void StopResultDisplay()
+        {
+            if (_clearRoutine != null) StopCoroutine(_clearRoutine);
+            _clearRoutine = null;
+            _isShowingClear = false;
+            if (_resultGroup != null) _resultGroup.DOKill();
+            if (_resultHalo != null) _resultHalo.rectTransform.DOKill();
+            SetResultAlpha(0f);
+        }
 
-            if (_resultHeaderText != null)
-            {
-                var color = _resultHeaderText.color;
-                color.a = alpha;
-                _resultHeaderText.color = color;
-            }
+        private void OnDisable()
+        {
+            StopResultDisplay();
         }
     }
 }

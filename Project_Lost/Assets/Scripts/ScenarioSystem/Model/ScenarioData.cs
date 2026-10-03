@@ -5,13 +5,13 @@ namespace ScenarioSystem.Model
 {
     /// <summary>
     /// シナリオ1本分のデータを定義する ScriptableObject。
-    /// アクションの順序リストと、連鎖・ループ設定のみを保持する。
-    /// 実行時の状態は ScenarioRuntimeState が担当するため、このSO は完全に不変。
+    /// アクションの順序リストと、連鎖・ループ設定を保持する編集用データ。
+    /// 再生位置などの実行状態は ScenarioRuntimeState が担当し、このSOには書き戻さない。
     /// </summary>
     [CreateAssetMenu(fileName = "NewScenarioData", menuName = "Scenario/Scenario Data")]
     public class ScenarioData : ScriptableObject
     {
-        [Tooltip("一意のシナリオID（検索・参照用）")]
+        [Tooltip("ID検索するシナリオの一意ID。直接参照だけで再生するシナリオは空欄でも可。")]
         public string scenarioId;
 
         [Tooltip("メインウィンドウを表示するか（オーバーレイ専用の場合は false にする）")]
@@ -25,5 +25,10 @@ namespace ScenarioSystem.Model
 
         [Tooltip("ループ再生するか")]
         public bool loop = false;
+
+        private void OnValidate() => ScenarioDataRevision.Invalidate();
+
+        /// <summary>コードから編集した場合の通知。Inspector編集はOnValidateが通知する。</summary>
+        public void NotifyDataChanged() => ScenarioDataRevision.Invalidate();
     }
 }

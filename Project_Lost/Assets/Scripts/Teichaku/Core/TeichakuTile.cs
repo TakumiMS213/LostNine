@@ -82,7 +82,7 @@ namespace Teichaku.Core
         /// </summary>
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (_manager != null)
+            if (_manager != null && eventData.button == PointerEventData.InputButton.Left)
             {
                 _manager.OnTilePointerDown(this);
             }

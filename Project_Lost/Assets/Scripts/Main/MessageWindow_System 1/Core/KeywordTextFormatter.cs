@@ -16,6 +16,14 @@ namespace MessageWindowSystem.Core
             return !string.IsNullOrEmpty(text) && LinkPattern.IsMatch(text);
         }
 
+        /// <summary>表示時と同じタグ解釈でIDを列挙する。データ検証との解釈のずれを防ぐ。</summary>
+        public static IEnumerable<string> GetKeywordIds(string text)
+        {
+            if (string.IsNullOrEmpty(text)) yield break;
+            foreach (Match match in LinkPattern.Matches(text))
+                yield return match.Groups["id"].Value.Trim();
+        }
+
         public static string ApplyColors(string text, IReadOnlyDictionary<string, string> colors)
         {
             if (string.IsNullOrEmpty(text) || colors == null || colors.Count == 0)

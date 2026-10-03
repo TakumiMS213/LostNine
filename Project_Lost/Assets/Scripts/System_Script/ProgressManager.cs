@@ -1,12 +1,17 @@
 using System;
 using System.Collections.Generic;
+using ScenarioSystem.Model;
+using DG.Tweening;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// Singleton that manages game progress (chapter and phase).
 /// </summary>
+[DefaultExecutionOrder(-100)]
 public class ProgressManager : MonoBehaviour
 {
     public static ProgressManager Instance { get; private set; }
@@ -28,8 +33,28 @@ public class ProgressManager : MonoBehaviour
     [Tooltip("カチョウのチュートリアル完了後に有効になるメモライザー解放フラグ")]
     [SerializeField] private bool _isMemorizerUnlocked;
 
-    [Tooltip("SHIFTで切り替えるメモライザー起動フラグ。フレームUIはこの値を参照する")]
+    [Tooltip("SHIFTを押している間だけ有効になるメモライザー起動フラグ。フレームUIはこの値を参照する")]
     [SerializeField] private bool _isMemorizerActive;
+
+    [Tooltip("メモライザー起動中に画面全体へ表示するフレーム画像")]
+    [SerializeField] private Sprite memorizerFrameSprite;
+
+    [SerializeField] private TMP_FontAsset memorizerStatusFont;
+    [SerializeField, Min(1f)] private float memorizerFrameStartScale = 1.35f;
+    [SerializeField, Min(0.01f)] private float memorizerFrameEnterDuration = 0.35f;
+    [SerializeField, Min(0f)] private float memorizerStatusDuration = 0.5f;
+    [SerializeField, Min(0f)] private float memorizerStatusJumpHeight = 28f;
+    [SerializeField] private Color memorizerTintColor = new Color(0.35f, 0.25f, 0.75f, 0.12f);
+
+    private GameObject _memorizerCanvas;
+    private Image _memorizerFrame;
+    private Image _memorizerTint;
+    private Canvas _memorizerTintCanvas;
+    private Material _memorizerTintMaterial;
+    private TextMeshProUGUI _memorizerStatus;
+    private Tween _memorizerFrameTween;
+    private Sequence _memorizerStatusTween;
+    private bool _hasApplicationFocus = true;
 
     private HashSet<string> _extractedKeywords = new HashSet<string>();
     private string _pendingStoryScenarioId;
@@ -82,6 +107,7 @@ public class ProgressManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             RefreshMemorizerUnlockFromProgress();
+            RefreshMemorizerFrame();
             SceneManager.activeSceneChanged += HandleActiveSceneChanged;
             Debug.Log("[ProgressManager] Initialized and marked DontDestroyOnLoad.");
         }
@@ -94,19 +120,30 @@ public class ProgressManager : MonoBehaviour
 
     private void Update()
     {
-        if (!_isMemorizerUnlocked || SceneManager.GetActiveScene().name != mainSceneName)
-            return;
-
         var keyboard = Keyboard.current;
-        if (keyboard != null &&
-            (keyboard.leftShiftKey.wasPressedThisFrame || keyboard.rightShiftKey.wasPressedThisFrame))
-        {
-            ToggleMemorizer();
-        }
+        bool shiftHeld = keyboard != null
+            && (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed);
+        SetMemorizerActive(_isMemorizerUnlocked && _hasApplicationFocus
+            && SceneManager.GetActiveScene().name == mainSceneName && shiftHeld);
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        _hasApplicationFocus = hasFocus;
+        if (!hasFocus)
+            SetMemorizerActive(false);
+    }
+
+    private void OnDisable()
+    {
+        if (Instance == this)
+            SetMemorizerActive(false);
     }
 
     private void OnDestroy()
     {
+        StopMemorizerTweens();
+        if (_memorizerTintMaterial != null) Destroy(_memorizerTintMaterial);
         if (Instance != this)
             return;
 
@@ -120,10 +157,13 @@ public class ProgressManager : MonoBehaviour
     public void SetProgress(int chapter, GamePhase phase)
     {
         Debug.Log($"[ProgressManager] SetProgress: {_currentChapter}-{_currentPhase} -> {chapter}-{phase}");
+        bool chapterChanged = _currentChapter != chapter;
         _currentChapter = chapter;
         _currentPhase = phase;
         RefreshMemorizerUnlockFromProgress();
-        ResetKeywordProgress();
+        // 発見色・再クリック不可と同様、取得済みIDと個数も章の間は保持する。
+        // LOAD/ニューゲームで同章をやり直す場合はStartFromChapterが明示的にリセットする。
+        if (chapterChanged) ResetKeywordProgress();
         OnProgressChanged?.Invoke();
     }
 
@@ -172,7 +212,10 @@ public class ProgressManager : MonoBehaviour
         _currentChapter = Mathf.Clamp(chapter, 1, _maxChapter);
         _currentPhase = GamePhase.Prologue;
         SetMemorizerUnlocked(_currentChapter > 1);
-        _currentKeywordProgress = 0;
+        SetMemorizerActive(false);
+        _pendingStoryScenarioId = null;
+        _pendingMainScenarioId = null;
+        ResetKeywordProgress();
         OnProgressChanged?.Invoke();
 
         TransitionToScene(storySceneName);
@@ -203,15 +246,162 @@ public class ProgressManager : MonoBehaviour
             return true;
 
         _isMemorizerActive = active;
+        RefreshMemorizerFrame(true);
         Debug.Log($"[ProgressManager] Memorizer {(active ? "activated" : "deactivated")}.");
         OnMemorizerStateChanged?.Invoke(active);
         return true;
     }
 
-    /// <summary>メモライザーの起動状態を反転する。</summary>
-    public bool ToggleMemorizer()
+    private void RefreshMemorizerFrame(bool animateAndNotify = false)
     {
-        return SetMemorizerActive(!_isMemorizerActive);
+        StopMemorizerTweens();
+        RefreshMemorizerTintMasks();
+        bool canDisplay = _isMemorizerUnlocked
+            && SceneManager.GetActiveScene().name == mainSceneName
+            && memorizerFrameSprite != null;
+
+        if (!canDisplay || (!_isMemorizerActive && !animateAndNotify))
+        {
+            if (_memorizerCanvas != null)
+                _memorizerCanvas.SetActive(false);
+            if (_memorizerTintCanvas != null)
+                _memorizerTintCanvas.gameObject.SetActive(false);
+            return;
+        }
+
+        EnsureMemorizerUI();
+        _memorizerCanvas.SetActive(true);
+        _memorizerTintCanvas.worldCamera = Camera.main;
+        _memorizerTintCanvas.gameObject.SetActive(_isMemorizerActive);
+        _memorizerFrame.gameObject.SetActive(_isMemorizerActive);
+        _memorizerTint.gameObject.SetActive(_isMemorizerActive);
+        _memorizerTint.color = memorizerTintColor;
+        _memorizerFrame.rectTransform.localScale = Vector3.one;
+        _memorizerStatus.gameObject.SetActive(animateAndNotify);
+
+        if (!animateAndNotify)
+            return;
+
+        if (_isMemorizerActive)
+        {
+            _memorizerFrame.rectTransform.localScale = Vector3.one * memorizerFrameStartScale;
+            _memorizerFrameTween = _memorizerFrame.rectTransform.DOScale(1f, memorizerFrameEnterDuration)
+                .SetEase(Ease.OutBack).SetUpdate(true).SetLink(gameObject);
+        }
+
+        _memorizerStatus.text = _isMemorizerActive ? "MEMORIZER ON" : "MEMORIZER OFF";
+        _memorizerStatus.alpha = 1f;
+        var statusRect = _memorizerStatus.rectTransform;
+        // 連続切り替えでも、前のジャンプ位置を引き継がず同じ位置から跳ねる。
+        statusRect.anchoredPosition = Vector2.zero;
+        _memorizerStatusTween = DOTween.Sequence();
+        _memorizerStatusTween.SetUpdate(true).SetLink(gameObject);
+        float fadeDuration = Mathf.Min(0.15f, memorizerStatusDuration);
+        float halfJumpDuration = (memorizerStatusDuration - fadeDuration) * 0.5f;
+        _memorizerStatusTween.Append(statusRect.DOAnchorPosY(memorizerStatusJumpHeight, halfJumpDuration)
+            .SetEase(Ease.OutQuad));
+        _memorizerStatusTween.Append(statusRect.DOAnchorPosY(0f, halfJumpDuration)
+            .SetEase(Ease.InQuad));
+        _memorizerStatusTween.Append(_memorizerStatus.DOFade(0f, fadeDuration));
+        _memorizerStatusTween.OnComplete(() =>
+        {
+            _memorizerStatus.gameObject.SetActive(false);
+            if (!_isMemorizerActive)
+                _memorizerCanvas.SetActive(false);
+        });
+    }
+
+    private void EnsureMemorizerUI()
+    {
+        if (_memorizerCanvas != null)
+            return;
+
+        // ProgressManagerと一緒に保持する。描画専用なのでGraphicRaycasterは付けない。
+        _memorizerCanvas = new GameObject("MemorizerFrameCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+        _memorizerCanvas.transform.SetParent(transform, false);
+        var canvas = _memorizerCanvas.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100; // SceneTransitionのフェード（9999）より背面。
+        var scaler = _memorizerCanvas.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.matchWidthOrHeight = 0.5f;
+
+        // 色フィルターはフレームとステータス文字の背面に置く。
+        _memorizerTint = CreateMemorizerImage("MemorizerTint");
+        // 立ち絵と同じカメラのステンシルを読み、最前面のOverlayフレームより先に描く。
+        var tintRoot = new GameObject("MemorizerTintCanvas", typeof(RectTransform), typeof(Canvas));
+        tintRoot.transform.SetParent(transform, false);
+        _memorizerTintCanvas = tintRoot.GetComponent<Canvas>();
+        _memorizerTintCanvas.renderMode = RenderMode.ScreenSpaceCamera;
+        _memorizerTintCanvas.worldCamera = Camera.main;
+        _memorizerTintCanvas.planeDistance = 1f;
+        _memorizerTintCanvas.sortingOrder = 99;
+        _memorizerTint.transform.SetParent(tintRoot.transform, false);
+        _memorizerTint.rectTransform.offsetMin = Vector2.zero;
+        _memorizerTint.rectTransform.offsetMax = Vector2.zero;
+        _memorizerTintMaterial = new Material(_memorizerTint.defaultMaterial);
+        _memorizerTintMaterial.SetInt("_Stencil", MemorizerTintMask.PortraitBit);
+        _memorizerTintMaterial.SetInt("_StencilReadMask", MemorizerTintMask.PortraitBit);
+        _memorizerTintMaterial.SetInt("_StencilWriteMask", 0);
+        _memorizerTintMaterial.SetInt("_StencilComp", (int)UnityEngine.Rendering.CompareFunction.NotEqual);
+        _memorizerTint.material = _memorizerTintMaterial;
+        _memorizerFrame = CreateMemorizerImage("MemorizerFrame");
+        _memorizerFrame.sprite = memorizerFrameSprite;
+
+        var statusObject = new GameObject("MemorizerStatus", typeof(RectTransform), typeof(TextMeshProUGUI));
+        statusObject.transform.SetParent(_memorizerCanvas.transform, false);
+        _memorizerStatus = statusObject.GetComponent<TextMeshProUGUI>();
+        _memorizerStatus.font = memorizerStatusFont;
+        _memorizerStatus.alignment = TextAlignmentOptions.Center;
+        _memorizerStatus.color = Color.white;
+        _memorizerStatus.raycastTarget = false;
+        _memorizerStatus.textWrappingMode = TextWrappingModes.NoWrap;
+        _memorizerStatus.enableAutoSizing = true;
+        _memorizerStatus.fontSizeMin = 12f;
+        _memorizerStatus.fontSizeMax = 120f;
+        var statusRect = _memorizerStatus.rectTransform;
+        statusRect.anchorMin = new Vector2(1f / 3f, 0.95f);
+        statusRect.anchorMax = new Vector2(2f / 3f, 0.95f);
+        statusRect.pivot = new Vector2(0.5f, 1f);
+        statusRect.sizeDelta = new Vector2(0f, 160f);
+        statusRect.anchoredPosition = Vector2.zero;
+        statusRect.localScale = Vector3.one * 0.5f;
+    }
+
+    private void RefreshMemorizerTintMasks()
+    {
+        // シーン内の非表示UIも登録し、会話開始後に表示されたUIにも同じ除外判定を使う。
+        foreach (var graphic in FindObjectsByType<Graphic>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (graphic.gameObject.scene.name != mainSceneName) continue;
+            if (_isMemorizerActive && !graphic.TryGetComponent<MemorizerTintMask>(out _))
+                graphic.gameObject.AddComponent<MemorizerTintMask>();
+            graphic.SetMaterialDirty();
+        }
+    }
+
+    private Image CreateMemorizerImage(string objectName)
+    {
+        var imageObject = new GameObject(objectName, typeof(RectTransform), typeof(Image));
+        imageObject.transform.SetParent(_memorizerCanvas.transform, false);
+        var image = imageObject.GetComponent<Image>();
+        image.raycastTarget = false;
+        var rect = image.rectTransform;
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        return image;
+    }
+
+    private void StopMemorizerTweens()
+    {
+        // 連打やシーン退出時は古い完了処理も破棄し、最新の状態を優先する。
+        _memorizerFrameTween?.Kill();
+        _memorizerFrameTween = null;
+        _memorizerStatusTween?.Kill();
+        _memorizerStatusTween = null;
     }
 
     /// <summary>
@@ -249,7 +439,7 @@ public class ProgressManager : MonoBehaviour
     /// <summary>
     /// Returns a string key for scenario lookup (e.g., "Ch1_Dialogue").
     /// </summary>
-    public string GetScenarioKey() => $"Ch{_currentChapter}_{_currentPhase}";
+    public string GetScenarioKey() => ScenarioKey.ForPhase(_currentChapter, _currentPhase);
 
     /// <summary>
     /// Queues a scenario ID and moves to the Story scene.
@@ -261,7 +451,7 @@ public class ProgressManager : MonoBehaviour
 
     public void StartScenarioById(string scenarioId, Action onComplete = null)
     {
-        string normalizedScenarioId = scenarioId?.Trim();
+        string normalizedScenarioId = ScenarioKey.Normalize(scenarioId);
         if (string.IsNullOrEmpty(normalizedScenarioId))
         {
             Debug.LogWarning("[ProgressManager] Scenario ID is empty.");
@@ -287,7 +477,7 @@ public class ProgressManager : MonoBehaviour
 
     public void StartProgressScenarioInStory(string scenarioId)
     {
-        string normalizedScenarioId = scenarioId?.Trim();
+        string normalizedScenarioId = ScenarioKey.Normalize(scenarioId);
         if (string.IsNullOrEmpty(normalizedScenarioId))
         {
             Debug.LogWarning("[ProgressManager] Progress scenario ID is empty.");
@@ -303,7 +493,7 @@ public class ProgressManager : MonoBehaviour
 
     public void StartScenarioFromMainById(string scenarioId)
     {
-        string normalizedScenarioId = scenarioId?.Trim();
+        string normalizedScenarioId = ScenarioKey.Normalize(scenarioId);
         if (string.IsNullOrEmpty(normalizedScenarioId))
         {
             Debug.LogWarning("[ProgressManager] Main scenario ID is empty.");
@@ -358,18 +548,7 @@ public class ProgressManager : MonoBehaviour
 
     private static bool TryParseChapterFromScenarioId(string scenarioId, out int chapter)
     {
-        chapter = 0;
-        if (string.IsNullOrEmpty(scenarioId) || scenarioId.Length < 3 || scenarioId[0] != 'C' || scenarioId[1] != 'h')
-            return false;
-
-        int index = 2;
-        while (index < scenarioId.Length && char.IsDigit(scenarioId[index]))
-        {
-            chapter = chapter * 10 + (scenarioId[index] - '0');
-            index++;
-        }
-
-        return chapter > 0;
+        return ScenarioKey.TryGetChapter(scenarioId, out chapter);
     }
 
     private void RefreshMemorizerUnlockFromProgress()
@@ -389,6 +568,7 @@ public class ProgressManager : MonoBehaviour
     {
         if (next.name != mainSceneName)
             SetMemorizerActive(false);
+        RefreshMemorizerFrame();
     }
 
     /// <summary>

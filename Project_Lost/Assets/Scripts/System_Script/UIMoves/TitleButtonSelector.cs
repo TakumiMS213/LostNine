@@ -1,175 +1,221 @@
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
 
 public class TitleButtonSelector : MonoBehaviour
 {
     [Header("ボタン (このセット専用)")]
     [SerializeField] private Button[] buttons;
-
     [Header("選択中の背景 (ボタンとindex対応)")]
     [SerializeField] private GameObject[] highlights;
-
     [Header("選択後のハイライト (ボタンとindex対応)")]
     [SerializeField] private GameObject[] selectedHighlights;
-
-    [Space]
     [Header("Sound Settings")]
     [SerializeField] private AudioSource moveSound;
     [SerializeField] private AudioSource selectSound;
     [SerializeField] private float soundVolume = 1f;
-    private bool isSelected = false; // 決定済みフラグ 決定後には移動無効化
-    [SerializeField] private MultiUISwitcher uiSwitcher;
+    [SerializeField] private UISwitcher uiSwitcher;
 
-    private int index = 0;
+    private int index;
+    private UnityAction[] _clickHandlers;
+    private Vector2 _lastPointerPosition;
+    private readonly List<RaycastResult> _raycastResults = new();
+    private PointerEventData _pointerData;
 
-    void Start()
+    private void Awake()
     {
-        UpdateHighlight();
-        SelectThis();  // 初期フォーカス
-        ClearSelectedHighlights();  // 選択ハイライトは初期状態では非表示
-    }
-
-    void Update()
-    {
-        // 現在 UI フォーカスがこのボタン群以外なら、入力無視
-        if (!IsFocused()) return;
-
-        // マウスホバー検出
-        CheckMouseHover();
-
-        // ↓ 移動（Down / S / ホイール下）
-        if (!isSelected && (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S) || Input.GetAxis("Mouse ScrollWheel") < 0f))
+        if (buttons == null) return;
+        _clickHandlers = new UnityAction[buttons.Length];
+        for (int i = 0; i < buttons.Length; i++)
         {
-            index = (index + 1) % buttons.Length;
-            ClearSelectedHighlights();
-            UpdateHighlight();
-            PlaySound(moveSound);
-        }
-
-        // ↑ 移動（Up / W / ホイール上）
-        if (!isSelected && (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) || Input.GetAxis("Mouse ScrollWheel") > 0f))
-        {
-            index = (index - 1 + buttons.Length) % buttons.Length;
-            ClearSelectedHighlights();
-            UpdateHighlight();
-            PlaySound(moveSound);
-        }
-
-        // 決定（Enter / F）
-        if (!isSelected && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.F) || Input.GetKeyDown(KeyCode.Space)))
-        {
-            isSelected = true;
-            ShowSelectedHighlight(index);
-            buttons[index].onClick.Invoke();
-            // SEはボタン側のOnClick()で PlaySelectSound() を呼ぶ
-        }
-        // キャンセル（Esc / G）
-        if (isSelected && (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.G)))
-        {
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (buttons[i] == null) continue;
+            int buttonIndex = i;
+            _clickHandlers[i] = () => HandleClick(buttonIndex);
+            // 矢印・W/S・決定はEventSystemに任せ、サブパネルへ勝手に移動しない。
+            buttons[i].navigation = new Navigation
             {
-                SystemScript.EscapeQuitHandler.SuppressQuitForCurrentFrame();
-            }
-
-            Debug.Log("TitleButtonSelector: キャンセル入力検出");
-            isSelected = false;
-            ClearSelectedHighlights();
-            UpdateHighlight();
-            uiSwitcher.HidePanels(0);
+                mode = Navigation.Mode.Explicit,
+                selectOnUp = buttons[FindNextIndex(i, -1)],
+                selectOnDown = buttons[FindNextIndex(i, 1)]
+            };
         }
+        DisableHighlightRaycasts(highlights);
+        DisableHighlightRaycasts(selectedHighlights);
     }
 
-    public void ResetSelection() // 外部から選択解除したいときに呼ぶ
+    private void OnEnable()
     {
-        isSelected = false;
+        if (_clickHandlers != null)
+            for (int i = 0; i < buttons.Length; i++)
+                if (buttons[i] != null && _clickHandlers[i] != null)
+                    buttons[i].onClick.AddListener(_clickHandlers[i]);
+        if (uiSwitcher != null) uiSwitcher.OnPanelClosed += ResetSelection;
+        _lastPointerPosition = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+        ResetSelection();
+    }
+
+    private void OnDisable()
+    {
+        if (_clickHandlers != null)
+            for (int i = 0; i < buttons.Length; i++)
+                if (buttons[i] != null && _clickHandlers[i] != null)
+                    buttons[i].onClick.RemoveListener(_clickHandlers[i]);
+        if (uiSwitcher != null) uiSwitcher.OnPanelClosed -= ResetSelection;
+    }
+
+    private void LateUpdate()
+    {
+        var eventSystem = EventSystem.current;
+        if (eventSystem == null || buttons == null || buttons.Length == 0) return;
+
+        // フォーカスが別のUIへ移っていても、マウスでタイトルへ戻れる。
+        // 静止したマウスは、キーボードで選んだ項目を上書きしない。
+        var mouse = Mouse.current;
+        if (mouse != null)
+        {
+            Vector2 position = mouse.position.ReadValue();
+            if (position != _lastPointerPosition || mouse.leftButton.wasPressedThisFrame)
+                CheckMouseHover(eventSystem, position);
+            _lastPointerPosition = position;
+        }
+
+        var selected = eventSystem.currentSelectedGameObject;
+        if (selected == null || !selected.activeInHierarchy)
+        {
+            SelectThis();
+            selected = eventSystem.currentSelectedGameObject;
+        }
+        int focusedIndex = FindButtonIndex(selected);
+        if (focusedIndex >= 0) SetIndex(focusedIndex);
+
+        var keyboard = Keyboard.current;
+        if (keyboard != null && keyboard.gKey.wasPressedThisFrame && uiSwitcher != null)
+        {
+            uiSwitcher.HideAllPanels();
+            ResetSelection();
+            return;
+        }
+        // スライダーやロード先を操作している間は、そちらのキーボード操作を優先する。
+        if (focusedIndex < 0 || !CanSelect(index)) return;
+
+        float scroll = mouse != null ? mouse.scroll.ReadValue().y : 0f;
+        if (scroll != 0f)
+        {
+            SetIndex(FindNextIndex(index, scroll > 0f ? -1 : 1));
+            SelectThis();
+        }
+
+        // 標準Submitと重複させず、従来のF/Spaceも決定キーとして維持する。
+        var module = eventSystem.currentInputModule as InputSystemUIInputModule;
+        bool submitted = module != null && module.submit != null
+            && module.submit.action != null && module.submit.action.WasPerformedThisFrame();
+        if (!submitted && keyboard != null &&
+            (keyboard.fKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame))
+            buttons[index].onClick.Invoke();
+    }
+
+    public void ResetSelection()
+    {
+        if (buttons == null || buttons.Length == 0) return;
+        if (!CanSelect(index)) index = FindNextIndex(index, 1);
         ClearSelectedHighlights();
         UpdateHighlight();
+        SelectThis();
     }
 
-    public void PlaySelectSound() // ボタンの OnClick() から呼び出す
+    public void PlaySelectSound() => PlaySound(selectSound);
+
+    private void HandleClick(int buttonIndex)
     {
-        PlaySound(selectSound);
+        SetIndex(buttonIndex);
+        ClearSelectedHighlights();
+        if (selectedHighlights != null && buttonIndex < selectedHighlights.Length
+            && selectedHighlights[buttonIndex] != null)
+            selectedHighlights[buttonIndex].SetActive(true);
     }
 
-    private bool IsFocused()
+    private void SetIndex(int nextIndex)
     {
-        var selected = EventSystem.current.currentSelectedGameObject;
-        if (selected == null) return false;
+        if (index == nextIndex || !CanSelect(nextIndex)) return;
+        index = nextIndex;
+        ClearSelectedHighlights();
+        UpdateHighlight();
+        PlaySound(moveSound);
+    }
 
-        foreach (var b in buttons)
+    private bool CanSelect(int i) => i >= 0 && i < buttons.Length && buttons[i] != null
+        && buttons[i].IsActive() && buttons[i].IsInteractable();
+
+    private int FindNextIndex(int start, int direction)
+    {
+        for (int step = 1; step <= buttons.Length; step++)
         {
-            if (b.gameObject == selected) return true;
+            int candidate = (start + direction * step + buttons.Length) % buttons.Length;
+            if (CanSelect(candidate)) return candidate;
         }
-        return false;
+        return start;
+    }
+
+    private int FindButtonIndex(GameObject target)
+    {
+        if (target == null) return -1;
+        var button = target.GetComponentInParent<Button>();
+        for (int i = 0; i < buttons.Length; i++)
+            if (button != null && buttons[i] == button) return i;
+        return -1;
     }
 
     private void SelectThis()
     {
-        EventSystem.current.SetSelectedGameObject(buttons[index].gameObject);
+        if (EventSystem.current != null && CanSelect(index))
+            EventSystem.current.SetSelectedGameObject(buttons[index].gameObject);
     }
 
     private void UpdateHighlight()
     {
+        if (highlights == null) return;
         for (int i = 0; i < highlights.Length; i++)
-        {
-            highlights[i].SetActive(i == index);
-        }
-        SelectThis();
-    }
-
-    private void PlaySound(AudioSource source)
-    {
-        if (source == null || source.clip == null) return;
-        source.PlayOneShot(source.clip, soundVolume);
+            if (highlights[i] != null) highlights[i].SetActive(i == index);
     }
 
     private void ClearSelectedHighlights()
     {
-        for (int i = 0; i < selectedHighlights.Length; i++)
-        {
-            if (selectedHighlights[i] != null)
-            {
-                selectedHighlights[i].SetActive(false);
-            }
-        }
+        if (selectedHighlights == null) return;
+        foreach (var highlight in selectedHighlights)
+            if (highlight != null) highlight.SetActive(false);
     }
 
-    private void ShowSelectedHighlight(int buttonIndex)
+    private void CheckMouseHover(EventSystem eventSystem, Vector2 position)
     {
-        if (selectedHighlights.Length > buttonIndex && selectedHighlights[buttonIndex] != null)
-        {
-            selectedHighlights[buttonIndex].SetActive(true);
-        }
+        _pointerData ??= new PointerEventData(eventSystem);
+        _pointerData.position = position;
+        _raycastResults.Clear();
+        eventSystem.RaycastAll(_pointerData, _raycastResults);
+        if (_raycastResults.Count == 0) return;
+
+        // 最前面だけを見る。パネル越しに背後のボタンを選択しない。
+        int hoveredIndex = FindButtonIndex(_raycastResults[0].gameObject);
+        if (hoveredIndex < 0 || !CanSelect(hoveredIndex)) return;
+        SetIndex(hoveredIndex);
+        SelectThis();
     }
 
-    private void CheckMouseHover()
+    private static void DisableHighlightRaycasts(GameObject[] objects)
     {
-        if(isSelected) return;
-        var pointerData = new PointerEventData(EventSystem.current)
-        {
-            position = Input.mousePosition
-        };
+        if (objects == null) return;
+        foreach (var obj in objects)
+            if (obj != null)
+                foreach (var graphic in obj.GetComponentsInChildren<Graphic>(true))
+                    graphic.raycastTarget = false;
+    }
 
-        var raycastResults = new System.Collections.Generic.List<RaycastResult>();
-        EventSystem.current.RaycastAll(pointerData, raycastResults);
-
-        foreach (var result in raycastResults)
-        {
-            for (int i = 0; i < buttons.Length; i++)
-            {
-                if (result.gameObject == buttons[i].gameObject)
-                {
-                    if (index != i)
-                    {
-                        index = i;
-                        ClearSelectedHighlights();
-                        UpdateHighlight();
-                        PlaySound(moveSound);
-                    }
-                    return;
-                }
-            }
-        }
+    private void PlaySound(AudioSource source)
+    {
+        if (source != null && source.clip != null)
+            source.PlayOneShot(source.clip, soundVolume);
     }
 }

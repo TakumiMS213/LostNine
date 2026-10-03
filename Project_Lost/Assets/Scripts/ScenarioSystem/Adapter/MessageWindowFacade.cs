@@ -54,6 +54,13 @@ namespace ScenarioSystem.Adapter
         /// <summary>DialogueText（KeywordHandler が参照）。</summary>
         public TMP_Text DialogueText => dialogueText;
 
+        public ScenarioDataDatabase ScenarioDatabase => scenarioDataDatabase;
+
+        public bool HasScenario(string scenarioId)
+            => scenarioDataDatabase != null && scenarioDataDatabase.TryGetById(scenarioId, out _);
+
+        public void StopScenario() => presenter?.StopScenario();
+
         // ScenarioDatabase removed
 
         /// <summary>ウィンドウが表示中か。</summary>
@@ -79,14 +86,21 @@ namespace ScenarioSystem.Adapter
         {
             ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibility;
             ScenarioEventBus.OnDialogueRequested += HandleDialogueForLog;
-            ScenarioEventBus.OnDialogueRequested += _ => _isTyping = true;
-            ScenarioEventBus.OnTypingCompleted += () => _isTyping = false;
+            ScenarioEventBus.OnTypingCompleted += HandleTypingCompleted;
         }
 
         private void OnDisable()
         {
             ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibility;
             ScenarioEventBus.OnDialogueRequested -= HandleDialogueForLog;
+            ScenarioEventBus.OnTypingCompleted -= HandleTypingCompleted;
+            _isTyping = false;
+            _isWindowActive = false;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
         }
 
         #endregion
@@ -138,6 +152,21 @@ namespace ScenarioSystem.Adapter
             onComplete?.Invoke();
         }
 
+        /// <summary>現在の会話位置を保持してキーワードの補足シナリオを再生する。</summary>
+        public void PlayTemporaryScenarioById(string scenarioId, Action onComplete = null)
+        {
+            var scenario = string.IsNullOrEmpty(scenarioId) || scenarioDataDatabase == null
+                ? null : scenarioDataDatabase.GetById(scenarioId);
+            if (presenter == null || scenario == null)
+            {
+                Debug.LogWarning($"[MessageWindowFacade] Temporary scenario '{scenarioId}' is unavailable.");
+                onComplete?.Invoke();
+                return;
+            }
+
+            presenter.PlayTemporaryScenario(scenario, onComplete);
+        }
+
         // Legacy DialogueScenario fallback removed
 
         /// <summary>テキスト送り（旧 Next() 互換）。</summary>
@@ -156,12 +185,17 @@ namespace ScenarioSystem.Adapter
         private void HandleWindowVisibility(bool visible)
         {
             _isWindowActive = visible;
+            if (!visible) _isTyping = false;
         }
 
         private void HandleDialogueForLog(DialogueEventData data)
         {
-            _log.Add((data.SpeakerName ?? string.Empty, data.Text ?? string.Empty));
+            _isTyping = !data.Instant;
+            if (!data.Instant)
+                _log.Add((data.SpeakerName ?? string.Empty, data.Text ?? string.Empty));
         }
+
+        private void HandleTypingCompleted() => _isTyping = false;
 
         #endregion
     }

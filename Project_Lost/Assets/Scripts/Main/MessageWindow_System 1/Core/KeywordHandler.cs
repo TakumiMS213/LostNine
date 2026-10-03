@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -8,6 +7,7 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 using ScenarioSystem.Adapter;
+using ScenarioSystem.Events;
 
 namespace MessageWindowSystem.Core
 {
@@ -26,6 +26,11 @@ namespace MessageWindowSystem.Core
 
         [Header("Charge Settings")]
         [SerializeField] private float chargeDuration = 1.0f;
+
+        [Header("Memorizer Keyword Shake")]
+        [Tooltip("メモライザー起動中の文字の揺れ幅（テキストのローカル座標）。")]
+        [SerializeField, Min(0f)] private float memorizerShakeStrength = 1.25f;
+        [SerializeField, Min(0f)] private float memorizerShakeFrequency = 24f;
 
         [Header("Keyword Hover Cursor")]
         [Tooltip("キーワード上にカーソルが重なったときに表示するカーソル画像。")]
@@ -71,6 +76,15 @@ namespace MessageWindowSystem.Core
         private bool _shouldBlockNext;
         private string _chargingLinkID;
         private Coroutine _chargeCoroutine;
+        private int _chargingLinkIndex = -1;
+        private float _chargeProgress;
+        private TMP_Text _animatedText;
+        private TMP_MeshInfo[] _baseMeshInfo;
+        private TMP_Text _chargingText;
+        private string _chargingTextSource;
+        private Tween _discoveryShakeTween;
+        private RectTransform _discoveryShakeTarget;
+        private Vector2 _discoveryShakeOrigin;
 
         private const string DummyPrefix = "dummy_";
         private bool _isHoveringLink;
@@ -118,22 +132,37 @@ namespace MessageWindowSystem.Core
             ResolveProvider();
         }
 
+        private void OnEnable()
+        {
+            ScenarioEventBus.OnDialogueRequested += HandleDialogueChanged;
+            ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibility;
+            ScenarioEventBus.OnScenarioStarted += HandleScenarioBoundary;
+            ScenarioEventBus.OnScenarioEnded += HandleScenarioBoundary;
+        }
+
         private void Update()
         {
-            if (_isCharging && !IsMemorizerActive)
+            if (_isCharging && !CanContinueCharge())
                 CancelCharge();
 
             UpdateCursorHover();
         }
 
+        private void LateUpdate()
+        {
+            UpdateKeywordVisuals();
+        }
+
         private void OnDisable()
         {
-            // Restore default cursor when handler is disabled
-            if (_isHoveringLink)
-            {
-                _isHoveringLink = false;
-                CursorManager.Instance?.ResetToDefault();
-            }
+            ScenarioEventBus.OnDialogueRequested -= HandleDialogueChanged;
+            ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibility;
+            ScenarioEventBus.OnScenarioStarted -= HandleScenarioBoundary;
+            ScenarioEventBus.OnScenarioEnded -= HandleScenarioBoundary;
+            CancelCharge();
+            StopDiscoveryShake();
+            ReleaseAnimatedText();
+            SetKeywordHover(false);
         }
 
         /// <summary>Checks if the text contains any TMP link tags.</summary>
@@ -160,8 +189,32 @@ namespace MessageWindowSystem.Core
         /// <summary>Triggers a shake effect on the dialogue text.</summary>
         public void ShakeLinkVisual(string id)
         {
+            StopDiscoveryShake();
             var provider = GetProvider();
-            provider?.DialogueText?.GetComponent<RectTransform>()?.DOShakeAnchorPos(0.35f, new Vector2(8f, 0f), 10, 90f);
+            var text = provider?.DialogueText;
+            if (text == null) return;
+
+            _discoveryShakeTarget = text.rectTransform;
+            _discoveryShakeOrigin = _discoveryShakeTarget.anchoredPosition;
+            _discoveryShakeTween = _discoveryShakeTarget.DOShakeAnchorPos(0.35f, new Vector2(8f, 0f), 10, 90f)
+                .SetLink(text.gameObject)
+                .OnKill(RestoreDiscoveryShake);
+        }
+
+        private void StopDiscoveryShake()
+        {
+            var tween = _discoveryShakeTween;
+            _discoveryShakeTween = null;
+            tween?.Kill();
+            RestoreDiscoveryShake();
+        }
+
+        private void RestoreDiscoveryShake()
+        {
+            if (_discoveryShakeTarget != null)
+                _discoveryShakeTarget.anchoredPosition = _discoveryShakeOrigin;
+            _discoveryShakeTarget = null;
+            _discoveryShakeTween = null;
         }
 
         #endregion
@@ -188,6 +241,8 @@ namespace MessageWindowSystem.Core
 
             _shouldBlockNext = true;
             _chargingLinkID = linkID;
+            _chargingText = dialogueText;
+            _chargingTextSource = dialogueText.text;
             _isCharging = true;
             _chargeCoroutine = StartCoroutine(ChargeRoutine(dialogueText, linkIndex, _chargingLinkID));
         }
@@ -216,47 +271,72 @@ namespace MessageWindowSystem.Core
         {
             _isCharging = false;
             if (_chargeCoroutine != null) StopCoroutine(_chargeCoroutine);
+            _chargeCoroutine = null;
+            _chargingLinkIndex = -1;
+            _chargeProgress = 0f;
 
             if (!string.IsNullOrEmpty(_chargingLinkID))
             {
-                var provider = GetProvider();
-                provider?.DialogueText?.ForceMeshUpdate();
+                // シーン破棄時にはProviderやTMPが先に破棄されている場合がある。
+                // cleanup中にProviderを再検索せず、Unityのnull判定で生存確認する。
+                var text = _chargingText;
+                if (text == null && IsProviderAlive(_provider)) text = _provider.DialogueText;
+                if (text != null) text.ForceMeshUpdate();
             }
 
-            EffectManager.Instance?.StopChargeSE();
+            var effects = EffectManager.Instance;
+            if (effects != null) effects.StopChargeSE();
             _chargingLinkID = null;
+            _chargingText = null;
+            _chargingTextSource = null;
+        }
+
+        private bool CanContinueCharge()
+        {
+            var provider = GetProvider();
+            return IsKeywordExtractionAvailable && provider != null && provider.IsWindowActive
+                && !provider.IsTyping && _chargingText != null && _chargingText.isActiveAndEnabled
+                && provider.DialogueText == _chargingText && _chargingText.text == _chargingTextSource
+                && CanInteractWithKeyword(_chargingLinkID);
+        }
+
+        private void HandleDialogueChanged(DialogueEventData _) => CancelInteraction();
+
+        private void HandleScenarioBoundary(ScenarioSystem.Model.ScenarioData _) => CancelInteraction();
+
+        private void HandleWindowVisibility(bool visible)
+        {
+            if (!visible) CancelInteraction();
+        }
+
+        private void CancelInteraction()
+        {
+            CancelCharge();
+            StopDiscoveryShake();
+            SetKeywordHover(false);
         }
 
         private IEnumerator ChargeRoutine(TMP_Text dialogueText, int linkIndex, string linkID)
         {
             EffectManager.Instance?.PlayChargeSE();
-
-            var linkInfo = dialogueText.textInfo.linkInfo[linkIndex];
-            int startCharIdx = linkInfo.linkTextfirstCharacterIndex;
-            int charCount = linkInfo.linkTextLength;
-
-            var originalColors = new Color32[charCount];
-            var originalVertices = new Vector3[charCount][];
-            CacheCharacterData(dialogueText, startCharIdx, charCount, originalColors, originalVertices);
-
-            Color32 targetColor = new Color32(255, 215, 0, 255);
-            const float maxScale = 1.5f;
+            _chargingLinkIndex = linkIndex;
+            _chargeProgress = 0f;
 
             float timer = 0f;
             while (timer < chargeDuration)
             {
                 timer += Time.deltaTime;
-                float progress = timer / chargeDuration;
-                float scale = Mathf.Lerp(1f, maxScale, DOVirtual.EasedValue(0f, 1f, progress, Ease.OutQuad));
-                ApplyChargeVisuals(dialogueText, startCharIdx, charCount, originalColors, originalVertices, targetColor, progress, scale);
+                _chargeProgress = Mathf.Clamp01(timer / chargeDuration);
                 yield return null;
             }
-
-            RestoreVertices(dialogueText, startCharIdx, charCount, originalVertices);
 
             _isCharging = false;
             _chargeCoroutine = null;
             _chargingLinkID = null;
+            _chargingText = null;
+            _chargingTextSource = null;
+            _chargingLinkIndex = -1;
+            _chargeProgress = 0f;
             EffectManager.Instance?.StopChargeSE();
 
             // 長押し中に別経路で発見された場合も、取得処理を繰り返さない。
@@ -322,56 +402,97 @@ namespace MessageWindowSystem.Core
 
         #region Vertex Manipulation
 
-        private static void CacheCharacterData(TMP_Text text, int start, int count, Color32[] colors, Vector3[][] vertices)
+        private void UpdateKeywordVisuals()
         {
-            for (int i = 0; i < count; i++)
+            var provider = GetProvider();
+            var text = provider?.DialogueText;
+            if (!IsMemorizerActive || provider == null || !provider.IsWindowActive
+                || text == null || !text.isActiveAndEnabled)
             {
-                var charInfo = text.textInfo.characterInfo[start + i];
-                if (!charInfo.isVisible) continue;
+                ReleaseAnimatedText();
+                return;
+            }
 
-                var mesh = text.textInfo.meshInfo[charInfo.materialReferenceIndex];
-                int vi = charInfo.vertexIndex;
+            if (_animatedText != text)
+            {
+                ReleaseAnimatedText();
+                _animatedText = text;
+                text.OnPreRenderText += HandleTextPreRender;
+                text.ForceMeshUpdate();
+            }
+            else if (text.havePropertiesChanged)
+                text.ForceMeshUpdate();
 
-                colors[i] = mesh.colors32[vi];
-                vertices[i] = new[] { mesh.vertices[vi], mesh.vertices[vi + 1], mesh.vertices[vi + 2], mesh.vertices[vi + 3] };
+            if (_baseMeshInfo == null || text.textInfo.linkCount == 0)
+                return;
+
+            // 常にTMPが生成した元の位置から描画し、揺れ・拡大の累積を防ぐ。
+            for (int i = 0; i < text.textInfo.meshInfo.Length; i++)
+            {
+                var mesh = text.textInfo.meshInfo[i];
+                Array.Copy(_baseMeshInfo[i].vertices, mesh.vertices, mesh.vertexCount);
+                Array.Copy(_baseMeshInfo[i].colors32, mesh.colors32, mesh.vertexCount);
+            }
+            ApplyKeywordVisuals(text.textInfo);
+            text.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices | TMP_VertexDataUpdateFlags.Colors32);
+        }
+
+        private void HandleTextPreRender(TMP_TextInfo textInfo)
+        {
+            // タイピング・色変更・文章の差し替え・レイアウト更新にも追従する。
+            // TMPの再利用バッファなので、毎フレームの配列生成は不要。
+            _baseMeshInfo = textInfo.CopyMeshInfoVertexData();
+            ApplyKeywordVisuals(textInfo);
+        }
+
+        private void ApplyKeywordVisuals(TMP_TextInfo textInfo)
+        {
+            if (!IsMemorizerActive || _provider == null || !_provider.IsWindowActive)
+                return;
+
+            float time = Time.unscaledTime * memorizerShakeFrequency * Mathf.PI * 2f;
+            float chargeScale = Mathf.Lerp(1f, 1.5f,
+                DOVirtual.EasedValue(0f, 1f, _chargeProgress, Ease.OutQuad));
+            var chargeColor = new Color32(255, 215, 0, 255);
+            for (int linkIndex = 0; linkIndex < textInfo.linkCount; linkIndex++)
+            {
+                var link = textInfo.linkInfo[linkIndex];
+                bool charging = _isCharging && linkIndex == _chargingLinkIndex;
+                int end = Mathf.Min(link.linkTextfirstCharacterIndex + link.linkTextLength,
+                    Mathf.Min(textInfo.characterCount, _animatedText.maxVisibleCharacters));
+                for (int i = link.linkTextfirstCharacterIndex; i < end; i++)
+                {
+                    var character = textInfo.characterInfo[i];
+                    if (!character.isVisible) continue;
+
+                    var mesh = textInfo.meshInfo[character.materialReferenceIndex];
+                    int vertex = character.vertexIndex;
+                    Vector3 center = (mesh.vertices[vertex] + mesh.vertices[vertex + 2]) * 0.5f;
+                    Vector3 offset = new Vector3(Mathf.Sin(time + i * 2.4f),
+                        Mathf.Sin(time * 1.17f + i * 1.3f), 0f) * memorizerShakeStrength;
+                    Color32 color = Color32.Lerp(mesh.colors32[vertex], chargeColor, _chargeProgress);
+                    for (int v = 0; v < 4; v++)
+                    {
+                        if (charging)
+                        {
+                            mesh.vertices[vertex + v] = center + (mesh.vertices[vertex + v] - center) * chargeScale;
+                            mesh.colors32[vertex + v] = color;
+                        }
+                        mesh.vertices[vertex + v] += offset;
+                    }
+                }
             }
         }
 
-        private static void ApplyChargeVisuals(TMP_Text text, int start, int count, Color32[] origColors, Vector3[][] origVerts, Color32 target, float progress, float scale)
+        private void ReleaseAnimatedText()
         {
-            for (int i = 0; i < count; i++)
+            if (_animatedText != null)
             {
-                var charInfo = text.textInfo.characterInfo[start + i];
-                if (!charInfo.isVisible || origVerts[i] == null) continue;
-
-                var mesh = text.textInfo.meshInfo[charInfo.materialReferenceIndex];
-                int vi = charInfo.vertexIndex;
-
-                var c = Color32.Lerp(origColors[i], target, progress);
-                mesh.colors32[vi] = mesh.colors32[vi + 1] = mesh.colors32[vi + 2] = mesh.colors32[vi + 3] = c;
-
-                Vector3 center = (origVerts[i][0] + origVerts[i][2]) / 2;
-                for (int v = 0; v < 4; v++)
-                    mesh.vertices[vi + v] = center + (origVerts[i][v] - center) * scale;
+                _animatedText.OnPreRenderText -= HandleTextPreRender;
+                _animatedText.ForceMeshUpdate(true);
             }
-
-            text.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32 | TMP_VertexDataUpdateFlags.Vertices);
-        }
-
-        private static void RestoreVertices(TMP_Text text, int start, int count, Vector3[][] origVerts)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                var charInfo = text.textInfo.characterInfo[start + i];
-                if (!charInfo.isVisible || origVerts[i] == null) continue;
-
-                var mesh = text.textInfo.meshInfo[charInfo.materialReferenceIndex];
-                int vi = charInfo.vertexIndex;
-
-                for (int v = 0; v < 4; v++)
-                    mesh.vertices[vi + v] = origVerts[i][v];
-            }
-            text.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
+            _animatedText = null;
+            _baseMeshInfo = null;
         }
 
         #endregion
@@ -385,8 +506,6 @@ namespace MessageWindowSystem.Core
         /// </summary>
         private void UpdateCursorHover()
         {
-            if (CursorManager.Instance == null || keywordHoverCursor == null) return;
-
             var provider = GetProvider();
             if (provider == null || !provider.IsWindowActive || provider.IsTyping || !IsKeywordExtractionAvailable)
             {
@@ -418,13 +537,15 @@ namespace MessageWindowSystem.Core
             if (_isHoveringLink == hovering) return;
 
             _isHoveringLink = hovering;
-            if (hovering)
+            var cursor = CursorManager.Instance;
+            if (cursor == null) return;
+            if (hovering && keywordHoverCursor != null)
             {
-                CursorManager.Instance?.SetCursor(keywordHoverCursor, keywordHoverHotspot);
+                cursor.SetCursor(keywordHoverCursor, keywordHoverHotspot);
             }
             else
             {
-                CursorManager.Instance?.ResetToDefault();
+                cursor.ResetToDefault();
             }
         }
 
@@ -439,10 +560,14 @@ namespace MessageWindowSystem.Core
         /// </summary>
         private IDialogueProvider GetProvider()
         {
-            if (_provider != null) return _provider;
+            if (IsProviderAlive(_provider)) return _provider;
+            _provider = null;
             ResolveProvider();
             return _provider;
         }
+
+        private static bool IsProviderAlive(IDialogueProvider provider) => provider != null
+            && (!(provider is UnityEngine.Object unityObject) || unityObject != null);
 
         private void ResolveProvider()
         {

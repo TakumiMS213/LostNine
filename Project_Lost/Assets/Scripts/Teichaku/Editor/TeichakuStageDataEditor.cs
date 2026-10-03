@@ -4,111 +4,119 @@ using Teichaku.Data;
 
 namespace Teichaku.Editor
 {
-    /// <summary>
-    /// TeichakuStageData のカスタムインスペクタ。
-    /// グリッド状のボタンでタイルの ON/OFF を直感的に編集できるステージビルダー。
-    /// </summary>
     [CustomEditor(typeof(TeichakuStageData))]
     public class TeichakuStageDataEditor : UnityEditor.Editor
     {
-        private const float BUTTON_SIZE = 32f;
-        private const float BUTTON_SPACING = 2f;
+        private StageSolutionStatus? _status;
+        private Vector2Int[] _solution;
+        private bool _showSolution;
+        private bool _showReference = true;
+
+        private void OnEnable() => Undo.undoRedoPerformed += InvalidateSolution;
+        private void OnDisable() => Undo.undoRedoPerformed -= InvalidateSolution;
+        private void InvalidateSolution() { _status = null; _solution = null; Repaint(); }
 
         public override void OnInspectorGUI()
         {
-            TeichakuStageData data = (TeichakuStageData)target;
+            var data = (TeichakuStageData)target;
+            serializedObject.Update();
+            EditorGUILayout.LabelField("なくしものと盤面", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("lostThingImage"), new GUIContent("下絵・結果画像"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("lostThingName"), new GUIContent("なくしものの名前"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("preferredTileSize"), new GUIContent("マスの希望サイズ"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("tileSpacing"), new GUIContent("マスの間隔"));
+            serializedObject.ApplyModifiedProperties();
+            EditorGUILayout.HelpBox("章ごとにデータを作成してTeichakuManagerへ登録します。後半ほどマス数や曲がり道・分岐を増やして調整できます。大きな盤面は自動で画面内に収まります。", MessageType.Info);
 
-            EditorGUILayout.LabelField("ステージビルダー", EditorStyles.boldLabel);
-            EditorGUILayout.Space(4);
-
-            // グリッドサイズの編集
             EditorGUI.BeginChangeCheck();
-            int newWidth = EditorGUILayout.IntSlider("横幅 (Width)", data.width, 1, 10);
-            int newHeight = EditorGUILayout.IntSlider("高さ (Height)", data.height, 1, 10);
+            int width = EditorGUILayout.IntSlider("横幅", data.width, 1, 20);
+            int height = EditorGUILayout.IntSlider("高さ", data.height, 1, 20);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(data, "Resize Teichaku Grid");
-                data.ResizeGrid(newWidth, newHeight);
-                EditorUtility.SetDirty(data);
+                data.ResizeGrid(width, height);
+                Changed(data);
             }
-
-            EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("タイル配置（クリックでON/OFF切替）", EditorStyles.miniLabel);
-            EditorGUILayout.Space(4);
-
-            // 配列サイズの整合性チェック
             if (data.tileActive == null || data.tileActive.Length != data.width * data.height)
             {
-                Undo.RecordObject(data, "Fix Teichaku Grid Array");
+                Undo.RecordObject(data, "Repair Teichaku Grid");
                 data.ResizeGrid(data.width, data.height);
-                EditorUtility.SetDirty(data);
+                Changed(data);
             }
 
-            // グリッドボタンの描画
+            _showReference = EditorGUILayout.Toggle("画像を下絵に表示", _showReference);
+            EditorGUILayout.LabelField("マスをクリックして形を編集", EditorStyles.miniBoldLabel);
             DrawGrid(data);
-
-            EditorGUILayout.Space(8);
-
-            // ステージ情報
-            EditorGUILayout.LabelField($"アクティブタイル数: {data.ActiveTileCount}", EditorStyles.helpBox);
-
-            // 一括操作
-            EditorGUILayout.Space(4);
-            EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("全てON"))
+            EditorGUILayout.LabelField($"有効マス：{data.ActiveTileCount}個");
+            using (new EditorGUILayout.HorizontalScope())
             {
-                Undo.RecordObject(data, "Enable All Tiles");
-                for (int i = 0; i < data.tileActive.Length; i++)
-                    data.tileActive[i] = true;
-                EditorUtility.SetDirty(data);
+                if (GUILayout.Button("全てON")) Fill(data, true);
+                if (GUILayout.Button("全てOFF")) Fill(data, false);
+                if (GUILayout.Button("解けるか確認"))
+                {
+                    _status = TeichakuStageSolver.Solve(data, out _solution);
+                    _showSolution = _status == StageSolutionStatus.Solved;
+                }
             }
-            if (GUILayout.Button("全てOFF"))
+            if (_status == StageSolutionStatus.Solved)
             {
-                Undo.RecordObject(data, "Disable All Tiles");
-                for (int i = 0; i < data.tileActive.Length; i++)
-                    data.tileActive[i] = false;
-                EditorUtility.SetDirty(data);
+                EditorGUILayout.HelpBox("全マスを一度ずつ通る解答が見つかりました。数字は通過順です。", MessageType.Info);
+                _showSolution = EditorGUILayout.Toggle("解答の通過順を表示", _showSolution);
             }
-            EditorGUILayout.EndHorizontal();
+            else if (_status == StageSolutionStatus.Unsolvable)
+                EditorGUILayout.HelpBox("この配置は一筆書きでクリアできません。マスの配置を調整してください。", MessageType.Error);
+            else if (_status == StageSolutionStatus.SearchLimitReached)
+                EditorGUILayout.HelpBox("探索の上限に達したため未判定です。解答がないという意味ではありません。盤面を簡略化するか、手動で解答を確認してください。", MessageType.Warning);
         }
 
-        /// <summary>
-        /// グリッドをボタン配列として描画する
-        /// </summary>
+        private void Changed(TeichakuStageData data)
+        {
+            EditorUtility.SetDirty(data);
+            InvalidateSolution();
+        }
+
+        private void Fill(TeichakuStageData data, bool active)
+        {
+            Undo.RecordObject(data, "Fill Teichaku Grid");
+            for (int i = 0; i < data.tileActive.Length; i++) data.tileActive[i] = active;
+            Changed(data);
+        }
+
         private void DrawGrid(TeichakuStageData data)
         {
-            Color defaultBg = GUI.backgroundColor;
-
+            float cell = Mathf.Clamp((EditorGUIUtility.currentViewWidth - 48f) / data.width, 10f, 32f);
+            Rect area = GUILayoutUtility.GetRect(data.width * cell, data.height * cell, GUILayout.ExpandWidth(false));
+            EditorGUI.DrawRect(area, new Color(0.12f, 0.12f, 0.12f));
+            if (_showReference && data.lostThingImage != null)
+            {
+                Sprite sprite = data.lostThingImage;
+                Rect crop = sprite.rect;
+                float scale = Mathf.Min(area.width / crop.width, area.height / crop.height);
+                Rect image = new Rect(area.center - crop.size * scale * 0.5f, crop.size * scale);
+                Rect uv = new Rect(crop.x / sprite.texture.width, crop.y / sprite.texture.height,
+                    crop.width / sprite.texture.width, crop.height / sprite.texture.height);
+                GUI.DrawTextureWithTexCoords(image, sprite.texture, uv, true);
+            }
             for (int y = 0; y < data.height; y++)
             {
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.FlexibleSpace();
-
                 for (int x = 0; x < data.width; x++)
                 {
-                    int index = y * data.width + x;
-                    bool isActive = data.tileActive[index];
-
-                    // 色の設定（ON = 緑、 OFF = 灰色）
-                    GUI.backgroundColor = isActive
-                        ? new Color(0.3f, 0.9f, 0.5f)
-                        : new Color(0.4f, 0.4f, 0.4f);
-
-                    string label = isActive ? "■" : "□";
-
-                    if (GUILayout.Button(label, GUILayout.Width(BUTTON_SIZE), GUILayout.Height(BUTTON_SIZE)))
+                    Rect rect = new Rect(area.x + x * cell, area.y + y * cell, cell - 1f, cell - 1f);
+                    bool active = data.IsTileActive(x, y);
+                    EditorGUI.DrawRect(rect, active ? new Color(0.15f, 0.9f, 0.45f, 0.55f) : new Color(0f, 0f, 0f, 0.2f));
+                    if (GUI.Button(rect, GUIContent.none, GUIStyle.none))
                     {
                         Undo.RecordObject(data, "Toggle Teichaku Tile");
-                        data.tileActive[index] = !isActive;
-                        EditorUtility.SetDirty(data);
+                        data.tileActive[y * data.width + x] = !active;
+                        Changed(data);
+                    }
+                    if (_showSolution && _solution != null)
+                    {
+                        int order = System.Array.IndexOf(_solution, new Vector2Int(x, y));
+                        if (order >= 0) GUI.Label(rect, (order + 1).ToString(), EditorStyles.centeredGreyMiniLabel);
                     }
                 }
-
-                GUILayout.FlexibleSpace();
-                EditorGUILayout.EndHorizontal();
             }
-
-            GUI.backgroundColor = defaultBg;
         }
     }
 }

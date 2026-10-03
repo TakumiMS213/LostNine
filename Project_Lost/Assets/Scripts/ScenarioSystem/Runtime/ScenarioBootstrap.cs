@@ -26,7 +26,7 @@ namespace ScenarioSystem.Runtime
         [Tooltip("テストシナリオを自動再生するか。")]
         [SerializeField] private bool autoPlay = true;
 
-        private void Start()
+        private void Awake()
         {
             if (presenter == null)
                 presenter = GetComponent<ScenarioPresenter>();
@@ -37,8 +37,15 @@ namespace ScenarioSystem.Runtime
                 return;
             }
 
-            RegisterAllExecutors();
+            if (scenarioDatabase == null && TryGetComponent<MessageWindowFacade>(out var facade))
+                scenarioDatabase = facade.ScenarioDatabase;
 
+            RegisterAllExecutors();
+        }
+
+        private void Start()
+        {
+            if (presenter == null) return;
             if (autoPlay && testScenario != null)
             {
                 Debug.Log($"[ScenarioBootstrap] Auto-playing test scenario: {testScenario.name}");

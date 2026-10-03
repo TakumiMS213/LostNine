@@ -35,6 +35,9 @@ namespace System_Script
         private GameObject _windowRoot;
         private TMP_Text _speakerNameText;
         private TMP_Text _messageText;
+        private DialogueView _dialogueView;
+        private bool _isOverlayVisible;
+        private bool _isMainWindowVisible;
 
         private void Awake()
         {
@@ -52,6 +55,8 @@ namespace System_Script
             ScenarioEventBus.OnOverlayRequested += HandleOverlayRequested;
             ScenarioEventBus.OnOverlayDismissed += HandleOverlayDismissed;
             ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibilityChanged;
+            ScenarioEventBus.OnDialogueRequested += HandleDialogueRequested;
+            ScenarioEventBus.OnScenarioEnded += HandleScenarioEnded;
         }
 
         private void OnDisable()
@@ -59,6 +64,10 @@ namespace System_Script
             ScenarioEventBus.OnOverlayRequested -= HandleOverlayRequested;
             ScenarioEventBus.OnOverlayDismissed -= HandleOverlayDismissed;
             ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibilityChanged;
+            ScenarioEventBus.OnDialogueRequested -= HandleDialogueRequested;
+            ScenarioEventBus.OnScenarioEnded -= HandleScenarioEnded;
+            StopAllCoroutines();
+            HandleOverlayDismissed();
         }
 
         private void BuildWindow()
@@ -118,9 +127,9 @@ namespace System_Script
 
             CreateAdvanceIndicator(panel.transform);
 
-            var dialogueView = canvasObject.AddComponent<DialogueView>();
-            dialogueView.Configure(dialogueText, windowRoot, typingSpeed);
-            button.onClick.AddListener(dialogueView.OnUserInput);
+            _dialogueView = canvasObject.AddComponent<DialogueView>();
+            _dialogueView.Configure(dialogueText, windowRoot, typingSpeed);
+            button.onClick.AddListener(OnUserInput);
 
             var speakerView = canvasObject.AddComponent<SpeakerNameView>();
             speakerView.Configure(speakerText);
@@ -173,6 +182,7 @@ namespace System_Script
 
         private void HandleOverlayRequested(OverlayEventData data)
         {
+            _isOverlayVisible = true;
             if (_windowRoot != null)
                 _windowRoot.SetActive(true);
 
@@ -180,11 +190,18 @@ namespace System_Script
                 _speakerNameText.text = data.SpeakerName ?? string.Empty;
 
             if (_messageText != null)
+            {
                 _messageText.text = data.Text ?? string.Empty;
+                _messageText.maxVisibleCharacters = int.MaxValue;
+            }
         }
 
         private void HandleOverlayDismissed()
         {
+            _isOverlayVisible = false;
+            if (_windowRoot != null)
+                _windowRoot.SetActive(false);
+
             if (_speakerNameText != null)
                 _speakerNameText.text = string.Empty;
 
@@ -194,8 +211,33 @@ namespace System_Script
 
         private void HandleWindowVisibilityChanged(bool visible)
         {
-            if (!visible && _windowRoot != null)
-                _windowRoot.SetActive(false);
+            _isMainWindowVisible = visible;
+            if (!visible)
+                HandleOverlayDismissed();
+        }
+
+        private void HandleDialogueRequested(DialogueEventData data)
+        {
+            _isOverlayVisible = false;
+            if (_windowRoot != null)
+                _windowRoot.SetActive(_isMainWindowVisible);
+        }
+
+        private void HandleScenarioEnded(ScenarioSystem.Model.ScenarioData scenario)
+        {
+            HandleOverlayDismissed();
+        }
+
+        public void OnUserInput()
+        {
+            if (!isActiveAndEnabled || _windowRoot == null || !_windowRoot.activeInHierarchy)
+                return;
+
+            // Overlayは通常会話ウィンドウが無効なシナリオでも独立して入力を受ける。
+            if (_isOverlayVisible)
+                _presenter?.Advance();
+            else
+                _dialogueView?.OnUserInput();
         }
 
         private void RegisterExecutors(ScenarioPresenter presenter)

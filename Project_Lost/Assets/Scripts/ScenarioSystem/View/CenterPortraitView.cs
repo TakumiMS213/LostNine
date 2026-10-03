@@ -18,6 +18,9 @@ namespace ScenarioSystem.View
 
         private Sprite _currentSprite;
         private bool _isMainPortraitAtCenter;
+        private bool _hasMainPortrait;
+
+        private void Awake() => MemorizerTintMask.MarkPortrait(portraitImage);
 
         private void OnEnable()
         {
@@ -42,7 +45,8 @@ namespace ScenarioSystem.View
         private void HandleDialogueRequested(DialogueEventData data)
         {
             // 既存 Portrait が Center にいるかどうかを追跡する
-            _isMainPortraitAtCenter = (data.Portrait != null && data.PortraitPosition == PortraitPosition.Center);
+            _hasMainPortrait = data.Portrait != null;
+            _isMainPortraitAtCenter = _hasMainPortrait && data.PortraitPosition == PortraitPosition.Center;
             RefreshVisibility();
         }
 
@@ -52,7 +56,7 @@ namespace ScenarioSystem.View
             {
                 // ウィンドウが閉じた = 既存 Portrait は Center に戻る
                 // → CenterPortrait は競合するので非表示を維持
-                _isMainPortraitAtCenter = true;
+                _isMainPortraitAtCenter = _hasMainPortrait;
                 RefreshVisibility();
             }
         }
@@ -69,12 +73,10 @@ namespace ScenarioSystem.View
             if (shouldShow)
             {
                 portraitImage.sprite = _currentSprite;
-                portraitImage.gameObject.SetActive(true);
             }
-            else
-            {
-                portraitImage.gameObject.SetActive(false);
-            }
+            // このViewはImageと同じオブジェクトに付いているため、GameObjectを
+            // 無効にすると購読も解除され、次の表示要求を受け取れなくなる。
+            portraitImage.enabled = shouldShow;
         }
     }
 }

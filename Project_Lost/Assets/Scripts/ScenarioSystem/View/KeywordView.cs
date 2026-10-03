@@ -75,6 +75,14 @@ namespace ScenarioSystem.View
             Debug.Log($"[KeywordView] Playing keyword scenario: {keywordId}");
             if (MessageWindowFacade.Instance != null)
             {
+                var progress = ProgressManager.Instance;
+                if (progress == null || progress.CurrentPhase != GamePhase.Extraction)
+                {
+                    // 会話中の抽出は一時的な割り込み。元の行・進行・完了処理へ戻す。
+                    MessageWindowFacade.Instance.PlayTemporaryScenarioById(keywordId, onComplete);
+                    return;
+                }
+
                 MessageWindowFacade.Instance.StartScenarioById(keywordId, () =>
                 {
                     onComplete?.Invoke();
@@ -83,7 +91,7 @@ namespace ScenarioSystem.View
                     // 抽出フェーズ中だけ、従来どおり抽出用シナリオへ戻す。
                     // 他フェーズでメモライザーを使った場合は現在の進行を維持する。
                     if (pm != null && pm.CurrentPhase == GamePhase.Extraction && !pm.AllKeywordsCollected)
-                        MessageWindowFacade.Instance.StartScenarioById($"Ch{pm.CurrentChapter}_Extraction");
+                        MessageWindowFacade.Instance.StartScenarioById(ScenarioKey.ForPhase(pm.CurrentChapter, GamePhase.Extraction));
                 });
             }
             else

@@ -49,18 +49,16 @@ namespace ScenarioSystem.Presenter.Executors
             else
             {
                 // 指定秒数後に自動で進む
-                _coroutineHost.StartCoroutine(WaitAutoDismiss(overlay.displayDuration, state, onComplete));
+                _coroutineHost.StartCoroutine(WaitAutoDismiss(overlay.displayDuration, onComplete));
             }
         }
 
-        private IEnumerator WaitAutoDismiss(float duration, ScenarioRuntimeState state, Action onComplete)
+        private static IEnumerator WaitAutoDismiss(float duration, Action onComplete)
         {
             yield return new WaitForSeconds(duration);
             
-            // 自動ディスミスの場合はここでイベントを発火する
-            ScenarioEventBus.RaiseOverlayDismissed();
-            
-            // 次へ進む
+            // Presenter が現行アクションか確認してから一度だけ閉じる。
+            // 中断済みの待機が、新しいオーバーレイを消すことを防ぐ。
             onComplete?.Invoke();
         }
     }

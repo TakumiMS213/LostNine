@@ -40,6 +40,7 @@ namespace ScenarioSystem.Runtime
         public ScenarioAction CurrentAction =>
             CurrentScenario != null
             && CurrentScenario.actions != null
+            && CurrentActionIndex >= 0
             && CurrentActionIndex < CurrentScenario.actions.Count
                 ? CurrentScenario.actions[CurrentActionIndex]
                 : null;

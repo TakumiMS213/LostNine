@@ -48,7 +48,7 @@ namespace ScenarioSystem.Adapter
             if (comuManager != null)
             {
                 Debug.Log("[ComuAdapter] ToggleComu");
-                comuManager.ToggleComu();
+                comuManager.ToggleComuFromScenario();
             }
             else
             {
@@ -67,7 +67,7 @@ namespace ScenarioSystem.Adapter
             if (comuManager != null)
             {
                 Debug.Log("[ComuAdapter] ToggleComuInstant");
-                comuManager.ToggleComuInstant();
+                comuManager.ToggleComuFromScenario(false);
             }
             else
             {

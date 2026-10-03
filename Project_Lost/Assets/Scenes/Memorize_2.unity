@@ -1828,10 +1828,10 @@ MonoBehaviour:
   resultTextFontSize: 80
   resultTextFont: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
   resultTextColor: {r: 1, g: 1, b: 1, a: 1}
-  resultHeaderText: "\u7279\u5B9A\u3057\u305F\u305F\u306A\u304F\u3057\u3082\u306E"
+  resultHeaderText: "\u7279\u5B9A\u3057\u305F\u306A\u304F\u3057\u3082\u306E"
   resultHeaderOffset: {x: 0, y: 330}
   resultHeaderFontSizeMultiplier: 1.5
-  clearImageDisplayDuration: 2
+  clearImageDisplayDuration: 5
   clearImageFadeInDuration: 0.3
   clearImageFadeOutDuration: 0.3
 --- !u!114 &2085530446
@@ -1848,6 +1848,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stageDataList:
   - {fileID: 11400000, guid: e053df9c26d400f4aaa382d20fdaefcc, type: 2}
+  - {fileID: 11400000, guid: e6de4fdfc5f34bb880cfc0146887b90f, type: 2}
   tilePrefab: {fileID: 2010403679}
   gridParent: {fileID: 107820786}
   tileSize: 160

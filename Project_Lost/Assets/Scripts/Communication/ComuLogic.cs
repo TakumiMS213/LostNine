@@ -1,3 +1,5 @@
+using ScenarioSystem.Model;
+
 namespace Communication
 {
     /// <summary>
@@ -68,29 +70,11 @@ namespace Communication
         /// </summary>
         public static StartInfo ResolveScenarioId(int chapter, GamePhase phase)
         {
-            var info = new StartInfo { EnableKeywords = false };
-
-            switch (phase)
+            return new StartInfo
             {
-                case GamePhase.Dialogue:
-                    info.ScenarioId = $"Ch{chapter}_Dialogue";
-                    break;
-
-                case GamePhase.Extraction:
-                    info.ScenarioId = $"Ch{chapter}_Extraction";
-                    info.EnableKeywords = true;
-                    break;
-
-                case GamePhase.Presentation:
-                    info.ScenarioId = $"Ch{chapter}_Presentation";
-                    break;
-
-                default:
-                    info.ScenarioId = $"Ch{chapter}_{phase}";
-                    break;
-            }
-
-            return info;
+                ScenarioId = ScenarioKey.ForPhase(chapter, phase),
+                EnableKeywords = phase == GamePhase.Extraction
+            };
         }
 
         /// <summary>
@@ -98,7 +82,7 @@ namespace Communication
         /// </summary>
         public static string ResolveEndScenarioId(int chapter)
         {
-            return $"Ch{chapter}_loop";
+            return ScenarioKey.ForPurpose(chapter, ScenarioPurpose.Loop);
         }
 
         #endregion

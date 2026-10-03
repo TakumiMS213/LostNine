@@ -13,6 +13,5 @@ MonoBehaviour:
   m_Name: Ch2_ToMemorizeScene
   m_EditorClassIdentifier: 
   steps:
-  - {fileID: 11400000, guid: d92f7a62f33c44b0ca9cb4839b0c70f2, type: 2}
   - {fileID: 11400000, guid: beddc3d35fa24146a5a8679d3ab0ef93, type: 2}
   - {fileID: 11400000, guid: cbd759972052b4c539dc9cd3f6710507, type: 2}

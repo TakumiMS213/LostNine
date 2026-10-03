@@ -46,6 +46,9 @@ namespace MessageWindowSystem.Core
         private Coroutine _shakeCoroutine;
         private Coroutine _flashCoroutine;
         private Coroutine _fadeCoroutine;
+        private Sequence _developmentTween;
+        private Transform _shakingCamera;
+        private Vector3 _shakeOffset;
 
         #endregion
 
@@ -63,9 +66,26 @@ namespace MessageWindowSystem.Core
         private static void InitOverlayAlpha(Image overlay)
         {
             if (overlay == null) return;
+            overlay.raycastTarget = false;
             var c = overlay.color;
             c.a = 0f;
             overlay.color = c;
+        }
+
+        private void OnDisable()
+        {
+            _developmentTween?.Kill();
+            _developmentTween = null;
+            StopAllCoroutines();
+            _shakeCoroutine = _flashCoroutine = _fadeCoroutine = null;
+            RestoreCameraPosition();
+            StopChargeSE();
+            InitOverlayAlpha(flashOverlay);
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
         }
 
         #endregion
@@ -95,7 +115,9 @@ namespace MessageWindowSystem.Core
             if (developCompleteSE != null)
                 seAudioSource?.PlayOneShot(developCompleteSE);
 
-            var seq = DOTween.Sequence();
+            _developmentTween?.Kill();
+            var seq = DOTween.Sequence().SetLink(gameObject);
+            _developmentTween = seq;
             seq.AppendCallback(() => PlayShake(developShakeDuration, developShakeStrength));
 
             if (flashOverlay != null)
@@ -174,6 +196,7 @@ namespace MessageWindowSystem.Core
         private void PlayShake(float duration, float magnitude)
         {
             if (_shakeCoroutine != null) StopCoroutine(_shakeCoroutine);
+            RestoreCameraPosition();
             _shakeCoroutine = StartCoroutine(ShakeCamera(duration, magnitude));
         }
 
@@ -230,29 +253,37 @@ namespace MessageWindowSystem.Core
             img.color = new Color(baseColor.r, baseColor.g, baseColor.b, to);
         }
 
-        private static IEnumerator ShakeCamera(float duration, float magnitude)
+        private IEnumerator ShakeCamera(float duration, float magnitude)
         {
             var cam = Camera.main;
             if (cam == null) yield break;
 
-            var camTransform = cam.transform;
-            Vector3 originalPos = camTransform.localPosition;
+            _shakingCamera = cam.transform;
             float elapsed = 0f;
 
             while (elapsed < duration)
             {
                 // Re-check camera validity each frame
-                if (camTransform == null) yield break;
+                if (_shakingCamera == null) yield break;
 
+                RestoreCameraPosition();
                 float x = UnityEngine.Random.Range(-1f, 1f) * magnitude;
                 float y = UnityEngine.Random.Range(-1f, 1f) * magnitude;
-                camTransform.localPosition = originalPos + new Vector3(x, y, 0f);
+                _shakeOffset = new Vector3(x, y, 0f);
+                _shakingCamera.localPosition += _shakeOffset;
                 elapsed += Time.deltaTime;
                 yield return null;
             }
 
-            if (camTransform != null)
-                camTransform.localPosition = originalPos;
+            RestoreCameraPosition();
+            _shakeCoroutine = null;
+        }
+
+        private void RestoreCameraPosition()
+        {
+            if (_shakingCamera != null)
+                _shakingCamera.localPosition -= _shakeOffset;
+            _shakeOffset = Vector3.zero;
         }
 
         #endregion

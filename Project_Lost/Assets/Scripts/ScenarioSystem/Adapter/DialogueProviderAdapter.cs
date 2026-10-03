@@ -57,6 +57,8 @@ namespace ScenarioSystem.Adapter
             ScenarioEventBus.OnDialogueRequested += HandleDialogue;
             ScenarioEventBus.OnTypingCompleted += HandleTypingCompleted;
             ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibility;
+            ScenarioEventBus.OnScenarioStarted += HandleScenarioBoundary;
+            ScenarioEventBus.OnScenarioEnded += HandleScenarioBoundary;
         }
 
         private void OnDisable()
@@ -64,6 +66,10 @@ namespace ScenarioSystem.Adapter
             ScenarioEventBus.OnDialogueRequested -= HandleDialogue;
             ScenarioEventBus.OnTypingCompleted -= HandleTypingCompleted;
             ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibility;
+            ScenarioEventBus.OnScenarioStarted -= HandleScenarioBoundary;
+            ScenarioEventBus.OnScenarioEnded -= HandleScenarioBoundary;
+            _isTyping = false;
+            _isWindowActive = false;
         }
 
         #endregion
@@ -84,6 +90,12 @@ namespace ScenarioSystem.Adapter
         private void HandleWindowVisibility(bool visible)
         {
             _isWindowActive = visible;
+            if (!visible) _isTyping = false;
+        }
+
+        private void HandleScenarioBoundary(Model.ScenarioData _)
+        {
+            _isTyping = false;
         }
 
         #endregion

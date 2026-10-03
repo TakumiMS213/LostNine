@@ -215,6 +215,11 @@ namespace Tuning.Core
             ResetNGZoneAlpha(rightNgZoneArea);
             ResetNGZoneAlpha(rightNgZoneArea2);
 
+            // 目標に入ったと判定される範囲を起点に、赤／青の波紋を表示する。
+            float targetDiameter = 2f * _currentSettings.targetTolerance * 100f
+                * (1f - _currentSettings.inTargetFeedbackThreshold);
+            feedback?.ConfigureTargetHighlights(this, leftTarget, rightTarget, targetDiameter);
+
             Debug.Log($"[TuningManager] Initialized with {sourceName}: Blocks={_activeBlockCount}, Inertia={_currentSettings.useInertia}");
         }
 

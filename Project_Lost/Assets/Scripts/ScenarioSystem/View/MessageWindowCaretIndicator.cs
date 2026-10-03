@@ -33,5 +33,12 @@ namespace ScenarioSystem.View
             float offset = Mathf.Sin(Time.unscaledTime * speed * Mathf.PI * 2f) * amplitude;
             _rectTransform.anchoredPosition = _baseAnchoredPosition + new Vector2(0f, offset);
         }
+
+        private void OnDisable()
+        {
+            // 次回表示時に揺れの途中の位置を基準として取り込まない。
+            if (_rectTransform != null)
+                _rectTransform.anchoredPosition = _baseAnchoredPosition;
+        }
     }
 }

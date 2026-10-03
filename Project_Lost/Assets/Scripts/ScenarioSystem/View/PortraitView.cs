@@ -40,10 +40,18 @@ namespace ScenarioSystem.View
         private string _previousSpeakerName;
         private Sprite _previousPortrait;
         private PortraitPosition _previousPortraitPosition;
+        private Sequence _jumpTween;
+        private Vector2 _jumpOrigin;
 
         #endregion
 
         #region Unity Lifecycle
+
+        private void Awake()
+        {
+            MemorizerTintMask.MarkPortrait(portraitImage);
+            MemorizerTintMask.MarkPortrait(ghostPortraitImage);
+        }
 
         private void OnEnable()
         {
@@ -54,6 +62,7 @@ namespace ScenarioSystem.View
 
         private void OnDisable()
         {
+            StopJump();
             ScenarioEventBus.OnDialogueRequested -= HandleDialogue;
             ScenarioEventBus.OnScenarioEnded -= HandleScenarioEnded;
             ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibilityChanged;
@@ -75,6 +84,7 @@ namespace ScenarioSystem.View
 
         private void HandleScenarioEnded(Model.ScenarioData _)
         {
+            StopJump();
             HideGhostPortrait();
             _previousSpeakerName = null;
             _previousPortrait = null;
@@ -84,6 +94,7 @@ namespace ScenarioSystem.View
         {
             if (!visible)
             {
+                StopJump();
                 // メッセージウィンドウが閉じた時、ポートレートを Center に移動する
                 if (portraitImage != null && portraitImage.gameObject.activeSelf)
                 {
@@ -99,6 +110,7 @@ namespace ScenarioSystem.View
         private void UpdatePortrait(DialogueEventData data)
         {
             if (portraitImage == null) return;
+            StopJump();
 
             if (data.Portrait == null)
             {
@@ -132,13 +144,21 @@ namespace ScenarioSystem.View
             var rect = portraitImage.GetComponent<RectTransform>();
             if (rect == null) return;
 
-            rect.DOKill();
-            var original = rect.anchoredPosition;
-            var target = original + Vector2.up * jumpHeight;
+            _jumpOrigin = rect.anchoredPosition;
+            var target = _jumpOrigin + Vector2.up * jumpHeight;
 
-            var seq = DOTween.Sequence();
-            seq.Append(rect.DOAnchorPos(target, jumpDuration * 0.5f).SetEase(Ease.OutQuad));
-            seq.Append(rect.DOAnchorPos(original, jumpDuration * 0.5f).SetEase(jumpEase));
+            _jumpTween = DOTween.Sequence().SetLink(gameObject);
+            _jumpTween.Append(rect.DOAnchorPos(target, jumpDuration * 0.5f).SetEase(Ease.OutQuad));
+            _jumpTween.Append(rect.DOAnchorPos(_jumpOrigin, jumpDuration * 0.5f).SetEase(jumpEase));
+        }
+
+        private void StopJump()
+        {
+            if (_jumpTween == null) return;
+            _jumpTween.Kill();
+            _jumpTween = null;
+            if (portraitImage != null)
+                portraitImage.rectTransform.anchoredPosition = _jumpOrigin;
         }
 
         private static void SetImageAlpha(Image image, float alpha)

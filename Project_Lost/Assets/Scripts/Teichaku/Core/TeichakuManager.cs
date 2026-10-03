@@ -32,6 +32,9 @@ namespace Teichaku.Core
         [Tooltip("タイル間の隙間（ピクセル）")]
         [SerializeField] private float tileSpacing = 4f;
 
+        [Tooltip("盤面全体の最大表示サイズ。マス数が多い章もこの範囲に収める")]
+        [SerializeField] private Vector2 maxBoardSize = new Vector2(1000f, 650f);
+
         [Header("コンポーネント")]
         [Tooltip("演出処理を行うTeichakuFeedbackコンポーネント")]
         [SerializeField] private TeichakuFeedback feedback;
@@ -109,8 +112,7 @@ namespace Teichaku.Core
                 return;
             }
 
-            BuildStage();
-            _isActive = true;
+            _isActive = BuildStage();
 
             Debug.Log($"[TeichakuManager] Initialized for Chapter {chapter} ({_totalActiveTileCount} tiles)");
         }
@@ -121,8 +123,7 @@ namespace Teichaku.Core
         public void SetStageData(TeichakuStageData data)
         {
             _currentStageData = data;
-            BuildStage();
-            _isActive = true;
+            _isActive = BuildStage();
         }
 
         public void SetActive(bool active) => _isActive = active;
@@ -134,23 +135,37 @@ namespace Teichaku.Core
         /// <summary>
         /// ステージデータに基づいてタイルを動的生成する
         /// </summary>
-        private void BuildStage()
+        private bool BuildStage()
         {
             // 既存タイルをクリア
             ClearTiles();
 
-            if (_currentStageData == null || tilePrefab == null || gridParent == null) return;
+            if (_currentStageData == null || tilePrefab == null || gridParent == null) return false;
+            if (!_currentStageData.TryGetActiveBounds(out RectInt occupied))
+            {
+                Debug.LogError("[TeichakuManager] Stage has no active tiles.");
+                return false;
+            }
 
             int w = _currentStageData.width;
             int h = _currentStageData.height;
 
             // グリッド全体のサイズを計算
-            float gridWidth = w * tileSize + (w - 1) * tileSpacing;
-            float gridHeight = h * tileSize + (h - 1) * tileSpacing;
+            float size = _currentStageData.preferredTileSize > 0f ? _currentStageData.preferredTileSize : tileSize;
+            float spacing = _currentStageData.tileSpacing >= 0f ? _currentStageData.tileSpacing : tileSpacing;
+            float gridWidth = occupied.width * size + (occupied.width - 1) * spacing;
+            float gridHeight = occupied.height * size + (occupied.height - 1) * spacing;
+            float fit = Mathf.Min(1f, Mathf.Max(1f, maxBoardSize.x) / gridWidth,
+                Mathf.Max(1f, maxBoardSize.y) / gridHeight);
+            size *= fit;
+            spacing *= fit;
+            gridWidth *= fit;
+            gridHeight *= fit;
+            gridParent.sizeDelta = new Vector2(gridWidth, gridHeight);
 
             // グリッドの左上基準のオフセット（中央揃え）
-            float startX = -gridWidth * 0.5f + tileSize * 0.5f;
-            float startY = gridHeight * 0.5f - tileSize * 0.5f;
+            float startX = -gridWidth * 0.5f + size * 0.5f;
+            float startY = gridHeight * 0.5f - size * 0.5f;
 
             _totalActiveTileCount = 0;
 
@@ -165,16 +180,18 @@ namespace Teichaku.Core
 
                     // RectTransformの設定
                     RectTransform rt = tile.GetComponent<RectTransform>();
-                    rt.sizeDelta = new Vector2(tileSize, tileSize);
+                    rt.sizeDelta = new Vector2(size, size);
                     rt.anchoredPosition = new Vector2(
-                        startX + x * (tileSize + tileSpacing),
-                        startY - y * (tileSize + tileSpacing)
+                        startX + (x - occupied.xMin) * (size + spacing),
+                        startY - (y - occupied.yMin) * (size + spacing)
                     );
 
                     _activeTiles.Add(tile);
                     _totalActiveTileCount++;
                 }
             }
+            feedback?.SetResultStageData(_currentStageData);
+            return true;
         }
 
         /// <summary>
@@ -186,7 +203,9 @@ namespace Teichaku.Core
             {
                 if (tile != null)
                 {
-                    Destroy(tile.gameObject);
+                    tile.gameObject.SetActive(false);
+                    if (Application.isPlaying) Destroy(tile.gameObject);
+                    else DestroyImmediate(tile.gameObject);
                 }
             }
             _activeTiles.Clear();
@@ -203,7 +222,7 @@ namespace Teichaku.Core
         /// </summary>
         public void OnTilePointerDown(TeichakuTile tile)
         {
-            if (!_isActive || tile == null) return;
+            if (!_isActive || _isDragging || tile == null) return;
 
             // ドラッグ開始
             _isDragging = true;
@@ -214,6 +233,7 @@ namespace Teichaku.Core
             _currentPath.Add(tile);
 
             feedback?.OnTileVisited(tile);
+            if (_currentPath.Count == _totalActiveTileCount) OnClear();
         }
 
         /// <summary>

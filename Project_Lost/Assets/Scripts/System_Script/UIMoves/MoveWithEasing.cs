@@ -39,37 +39,26 @@ namespace Main.UIMoves
 
             var trans = obj.transform;
 
-            var seq = DOTween.Sequence();
+            var seq = DOTween.Sequence().SetTarget(trans).SetLink(obj, LinkBehaviour.KillOnDisable);
+            seq.Append(trans.DOMove(to, options.duration).SetEase(options.ease));
+            AppendFade(seq, obj, options);
+            float completionTime = seq.Duration();
 
-            // 移動本体
-            var moveTween = trans.DOMove(to, options.duration).SetEase(options.ease);
-            seq.Append(moveTween);
-
-            // 揺れ（左右）: 移動完了後に短く左右に振動させる
             if (options.shakeOnComplete)
             {
-                seq.AppendCallback(() =>
-                {
-                    // 小さな左右移動シーケンスを作って再生
-                    var shakeSeq = DOTween.Sequence();
-                    float s = options.shakeStrength;
-                    float sd = Mathf.Max(0.01f, options.shakeDuration);
-
-                    // 右へ -> 左へ -> 中央へ
-                    shakeSeq.Append(trans.DOMoveX(to.x + s, sd * 0.25f).SetEase(Ease.InOutSine));
-                    shakeSeq.Append(trans.DOMoveX(to.x - s, sd * 0.5f).SetEase(Ease.InOutSine));
-                    shakeSeq.Append(trans.DOMoveX(to.x, sd * 0.25f).SetEase(Ease.InOutSine));
-                    shakeSeq.Play();
-                });
+                float strength = options.shakeStrength;
+                float shakeDuration = Mathf.Max(0.01f, options.shakeDuration);
+                var shake = DOTween.Sequence();
+                shake.Append(trans.DOMoveX(to.x + strength, shakeDuration * 0.25f).SetEase(Ease.InOutSine));
+                shake.Append(trans.DOMoveX(to.x - strength, shakeDuration * 0.5f).SetEase(Ease.InOutSine));
+                shake.Append(trans.DOMoveX(to.x, shakeDuration * 0.25f).SetEase(Ease.InOutSine));
+                seq.Insert(Mathf.Max(0f, options.duration), shake);
             }
 
-            // 移動後に透明度を設定（CanvasGroup または UI Graphic / TextMeshPro / SpriteRenderer をサポート）
-            // 揺れは独立した Sequence。フェードとの並行実行を維持する。
-            AppendFade(seq, obj, options);
-
-            // 透明度指定が無い(デフォルト 1)か、フェード対象が見つからない場合は何もしない
-
-            seq.OnComplete(() => onComplete?.Invoke());
+            // 従来通り、移動後の揺れとフェードは同時に始まる。
+            // 完了通知の時刻も従来の移動＋フェード終了時点を維持する。
+            if (onComplete != null)
+                seq.InsertCallback(completionTime, () => onComplete());
 
             return seq;
         }
@@ -92,30 +81,24 @@ namespace Main.UIMoves
                 return MoveTo(obj, worldTo, options, onComplete);
             }
 
-            var seq = DOTween.Sequence();
-
-            var moveTween = rt.DOAnchorPos(toAnchored, options.duration).SetEase(options.ease);
-            seq.Append(moveTween);
+            var seq = DOTween.Sequence().SetTarget(rt).SetLink(obj, LinkBehaviour.KillOnDisable);
+            seq.Append(rt.DOAnchorPos(toAnchored, options.duration).SetEase(options.ease));
+            AppendFade(seq, obj, options);
+            float completionTime = seq.Duration();
 
             if (options.shakeOnComplete)
             {
-                seq.AppendCallback(() =>
-                {
-                    var shakeSeq = DOTween.Sequence();
-                    float s = options.shakeStrength;
-                    float sd = Mathf.Max(0.01f, options.shakeDuration);
-
-                    shakeSeq.Append(rt.DOAnchorPosX(toAnchored.x + s, sd * 0.25f).SetEase(Ease.InOutSine));
-                    shakeSeq.Append(rt.DOAnchorPosX(toAnchored.x - s, sd * 0.5f).SetEase(Ease.InOutSine));
-                    shakeSeq.Append(rt.DOAnchorPosX(toAnchored.x, sd * 0.25f).SetEase(Ease.InOutSine));
-                    shakeSeq.Play();
-                });
+                float strength = options.shakeStrength;
+                float shakeDuration = Mathf.Max(0.01f, options.shakeDuration);
+                var shake = DOTween.Sequence();
+                shake.Append(rt.DOAnchorPosX(toAnchored.x + strength, shakeDuration * 0.25f).SetEase(Ease.InOutSine));
+                shake.Append(rt.DOAnchorPosX(toAnchored.x - strength, shakeDuration * 0.5f).SetEase(Ease.InOutSine));
+                shake.Append(rt.DOAnchorPosX(toAnchored.x, shakeDuration * 0.25f).SetEase(Ease.InOutSine));
+                seq.Insert(Mathf.Max(0f, options.duration), shake);
             }
 
-            // フェード処理は MoveTo と同じロジックを使う
-            AppendFade(seq, obj, options);
-
-            seq.OnComplete(() => onComplete?.Invoke());
+            if (onComplete != null)
+                seq.InsertCallback(completionTime, () => onComplete());
             return seq;
         }
 

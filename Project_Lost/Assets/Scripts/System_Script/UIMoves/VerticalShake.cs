@@ -8,14 +8,23 @@ public class VerticalShake : MonoBehaviour
     [SerializeField] private Ease ease = Ease.InOutSine;
 
     private Vector3 originalPos;
+    private Tween _tween;
 
-    void Start()
+    private void OnEnable()
     {
         originalPos = transform.localPosition;
 
-        transform
+        _tween = transform
             .DOLocalMoveY(originalPos.y + moveAmount, duration)
             .SetEase(ease)
+            .SetLink(gameObject)
             .SetLoops(-1, LoopType.Yoyo); // 往復
+    }
+
+    private void OnDisable()
+    {
+        _tween?.Kill();
+        _tween = null;
+        transform.localPosition = originalPos;
     }
 }

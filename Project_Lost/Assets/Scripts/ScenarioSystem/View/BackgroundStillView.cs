@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -19,6 +20,7 @@ namespace ScenarioSystem.View
 
         [Tooltip("背景スチル表示時に非表示にするオブジェクト群。")]
         [SerializeField] private GameObject[] objectsToHideOnStill;
+        private readonly Dictionary<GameObject, bool> _hiddenObjectStates = new();
 
         #endregion
 
@@ -32,6 +34,7 @@ namespace ScenarioSystem.View
 
         private void OnDisable()
         {
+            RestoreHiddenObjects();
             ScenarioEventBus.OnDialogueRequested -= HandleDialogue;
             ScenarioEventBus.OnScenarioEnded -= HandleScenarioEnded;
         }
@@ -56,7 +59,10 @@ namespace ScenarioSystem.View
                 backgroundStillImage.gameObject.SetActive(false);
             }
 
-            ToggleHiddenObjects(!hasStill);
+            if (hasStill)
+                HideObjectsForStill();
+            else
+                RestoreHiddenObjects();
         }
 
         private void HandleScenarioEnded(ScenarioData _)
@@ -64,20 +70,30 @@ namespace ScenarioSystem.View
             if (backgroundStillImage != null)
                 backgroundStillImage.gameObject.SetActive(false);
 
-            ToggleHiddenObjects(true);
+            RestoreHiddenObjects();
         }
 
         #endregion
 
         #region Utility
 
-        private void ToggleHiddenObjects(bool visible)
+        private void HideObjectsForStill()
         {
             if (objectsToHideOnStill == null) return;
             foreach (var obj in objectsToHideOnStill)
             {
-                if (obj != null) obj.SetActive(visible);
+                if (obj == null) continue;
+                if (!_hiddenObjectStates.ContainsKey(obj))
+                    _hiddenObjectStates.Add(obj, obj.activeSelf);
+                obj.SetActive(false);
             }
+        }
+
+        private void RestoreHiddenObjects()
+        {
+            foreach (var entry in _hiddenObjectStates)
+                if (entry.Key != null) entry.Key.SetActive(entry.Value);
+            _hiddenObjectStates.Clear();
         }
 
         #endregion

@@ -1,0 +1,96 @@
+会話システム検証・修正記録（2026-10-02）
+
+対象と結果
+Unity 6000.0.67f1 / Unity Editor上で検証。
+本編で使用する会話システム、Main・Storyの配線、調律・定着の説明窓を確認した。
+ScenarioData 27件、アクション参照92件の欠落と遷移先シーンを照合した。
+LostNine.EditModeTests: 136件成功、失敗0件、スキップ0件。
+この件数には既存のキーワード・調律・定着等のテストも含む。
+最終テストジョブ: 4e8b6354ba8a4d05bd40d33e9199b928
+
+実プレイで確認した経路
+・Chapter1: Story冒頭からMainのチュートリアル終了まで、実際のUIレイキャスト経由で進行。
+・Chapter2: LOADのStartFromChapter(2)からStory、Mainの導入会話、非会話状態まで進行。
+・Chapter1 / Chapter2: Shift長押しとキーワード位置への入力で3つのキーワードを抽出。
+・Chapter1: 抽出完了会話からMemorizeの調律説明へ進行。説明を閉じた後の入力遮断解除も確認。
+・Chapter1: Memorize_2の定着説明を最後までクリックし、入力遮断解除を確認。
+・Chapter1: Presentationの20行を経てChapterSelectへ遷移。
+・Chapter2: ChoiceButton_1 / ChoiceButton_2の両方を画面上の位置からクリック。
+  Truth / Lieの各分岐、Epilogue、ChapterSelectまで進行。
+・抽出フェーズ以外での抽出は、既存のChapter2キーワード本文をDialogueフェーズで再生して検証。
+  詳細会話から同じ行へ戻り、発見済み黄色・全文表示・非タイピング状態を保持することを確認。
+  3つ取得後もDialogueのまま維持し、Extractionへ進めると完了会話が起動してMemorizeへ遷移した。
+  遷移後の取得数は3のままであることも確認した。
+
+修正後に確認した経路では、ゲーム側のException / ErrorやDOTweenの破棄参照警告は発生しなかった。
+Chapter2の不足データによる警告は下記の残存データ欄へ記載した。
+
+実プレイ入力検証は、仮想InputSystemデバイスとEventSystemのレイキャストを使用した。
+キーワード長押しでは実際のKeywordHandlerへのpointerDown到達、選択肢では対象Buttonへの到達を確認した。
+一部の経路は検証用にフェーズや開始シーンを指定している。
+調律・定着パズルをすべて手動でクリアする通しプレイや、ビルド済み各OS上の検証は含まない。
+
+修正した原因
+1. 会話の差替え・終了と非同期処理
+   実行世代と完了の一度限りの受付で、古いWait / Overlay / 演出完了が新しい会話を進めることを防止。
+   Started / Ended通知中の開始・停止要求は、通知を全購読者へ配信してから処理する。
+   古いEnded通知が新しい選択肢を消す順序依存も解消。
+
+2. キーワード詳細からの復帰と入力
+   通常会話への割込みは元の行・進行位置・完了通知を保存して復帰する。
+   復帰行は全文表示し、同じ行のログを増やさない。発見済みの黄色と再抽出禁止を維持する。
+   抽出フェーズ固有の既存ループは保持する。
+   本文差替え・非表示・無効化時に文字送りと抽出チャージを破棄する。
+   選択肢表示中の会話送り、重複選択、古い選択肢クリックを受け付けない。
+
+3. UI・描画・アニメーション
+   選択肢の前面表示、実際のクリック受容、シーン退出時の破棄済みButton参照を修正。
+   立ち絵ジャンプ、話者名スライド、キーワード揺れ、ウィンドウ移動・拡縮等を所有Tweenとして停止する。
+   中途半端な位置や古い演出の書き戻し、シーン破棄後のTween参照を防止する。
+   中央立ち絵を隠すとイベント購読まで消える問題、背景解除時に不要なUIを有効化する問題を修正。
+   演出画像のraycastTarget、説明窓終了時の透明な全画面ブロッカー残留を修正。
+
+4. シーンと会話状態
+   Storyに欠けていたOverlayViewと表示UIを設定。
+   Mainの欠落スクリプト、重複KeywordHandler、切れたイベント参照を整理。
+   KeywordHandlerの入力元とシナリオDBを明示的に設定。
+   Executor登録をAwakeへ移し、開始順による実行器未登録を防止。
+   会話開始・終了の各入口で状態、UI形状、操作制限を同期させ、終了時のフォントサイズ上書きを除去。
+   存在しない章ループシナリオは呼び出さず、会話終了を確定する。
+
+5. 章内の進行と再開
+   LOADで同章を再開した際、取得済みID・取得数・保留中のシナリオ・メモライザー状態を初期化する。
+   SetProgressによる同章のフェーズ変更では取得済みID・取得数を維持する。
+   Dialogue中に全取得した場合、Extraction到達後に既存の完了シーケンスを一度だけ起動する。
+   別Flowの実行中は完了要求を保持し、イベント通知中の再入を避ける。
+   後段フェーズから再び調律へ入らないよう、調律開始用D&DはExtraction中の全取得時に限定する。
+
+追加した回帰テスト
+Assets/Tests/Editor/ScenarioPresenterTests.cs
+Assets/Tests/Editor/DialogueLifecycleTests.cs
+Assets/Tests/Editor/DialogueVisualTests.cs
+Assets/Tests/Editor/ConversationFlowTests.cs
+Assets/Tests/Editor/ConversationSceneTests.cs
+Assets/Tests/Editor/ConversationAnimationTests.cs
+Assets/Tests/Editor/ProgressRestartTests.cs
+Assets/Tests/Editor/KeywordProgressContinuityTests.cs
+
+残存データと検証範囲の区別
+・Assets/Scenes/Communication.unity
+  通常フローからの遷移参照は見つからない旧実装シーン。
+  旧会話スクリプトとテストシナリオの参照先が欠落している。
+  ビルド設定には残っているため、今回は削除せず整理候補として記録した。直接起動の動作保証対象外。
+・Assets/Scenes/ScenarioTest.unity
+  現行Presenterを使う開発用ハーネス。Ch1_01を自動再生するが本編用の進行・抽出連携はない。
+  通常フローからの遷移参照は見つからない。旧不要物とは断定せず保持した。直接起動は検証対象外。
+・KeyWordComplete_Test
+  参照するシナリオが存在しない旧FlowStep。Ch1/Ch2の本編シーケンスから参照を外した。
+  実際のExtractionComplete会話は残している。旧アセット本体は保持した。
+・Chapter2のLostNoteCharacterData
+  対応する人物データが登録されておらず、ノート側で警告が出る。会話の進行停止は確認されなかった。
+  説明文・画像などの内容は新規作成していない。
+・Ch2_Tuning / Ch2_Fixation
+  個別の説明シナリオはデータベースに存在しない。Chapter1の説明は確認済み。
+  存在しない説明内容は補作していない。
+
+この記録は、確認した経路と回帰条件での結果であり、未作成シナリオや全環境での無不具合を保証するものではない。

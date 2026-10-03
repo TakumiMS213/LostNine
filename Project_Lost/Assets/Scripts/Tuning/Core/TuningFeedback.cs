@@ -130,6 +130,8 @@ namespace Tuning.Core
         private float _targetCutoff;
         private bool _usesRightBlock = true;
         private float _shakeEnabledAt;
+        private Tuning.Visuals.TargetRippleVisualizer _leftTargetRipples;
+        private Tuning.Visuals.TargetRippleVisualizer _rightTargetRipples;
 
         private void Awake()
         {
@@ -158,6 +160,45 @@ namespace Tuning.Core
 
             if (rightWaveform != null)
                 rightWaveform.gameObject.SetActive(true);
+        }
+
+        public void ConfigureTargetHighlights(
+            TuningManager owner, RectTransform leftTarget, RectTransform rightTarget, float targetDiameter)
+        {
+            ConfigureTargetRipple(ref _leftTargetRipples, owner, leftTarget, targetDiameter,
+                leftWaveform != null ? leftWaveform.color : Color.red);
+
+            if (_usesRightBlock)
+            {
+                ConfigureTargetRipple(ref _rightTargetRipples, owner, rightTarget, targetDiameter,
+                    rightWaveform != null ? rightWaveform.color : Color.blue);
+            }
+            else if (_rightTargetRipples != null)
+            {
+                _rightTargetRipples.gameObject.SetActive(false);
+            }
+        }
+
+        private static void ConfigureTargetRipple(
+            ref Tuning.Visuals.TargetRippleVisualizer ripple,
+            TuningManager owner, RectTransform target, float targetDiameter, Color tint)
+        {
+            if (target == null)
+            {
+                if (ripple != null) ripple.gameObject.SetActive(false);
+                return;
+            }
+
+            if (ripple == null)
+            {
+                var rippleObject = new GameObject(target.name + "_Ripples",
+                    typeof(RectTransform), typeof(CanvasRenderer), typeof(Tuning.Visuals.TargetRippleVisualizer));
+                rippleObject.layer = target.gameObject.layer;
+                ripple = rippleObject.GetComponent<Tuning.Visuals.TargetRippleVisualizer>();
+            }
+
+            ripple.Configure(owner, target, targetDiameter, tint);
+            ripple.gameObject.SetActive(true);
         }
 
         /// <summary>

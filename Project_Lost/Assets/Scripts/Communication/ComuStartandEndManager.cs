@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
@@ -5,6 +7,7 @@ using Communication;
 using MessageWindowSystem.Core;
 using MessageWindowSystem.Testing;
 using ScenarioSystem.View;
+using ScenarioSystem.Adapter;
 using TMPro;
 
 /// <summary>
@@ -23,6 +26,10 @@ public class ComuStartandEndManager : MonoBehaviour
     [SerializeField] private GameObject desk;
     [SerializeField] private GameObject messageWindow;
     [SerializeField] private GameObject messageWindowBackGround;
+    [SerializeField] private SpeechBubbleView speechBubble;
+    [SerializeField] private SpeakerNameView speakerNameView;
+    [SerializeField] private Vector2 comuSpeakerNamePosition = new Vector2(40f, 20f);
+    [SerializeField] private Color comuWindowColor = new Color(0.16078432f, 0.16078432f, 0.16078432f, 0.8f);
     [SerializeField] private GameObject NamePlate;
     [SerializeField] private GameObject NamePlateBackGround;
     [SerializeField] private Image fadeFrame;
@@ -79,9 +86,15 @@ public class ComuStartandEndManager : MonoBehaviour
 
     /// <summary>通常モード（探索モード）時のフォントサイズ。Awake で記録する。</summary>
     private float _originalFontSize;
+    private Vector4 _originalTextMargin;
+    private Color _originalTextColor;
     /// <summary>通常モード時のスプライト。Awake で記録する。</summary>
     private Sprite _originalSprite;
+    private Color _originalWindowColor;
+    private Vector2 _originalSpeakerNamePosition;
     private GameObject _portraitGuidanceObject;
+    private CancellationTokenSource _transitionCancellation;
+    private int _transitionVersion;
 
     public bool IsInCommunication => _logic.IsInCommunication;
 
@@ -89,9 +102,18 @@ public class ComuStartandEndManager : MonoBehaviour
     {
         // 初期値を記録（End 時の復帰用）
         if (fontSizeTarget != null)
+        {
             _originalFontSize = fontSizeTarget.fontSize;
+            _originalTextMargin = fontSizeTarget.margin;
+            _originalTextColor = fontSizeTarget.color;
+        }
         if (portraitSpriteTarget != null)
+        {
             _originalSprite = portraitSpriteTarget.sprite;
+            _originalWindowColor = portraitSpriteTarget.color;
+        }
+        if (NamePlate != null && NamePlate.transform is RectTransform nameRect)
+            _originalSpeakerNamePosition = nameRect.anchoredPosition;
     }
 
     // ── Unity Lifecycle ──────────────────────────────────────────
@@ -115,6 +137,8 @@ public class ComuStartandEndManager : MonoBehaviour
 
     private void OnDisable()
     {
+        _transitionVersion++;
+        _transitionCancellation?.Cancel();
         if (ProgressManager.Instance != null && _subscribedToThreshold)
         {
             ProgressManager.Instance.OnKeywordThresholdReached -= ActivateMemorizer;
@@ -141,8 +165,8 @@ public class ComuStartandEndManager : MonoBehaviour
         }
     }
 
-    public void ComuStart(string scenarioId) => StartComuFlow(scenarioId).Forget();
-    public void ComuEnd(string scenarioId) => EndComuFlow(scenarioId).Forget();
+    public void ComuStart(string scenarioId) => ComuStartTask(scenarioId).Forget();
+    public void ComuEnd(string scenarioId) => ComuEndTask(scenarioId).Forget();
 
     /// <summary>
     /// Wrapper for ToggleComuforPortrait. Can be called from Button.onClick.
@@ -194,38 +218,11 @@ public class ComuStartandEndManager : MonoBehaviour
                 return;
 
             case ComuLogic.ToggleResult.EndCommunication:
-                string endId = GetEndScenarioId();
-                // 形状変更（探索モードへ）
-                ApplyShapeToggle(allowAnimation);
-                if (allowAnimation)
-                    ComuEnd(endId);
-                else
-                    ComuEndTask(endId, allowAnimation: false).Forget();
-                _logic.IsInCommunication = false;
+                EndCommunicationFromPortrait(allowAnimation).Forget();
                 return;
 
             case ComuLogic.ToggleResult.StartCommunication:
-                var pm = ProgressManager.Instance;
-                string scenarioId;
-                if (pm == null)
-                {
-                    Debug.LogWarning("[ComuManager] ProgressManager not found. Using fallback ID.");
-                    scenarioId = startScenarioId;
-                }
-                else
-                {
-                    var info = ComuLogic.ResolveScenarioId(pm.CurrentChapter, pm.CurrentPhase);
-                    Debug.Log($"[ComuManager] ToggleComuforPortrait: Phase={pm.CurrentPhase}, Scenario={info.ScenarioId}, Keywords={info.EnableKeywords}");
-                    scenarioId = info.ScenarioId;
-                }
-
-                // 形状変更（コミュニケーションモードへ）
-                ApplyShapeToggle(allowAnimation);
-                if (allowAnimation)
-                    ComuStart(scenarioId);
-                else
-                    ComuStartTask(scenarioId, allowAnimation: false).Forget();
-                _logic.IsInCommunication = true;
+                ComuStartTask(GetStartScenarioId(), allowAnimation).Forget();
                 return;
         }
     }
@@ -250,34 +247,43 @@ public class ComuStartandEndManager : MonoBehaviour
         if (_logic.IsInCommunication)
         {
             ComuEnd(endId);
-            _logic.IsInCommunication = false;
         }
         else
         {
             ComuStart(startId);
-            _logic.IsInCommunication = true;
         }
+    }
+
+    private string GetStartScenarioId()
+    {
+        if (useProgressBasedId && ProgressManager.Instance != null)
+            return ComuLogic.ResolveScenarioId(ProgressManager.Instance.CurrentChapter,
+                ProgressManager.Instance.CurrentPhase).ScenarioId;
+        return startScenarioId;
+    }
+
+    private async UniTask EndCommunicationFromPortrait(bool allowAnimation)
+    {
+        string scenarioId = GetEndScenarioId();
+        var transition = ComuEndTask(scenarioId, allowAnimation);
+        int version = _transitionVersion;
+        await transition;
+        if (this != null && isActiveAndEnabled && version == _transitionVersion && string.IsNullOrEmpty(scenarioId))
+            MessageWindowFacade.Instance?.StopScenario();
     }
 
     private string GetEndScenarioId()
     {
         if (useProgressBasedId && ProgressManager.Instance != null)
-            return ComuLogic.ResolveEndScenarioId(ProgressManager.Instance.CurrentChapter);
+        {
+            string id = ComuLogic.ResolveEndScenarioId(ProgressManager.Instance.CurrentChapter);
+            return MessageWindowFacade.Instance != null && MessageWindowFacade.Instance.HasScenario(id)
+                ? id : null;
+        }
         return endScenarioId;
     }
 
     #region Shape Toggle
-
-    /// <summary>
-    /// shapeAnimators の全 MoveOnClickandReturn をトグルし、
-    /// スプライト・フォントサイズも切り替える。
-    /// allowAnimation = true: Play() でアニメーション付きトグル。
-    /// allowAnimation = false: SetToTarget() / SetToOriginal() で即座にトグル。
-    /// </summary>
-    private void ApplyShapeToggle(bool allowAnimation)
-    {
-        ApplyShapeState(!_logic.IsInCommunication, allowAnimation);
-    }
 
     /// <summary>
     /// UI形状を指定された会話状態へ確定する。
@@ -306,6 +312,22 @@ public class ComuStartandEndManager : MonoBehaviour
         if (portraitSpriteTarget != null && comuSprite != null)
             portraitSpriteTarget.sprite = isInCommunication ? comuSprite : _originalSprite;
 
+        if (speechBubble != null)
+        {
+            speechBubble.SetConversationMode(isInCommunication);
+            if (portraitSpriteTarget != null)
+                portraitSpriteTarget.color = isInCommunication ? comuWindowColor : _originalWindowColor;
+            if (fontSizeTarget != null)
+            {
+                fontSizeTarget.margin = isInCommunication ? Vector4.zero : _originalTextMargin;
+                fontSizeTarget.color = isInCommunication ? Color.white : _originalTextColor;
+            }
+        }
+
+        if (speakerNameView != null)
+            speakerNameView.SetRestingPosition(isInCommunication
+                ? comuSpeakerNamePosition : _originalSpeakerNamePosition);
+
         if (fontSizeTarget != null)
             fontSizeTarget.fontSize = isInCommunication ? comuFontSize : _originalFontSize;
     }
@@ -314,74 +336,88 @@ public class ComuStartandEndManager : MonoBehaviour
 
     #region UniTask API (for FlowSteps)
 
-    public async UniTask ComuStartTask(string scenarioId, bool allowAnimation = true)
+    public UniTask ComuStartTask(string scenarioId, bool allowAnimation = true)
+        => SetCommunicationState(true, scenarioId, allowAnimation);
+
+    public UniTask ComuEndTask(string scenarioId, bool allowAnimation = true)
+        => SetCommunicationState(false, scenarioId, allowAnimation);
+
+    private async UniTask SetCommunicationState(bool inCommunication, string scenarioId, bool allowAnimation)
     {
-        if (allowAnimation)
+        // 全入口で状態と形状を同時に更新し、連打・FlowStepとの競合を防ぐ。
+        if (_logic.IsAnimating) return;
+
+        _transitionVersion++;
+        _logic.IsAnimating = true;
+        _logic.IsInCommunication = inCommunication;
+        var cancellation = new CancellationTokenSource();
+        _transitionCancellation = cancellation;
+        bool completed = false;
+        try
         {
-            await StartComuFlow(scenarioId);
-        }
-        else
-        {
-            SetPortraitInteractable(false);
+            ApplyShapeState(inCommunication, allowAnimation);
             if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
-            
-            // アニメーション中の DOTween を停止し、即座に最終状態へ
-            SetDeskInstant();
 
-            fadeFrame.gameObject.SetActive(false);
-            // fadeFrame の MoveOnClickandReturn 状態もリセット
-            if (fadeFrame.TryGetComponent<MoveOnClickandReturn>(out var fadeAnim))
-                fadeAnim.SetToOriginal();
+            if (allowAnimation)
+            {
+                if (inCommunication) await StartComuFlow(cancellation.Token);
+                else await EndComuFlow(cancellation.Token);
+            }
 
-            NamePlate.SetActive(true);
-            messageWindow.SetActive(true);
-            messageWindowBackGround.SetActive(true);
-            NamePlateBackGround.SetActive(true);
-            ObjectiveDisplay.SetActive(true);
-            ToggleEffect.SetActive(false);
-            if (Portrait != null) Portrait.SetActive(true);
-            
-            SetPortraitInteractable(true);
-
-            if (!string.IsNullOrEmpty(scenarioId))
-                messageWindowIndexStarter.StartScenarioById(scenarioId);
+            cancellation.Token.ThrowIfCancellationRequested();
+            ApplyCompletedTransitionUI(inCommunication);
+            if (!inCommunication && allowAnimation)
+            {
+                PlayWithChildren(backGround_Text);
+                PlayWithChildren(backGround_SpeakerName);
+            }
+            completed = true;
         }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            // シーン離脱・無効化後に古いUIやシナリオを操作しない。
+            if (this != null)
+            {
+                ApplyShapeState(inCommunication, false);
+                ApplyCompletedTransitionUI(inCommunication);
+            }
+        }
+        finally
+        {
+            _logic.IsAnimating = false;
+            _transitionCancellation = null;
+            cancellation.Dispose();
+        }
+
+        if (!completed) return;
+
+        // アニメーションのロックだけを解除する。シナリオ側の操作禁止指定は保持する。
+        SetPortraitInteractable(_logic.IsPortraitInteractable, true);
+        if (!string.IsNullOrEmpty(scenarioId) && messageWindowIndexStarter != null)
+            messageWindowIndexStarter.StartScenarioById(scenarioId);
     }
 
-    public async UniTask ComuEndTask(string scenarioId, bool allowAnimation = true)
+    private void ApplyCompletedTransitionUI(bool inCommunication)
     {
-        if (allowAnimation)
+        SetDeskInstant();
+        ResetAnimation(comuStartUI);
+        ResetAnimation(comuEndUI);
+        if (fadeFrame != null)
         {
-            await EndComuFlow(scenarioId);
-        }
-        else
-        {
-            SetPortraitInteractable(false);
-            if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
-            
-            // アニメーション中の DOTween を停止し、即座に最終状態へ
-            SetDeskInstant();
-
-            NamePlate.SetActive(false);
-            messageWindow.SetActive(false);
-            messageWindowBackGround.SetActive(false);
-            NamePlateBackGround.SetActive(false);
-            ObjectiveDisplay.SetActive(true);
+            ResetAnimation(fadeFrame.gameObject);
             fadeFrame.gameObject.SetActive(false);
-            // fadeFrame の MoveOnClickandReturn 状態もリセット
-            if (fadeFrame.TryGetComponent<MoveOnClickandReturn>(out var fadeAnim))
-                fadeAnim.SetToOriginal();
-
-            ToggleEffect.SetActive(false);
-            if (Portrait != null) Portrait.SetActive(true);
-            
-            Memorizer.SetActive(true);
-            LostNote.SetActive(true);
-            
-            SetPortraitInteractable(true);
-
-            if (!string.IsNullOrEmpty(scenarioId))
-                messageWindowIndexStarter.StartScenarioById(scenarioId);
+        }
+        SetActive(NamePlate, true);
+        SetActive(messageWindow, true);
+        SetActive(messageWindowBackGround, true);
+        SetActive(NamePlateBackGround, true);
+        SetActive(ObjectiveDisplay, true);
+        SetActive(ToggleEffect, false);
+        SetActive(Portrait, true);
+        if (!inCommunication)
+        {
+            SetActive(Memorizer, true);
+            SetActive(LostNote, true);
         }
     }
 
@@ -389,97 +425,42 @@ public class ComuStartandEndManager : MonoBehaviour
 
     #region Animation Flows
 
-    private async UniTask StartComuFlow(string Startid)
+    private async UniTask StartComuFlow(CancellationToken cancellationToken)
     {
-        _logic.IsAnimating = true;
-        SetPortraitInteractable(false);
-        if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
-
-        var fadeAnim = fadeFrame.GetComponent<MoveOnClickandReturn>();
-        fadeFrame.gameObject.SetActive(true);
-        NamePlate.SetActive(false);
-        messageWindow.SetActive(false);
-        messageWindowBackGround.SetActive(false);
-        NamePlateBackGround.SetActive(false);
-        ObjectiveDisplay.SetActive(false);
-        ToggleEffect.SetActive(true);
-
+        SetActive(fadeFrame != null ? fadeFrame.gameObject : null, true);
+        SetTransitionContentVisible(false);
+        SetActive(ToggleEffect, true);
         PlayDeskAnimation();
-        fadeAnim.Play();
+        PlayAnimation(fadeFrame != null ? fadeFrame.gameObject : null);
 
-        await UniTask.Delay(1000);
-
-        var startPanel = comuStartUI.GetComponent<MoveOnClickandReturn>();
-        startPanel.Play();
-
-        await UniTask.Delay(1500);
-
-        startPanel.Play();
+        await UniTask.Delay(1000, cancellationToken: cancellationToken);
+        PlayAnimation(comuStartUI);
+        await UniTask.Delay(1500, cancellationToken: cancellationToken);
+        PlayAnimation(comuStartUI);
         PlayDeskAnimation();
-
-        await UniTask.Delay(500);
-
-        NamePlate.SetActive(true);
-        messageWindow.SetActive(true);
-        messageWindowBackGround.SetActive(true);
-        NamePlateBackGround.SetActive(true);
-        ObjectiveDisplay.SetActive(true);
-        ToggleEffect.SetActive(false);
-        if (Portrait != null) Portrait.SetActive(true);
-
-        fadeFrame.gameObject.SetActive(false);
-
-        _logic.IsAnimating = false;
-        SetPortraitInteractable(true);
-
-        if (!string.IsNullOrEmpty(Startid))
-            messageWindowIndexStarter.StartScenarioById(Startid);
+        await UniTask.Delay(500, cancellationToken: cancellationToken);
     }
 
-    private async UniTask EndComuFlow(string Endid)
+    private async UniTask EndComuFlow(CancellationToken cancellationToken)
     {
-        _logic.IsAnimating = true;
-        SetPortraitInteractable(false);
-        if (unclickableOverlay != null) unclickableOverlay.SetActive(false);
+        PlayAnimation(comuEndUI);
+        SetTransitionContentVisible(false);
+        SetActive(fadeFrame != null ? fadeFrame.gameObject : null, true);
+        SetActive(ToggleEffect, true);
+        PlayAnimation(fadeFrame != null ? fadeFrame.gameObject : null);
 
-        var endPanel = comuEndUI.GetComponent<MoveOnClickandReturn>();
-        var fadeAnim = fadeFrame.GetComponent<MoveOnClickandReturn>();
-        endPanel.Play();
-        NamePlate.SetActive(false);
-        messageWindow.SetActive(false);
-        messageWindowBackGround.SetActive(false);
-        NamePlateBackGround.SetActive(false);
-        ObjectiveDisplay.SetActive(false);
-        fadeFrame.gameObject.SetActive(true);
-        ToggleEffect.SetActive(true);
-        fadeAnim.Play();
+        await UniTask.Delay(1500, cancellationToken: cancellationToken);
+        PlayAnimation(comuEndUI);
+        await UniTask.Delay(500, cancellationToken: cancellationToken);
+    }
 
-        await UniTask.Delay(1500);
-
-        endPanel.Play();
-
-        await UniTask.Delay(500);
-        NamePlate.SetActive(true);
-        messageWindow.SetActive(true);
-        messageWindow.GetComponent<TMP_Text>().fontSize = 40.5f;
-        messageWindowBackGround.SetActive(true);
-        NamePlateBackGround.SetActive(true);
-        fadeFrame.gameObject.SetActive(false);
-        ObjectiveDisplay.SetActive(true);
-        Memorizer.SetActive(true);
-        LostNote.SetActive(true);
-        ToggleEffect.SetActive(false);
-        if (Portrait != null) Portrait.SetActive(true);
-
-        _logic.IsAnimating = false;
-        SetPortraitInteractable(true);
-
-        // 会話終了後、背景パネルの退場アニメーションを起動
-        PlayWithChildren(backGround_Text);
-        PlayWithChildren(backGround_SpeakerName);
-
-        if (!string.IsNullOrEmpty(Endid))
-            messageWindowIndexStarter.StartScenarioById(Endid);
+    private void SetTransitionContentVisible(bool visible)
+    {
+        SetActive(NamePlate, visible);
+        SetActive(messageWindow, visible);
+        SetActive(messageWindowBackGround, visible);
+        SetActive(NamePlateBackGround, visible);
+        SetActive(ObjectiveDisplay, visible);
     }
 
     #endregion
@@ -488,6 +469,7 @@ public class ComuStartandEndManager : MonoBehaviour
 
     private void PlayDeskAnimation()
     {
+        if (desk == null) return;
         if (desk.TryGetComponent<MoveOnClickandReturn>(out var move)) move.Play();
         else if (desk.TryGetComponent<FirstMove>(out var first)) first.Play();
     }
@@ -507,17 +489,28 @@ public class ComuStartandEndManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 対象 GameObject 自身と、すべての子孫にある MoveOnClickandReturn の Play() を呼ぶ。
-    /// GetComponentsInChildren は自身も含むため、GetComponents との二重呼び出しは不要。
-    /// </summary>
     private static void PlayWithChildren(GameObject root)
     {
         if (root == null) return;
+        foreach (var animator in root.GetComponentsInChildren<MoveOnClickandReturn>(true))
+            animator.Play();
+    }
 
-        // includeInactive: true で非表示オブジェクトも対象（自身も含む）
-        foreach (var moc in root.GetComponentsInChildren<MoveOnClickandReturn>(includeInactive: true))
-            moc.Play();
+    private static void SetActive(GameObject target, bool active)
+    {
+        if (target != null) target.SetActive(active);
+    }
+
+    private static void PlayAnimation(GameObject target)
+    {
+        if (target != null && target.TryGetComponent<MoveOnClickandReturn>(out var move))
+            move.Play();
+    }
+
+    private static void ResetAnimation(GameObject target)
+    {
+        if (target != null && target.TryGetComponent<MoveOnClickandReturn>(out var move))
+            move.SetToOriginal();
     }
 
     public void SetPortraitInteractable(bool interactable, bool updateOverlay = false)

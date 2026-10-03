@@ -44,14 +44,15 @@ namespace ScenarioSystem.View
 
         private void OnEnable()
         {
-            TrySubscribeManager(true);
+            // 他オブジェクトのAwakeがまだ呼ばれていない場合はUpdate/Startで再試行する。
+            TrySubscribeManager(false);
             RenderNotes();
             RenderCharacter();
         }
 
         private void Start()
         {
-            TrySubscribeManager(false);
+            TrySubscribeManager(true);
             RenderNotes();
             RenderCharacter();
         }

@@ -36,6 +36,8 @@ namespace ScenarioSystem.View
         private Coroutine _shakeCoroutine;
         private Coroutine _flashCoroutine;
         private Coroutine _fadeCoroutine;
+        private Transform _shakingCamera;
+        private Vector3 _shakeOffset;
 
         #endregion
 
@@ -45,6 +47,7 @@ namespace ScenarioSystem.View
         {
             InitOverlayAlpha(flashOverlay);
             InitOverlayAlpha(fadeOverlay);
+            if (centerImage != null) centerImage.raycastTarget = false;
         }
 
         private void OnEnable()
@@ -55,6 +58,11 @@ namespace ScenarioSystem.View
         private void OnDisable()
         {
             ScenarioEventBus.OnEffectRequested -= HandleEffectRequested;
+            StopAllCoroutines();
+            _shakeCoroutine = _flashCoroutine = _fadeCoroutine = null;
+            RestoreCameraPosition();
+            InitOverlayAlpha(flashOverlay);
+            InitOverlayAlpha(fadeOverlay);
         }
 
         #endregion
@@ -157,6 +165,7 @@ namespace ScenarioSystem.View
         private void PlayShake(float duration, float magnitude)
         {
             if (_shakeCoroutine != null) StopCoroutine(_shakeCoroutine);
+            RestoreCameraPosition();
             _shakeCoroutine = StartCoroutine(ShakeCamera(duration, magnitude));
         }
 
@@ -211,28 +220,36 @@ namespace ScenarioSystem.View
             img.color = new Color(baseColor.r, baseColor.g, baseColor.b, to);
         }
 
-        private static IEnumerator ShakeCamera(float duration, float magnitude)
+        private IEnumerator ShakeCamera(float duration, float magnitude)
         {
             var cam = Camera.main;
             if (cam == null) yield break;
 
-            var camTransform = cam.transform;
-            Vector3 originalPos = camTransform.localPosition;
+            _shakingCamera = cam.transform;
             float elapsed = 0f;
 
             while (elapsed < duration)
             {
-                if (camTransform == null) yield break;
+                if (_shakingCamera == null) yield break;
 
+                RestoreCameraPosition();
                 float x = Random.Range(-1f, 1f) * magnitude;
                 float y = Random.Range(-1f, 1f) * magnitude;
-                camTransform.localPosition = originalPos + new Vector3(x, y, 0f);
+                _shakeOffset = new Vector3(x, y, 0f);
+                _shakingCamera.localPosition += _shakeOffset;
                 elapsed += Time.deltaTime;
                 yield return null;
             }
 
-            if (camTransform != null)
-                camTransform.localPosition = originalPos;
+            RestoreCameraPosition();
+            _shakeCoroutine = null;
+        }
+
+        private void RestoreCameraPosition()
+        {
+            if (_shakingCamera != null)
+                _shakingCamera.localPosition -= _shakeOffset;
+            _shakeOffset = Vector3.zero;
         }
 
         #endregion
@@ -242,6 +259,7 @@ namespace ScenarioSystem.View
         private static void InitOverlayAlpha(Image overlay)
         {
             if (overlay == null) return;
+            overlay.raycastTarget = false;
             var c = overlay.color;
             c.a = 0f;
             overlay.color = c;
