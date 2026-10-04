@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3a9213b28fb603e2ab7746b5ebba125, type: 3}
+  m_Name: ScenarioFlowCatalog
+  m_EditorClassIdentifier: 
+  startingSequence: {fileID: 11400000, guid: cad9efc2b74464f01b7a0711246e347e, type: 2}
+  overrideSequences:
+  - targetChapter: 1
+    targetPhase: 2
+    sequence: {fileID: 11400000, guid: cad9efc2b74464f01b7a0711246e347e, type: 2}
+  - targetChapter: 2
+    targetPhase: 2
+    sequence: {fileID: 11400000, guid: 452c461ba49e747f69f04c9220ce0970, type: 2}

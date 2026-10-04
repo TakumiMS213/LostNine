@@ -1021,7 +1021,7 @@ MonoBehaviour:
   ghostPortraitImage: {fileID: 363964322}
   enableGhostPortrait: 1
   ghostPortraitAlpha: 0.3
-  jumpOnText: 1
+  jumpOnText: 0
   jumpHeight: 10
   jumpDuration: 0.3
   jumpEase: 30
@@ -8876,7 +8876,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2036071045}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dfb22285a8fc22140b2f6ee062c91ebd, type: 3}
   m_Name: 

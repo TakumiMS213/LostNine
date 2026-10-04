@@ -6279,7 +6279,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2072768337}
-        m_TargetAssemblyTypeName: TitleButtonSelector, Assembly-CSharp
+        m_TargetAssemblyTypeName: SystemScript.UIMoves.TitleButtonSelector, Assembly-CSharp
         m_MethodName: PlaySelectSound
         m_Mode: 1
         m_Arguments:
@@ -6605,6 +6605,7 @@ MonoBehaviour:
   selectSound: {fileID: 1442643377}
   soundVolume: 0.05
   uiSwitcher: {fileID: 0}
+  blockingPanels: []
 --- !u!1 &316458039
 GameObject:
   m_ObjectHideFlags: 0
@@ -6700,7 +6701,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
       - m_Target: {fileID: 2072768337}
-        m_TargetAssemblyTypeName: TitleButtonSelector, Assembly-CSharp
+        m_TargetAssemblyTypeName: SystemScript.UIMoves.TitleButtonSelector, Assembly-CSharp
         m_MethodName: ResetSelection
         m_Mode: 1
         m_Arguments:
@@ -10768,9 +10769,15 @@ MonoBehaviour:
   _currentPhase: 0
   _currentKeywordProgress: 0
   _keywordThreshold: 3
+  _isMemorizerUnlocked: 0
+  _isMemorizerActive: 0
   memorizerFrameSprite: {fileID: 21300000, guid: d5b1e418dc0964c19b9f7c46f62e0263, type: 3}
   memorizerStatusFont: {fileID: 11400000, guid: 1294129f9b8daea40930e83bb7c672b5, type: 2}
+  memorizerFrameStartScale: 1.35
+  memorizerFrameEnterDuration: 0.35
   memorizerStatusDuration: 0.5
+  memorizerStatusJumpHeight: 28
+  memorizerTintColor: {r: 0.35, g: 0.25, b: 0.75, a: 0.12}
   _maxChapter: 9
   mainSceneName: Main
   chapterSelectSceneName: ChapterSelect
@@ -14421,7 +14428,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2072768337}
-        m_TargetAssemblyTypeName: TitleButtonSelector, Assembly-CSharp
+        m_TargetAssemblyTypeName: SystemScript.UIMoves.TitleButtonSelector, Assembly-CSharp
         m_MethodName: PlaySelectSound
         m_Mode: 1
         m_Arguments:
@@ -14820,7 +14827,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2072768337}
-        m_TargetAssemblyTypeName: TitleButtonSelector, Assembly-CSharp
+        m_TargetAssemblyTypeName: SystemScript.UIMoves.TitleButtonSelector, Assembly-CSharp
         m_MethodName: PlaySelectSound
         m_Mode: 1
         m_Arguments:
@@ -15722,6 +15729,9 @@ MonoBehaviour:
   selectSound: {fileID: 1442643377}
   soundVolume: 0.1
   uiSwitcher: {fileID: 1681343025}
+  blockingPanels:
+  - {fileID: 1846055426}
+  - {fileID: 1971108219}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

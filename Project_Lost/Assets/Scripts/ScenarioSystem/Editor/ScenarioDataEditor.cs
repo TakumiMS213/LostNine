@@ -41,6 +41,7 @@ namespace ScenarioSystem.Editor
 
         public override void OnInspectorGUI()
         {
+            if (Csv.ScenarioCsvGeneratedInspector.DrawManaged(target)) return;
             serializedObject.Update();
             EditorGUILayout.PropertyField(serializedObject.FindProperty("scenarioId"), new GUIContent("シナリオID"));
             EditorGUILayout.HelpBox("IDは文字列で呼び出す場合に設定します。直接参照だけで再生するシナリオは空欄にできます。", MessageType.Info);

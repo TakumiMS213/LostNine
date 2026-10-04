@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using ScenarioSystem.Adapter;
 using ScenarioSystem.Events;
 using ScenarioSystem.Model.Actions;
 
@@ -16,14 +17,38 @@ namespace ScenarioSystem.View
         [Tooltip("画面中央に配置する Image コンポーネント")]
         [SerializeField] private Image portraitImage;
 
+        [Header("章別Portrait（設定時はシナリオの表示指示から独立）")]
+        [SerializeField] private LostNoteCharacterDatabase chapterPortraitDatabase;
+        [Tooltip("章の画像が未登録の場合に表示する画像")]
+        [SerializeField] private Sprite fallbackChapterPortrait;
+
+        private ProgressManager _progressManager;
+        private int _displayedChapter = -1;
         private Sprite _currentSprite;
         private bool _isMainPortraitAtCenter;
         private bool _hasMainPortrait;
 
         private void Awake() => MemorizerTintMask.MarkPortrait(portraitImage);
 
+        private void Start()
+        {
+            if (chapterPortraitDatabase == null) return;
+            // 他のオブジェクトのAwakeで生成された進行管理もここで取得する。
+            BindProgressManager();
+            RefreshChapterPortrait();
+        }
+
         private void OnEnable()
         {
+            if (chapterPortraitDatabase != null)
+            {
+                _displayedChapter = -1;
+                _isMainPortraitAtCenter = false;
+                _hasMainPortrait = false;
+                BindProgressManager();
+                RefreshChapterPortrait();
+                return;
+            }
             ScenarioEventBus.OnCenterPortraitChanged += HandleCenterPortraitChanged;
             ScenarioEventBus.OnDialogueRequested += HandleDialogueRequested;
             ScenarioEventBus.OnWindowVisibilityChanged += HandleWindowVisibilityChanged;
@@ -34,6 +59,30 @@ namespace ScenarioSystem.View
             ScenarioEventBus.OnCenterPortraitChanged -= HandleCenterPortraitChanged;
             ScenarioEventBus.OnDialogueRequested -= HandleDialogueRequested;
             ScenarioEventBus.OnWindowVisibilityChanged -= HandleWindowVisibilityChanged;
+            if (_progressManager != null) _progressManager.OnProgressChanged -= RefreshChapterPortrait;
+            _progressManager = null;
+        }
+
+        private void BindProgressManager()
+        {
+            var progress = ProgressManager.Instance;
+            if (_progressManager == progress) return;
+            if (_progressManager != null) _progressManager.OnProgressChanged -= RefreshChapterPortrait;
+            _progressManager = progress;
+            if (_progressManager != null) _progressManager.OnProgressChanged += RefreshChapterPortrait;
+        }
+
+        private void RefreshChapterPortrait()
+        {
+            if (chapterPortraitDatabase == null) return;
+            int chapter = _progressManager != null ? _progressManager.CurrentChapter : 1;
+            if (_displayedChapter == chapter) return;
+            _displayedChapter = chapter;
+            _currentSprite = fallbackChapterPortrait;
+            if (chapterPortraitDatabase.TryGetByChapter(chapter, out var data)
+                && data != null && data.CharacterSprite != null)
+                _currentSprite = data.CharacterSprite;
+            RefreshVisibility();
         }
 
         private void HandleCenterPortraitChanged(Sprite sprite)

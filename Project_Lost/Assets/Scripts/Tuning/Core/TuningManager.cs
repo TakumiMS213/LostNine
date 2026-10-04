@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using MessageWindowSystem.Core;
 using Tuning.Data;
 
 namespace Tuning.Core
@@ -29,6 +32,10 @@ namespace Tuning.Core
 
         [Tooltip("右側の点が目指すべきターゲット円")]
         [SerializeField] private RectTransform rightTarget;
+
+        [Header("マウスカーソル")]
+        [SerializeField] private Texture2D hoverHandCursor;
+        [SerializeField] private Texture2D grabHandCursor;
 
         [Header("UIレイアウト")]
         [Tooltip("操作する点の基準サイズに対する倍率")]
@@ -81,6 +88,16 @@ namespace Tuning.Core
         private float _leftBlockProximity;
         private float _rightBlockProximity;
         private bool _isActive;
+        private RectTransform _draggedPoint;
+        private Vector2 _dragOffset;
+        private RectTransform _leftPointParent;
+        private RectTransform _rightPointParent;
+        private Canvas _leftPointCanvas;
+        private Canvas _rightPointCanvas;
+        private CursorManager _cursorManager;
+        private PointerEventData _pointerData;
+        private readonly List<RaycastResult> _pointerHits = new(8);
+        private int _mouseCursorState;
         private int _activeBlockCount = 2;
 
         private bool _layoutCaptured;
@@ -114,8 +131,13 @@ namespace Tuning.Core
 
         private void Update()
         {
-            if (!_isActive || _currentSettings == null) return;
+            if (!_isActive || _currentSettings == null)
+            {
+                ResetMouseInteraction();
+                return;
+            }
 
+            UpdateMouseInteraction();
             UpdatePointMovement();
             UpdateTargetMovement();
             UpdateSyncRate();
@@ -129,6 +151,13 @@ namespace Tuning.Core
                 _rightInTarget,
                 _leftBlockProximity,
                 _rightBlockProximity);
+        }
+
+        private void OnDisable() => ResetMouseInteraction();
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus) ResetMouseInteraction();
         }
 
         #endregion
@@ -158,6 +187,8 @@ namespace Tuning.Core
                 return;
             }
 
+            ResetMouseInteraction();
+            CacheMouseReferences();
             _currentSettings = settings;
 
             CaptureInitialLayout();
@@ -315,11 +346,128 @@ namespace Tuning.Core
             ApplySettings(newSettings, newSettings != null ? newSettings.name : "runtime settings");
         }
 
-        public void SetActive(bool active) => _isActive = active;
+        public void SetActive(bool active)
+        {
+            _isActive = active;
+            if (!active) ResetMouseInteraction();
+        }
 
         #endregion
 
         #region Movement
+
+        private void CacheMouseReferences()
+        {
+            _leftPointParent = leftPoint != null ? leftPoint.parent as RectTransform : null;
+            _rightPointParent = rightPoint != null ? rightPoint.parent as RectTransform : null;
+            _leftPointCanvas = leftPoint != null ? leftPoint.GetComponentInParent<Canvas>() : null;
+            _rightPointCanvas = rightPoint != null ? rightPoint.GetComponentInParent<Canvas>() : null;
+            _cursorManager = CursorManager.Instance;
+            var eventSystem = EventSystem.current;
+            _pointerData = eventSystem != null ? new PointerEventData(eventSystem) : null;
+        }
+
+        private void UpdateMouseInteraction()
+        {
+            var mouse = Mouse.current;
+            if (mouse == null || !Application.isFocused || Time.timeScale <= 0f)
+            {
+                ResetMouseInteraction();
+                return;
+            }
+
+            if (_draggedPoint != null && (!mouse.leftButton.isPressed
+                || !_draggedPoint.gameObject.activeInHierarchy
+                || (_draggedPoint == rightPoint && _activeBlockCount < 2)))
+                _draggedPoint = null;
+
+            if (_draggedPoint != null)
+            {
+                SetMouseCursor(2);
+                return;
+            }
+
+            RectTransform hoveredPoint = GetHoveredPoint(mouse.position.ReadValue());
+            if (hoveredPoint != null && mouse.leftButton.wasPressedThisFrame
+                && TryGetPointerPosition(hoveredPoint, mouse.position.ReadValue(), out Vector2 position))
+            {
+                _draggedPoint = hoveredPoint;
+                _dragOffset = hoveredPoint.anchoredPosition - position;
+            }
+            SetMouseCursor(_draggedPoint != null ? 2 : hoveredPoint != null ? 1 : 0);
+        }
+
+        private RectTransform GetHoveredPoint(Vector2 screenPosition)
+        {
+            var eventSystem = EventSystem.current;
+            if (eventSystem == null || _pointerData == null) return null;
+            _pointerData.position = screenPosition;
+            _pointerHits.Clear();
+            eventSystem.RaycastAll(_pointerData, _pointerHits);
+            if (_pointerHits.Count == 0 || _pointerHits[0].gameObject == null) return null;
+
+            Transform hit = _pointerHits[0].gameObject.transform;
+            if (leftPoint != null && leftPoint.gameObject.activeInHierarchy
+                && (hit == leftPoint || hit.IsChildOf(leftPoint))) return leftPoint;
+            if (_activeBlockCount > 1 && rightPoint != null && rightPoint.gameObject.activeInHierarchy
+                && (hit == rightPoint || hit.IsChildOf(rightPoint))) return rightPoint;
+            return null;
+        }
+
+        private bool TryGetPointerPosition(RectTransform point, Vector2 screenPosition, out Vector2 position)
+        {
+            position = Vector2.zero;
+            if (point == null) return false;
+            RectTransform parent = point == leftPoint ? _leftPointParent : _rightPointParent;
+            Canvas canvas = point == leftPoint ? _leftPointCanvas : _rightPointCanvas;
+            if (parent == null || canvas == null) return false;
+            Camera camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screenPosition, camera, out Vector2 local))
+                return false;
+
+            Vector2 anchor = new Vector2(
+                Mathf.Lerp(point.anchorMin.x, point.anchorMax.x, point.pivot.x),
+                Mathf.Lerp(point.anchorMin.y, point.anchorMax.y, point.pivot.y));
+            position = local - parent.rect.min - Vector2.Scale(parent.rect.size, anchor);
+            return true;
+        }
+
+        private Vector2 GetNextPointPosition(RectTransform point, Vector2 velocity)
+        {
+            var mouse = Mouse.current;
+            if (point != null && point == _draggedPoint && mouse != null
+                && TryGetPointerPosition(point, mouse.position.ReadValue(), out Vector2 position))
+                return position + _dragOffset;
+            return point != null ? point.anchoredPosition + velocity * Time.deltaTime : Vector2.zero;
+        }
+
+        private void ResetMouseInteraction()
+        {
+            if (_draggedPoint != null)
+            {
+                if (_draggedPoint == leftPoint) _leftVelocity = Vector2.zero;
+                else if (_draggedPoint == rightPoint) _rightVelocity = Vector2.zero;
+            }
+            _draggedPoint = null;
+            SetMouseCursor(0);
+        }
+
+        private void SetMouseCursor(int state)
+        {
+            if (_mouseCursorState == state) return;
+            _mouseCursorState = state;
+            if (state == 0)
+            {
+                if (_cursorManager != null) _cursorManager.ResetToDefault();
+                else Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+                return;
+            }
+
+            Texture2D texture = state == 2 && grabHandCursor != null ? grabHandCursor : hoverHandCursor;
+            Vector2 hotspot = texture != null ? new Vector2(texture.width * 0.5f, texture.height * 0.5f) : Vector2.zero;
+            if (_cursorManager != null) _cursorManager.SetCursor(texture, hotspot);
+            else Cursor.SetCursor(texture, hotspot, CursorMode.Auto);
+        }
 
         private void UpdatePointMovement()
         {
@@ -352,16 +500,20 @@ namespace Tuning.Core
             _leftVelocity = Vector2.ClampMagnitude(_leftVelocity, _currentSettings.leftMaxSpeed);
             _rightVelocity = Vector2.ClampMagnitude(_rightVelocity, _currentSettings.rightMaxSpeed);
 
+            // 掴んでいる点はマウスに追従させ、慣性が残らないようにする。
+            if (_draggedPoint != null && _draggedPoint == leftPoint) _leftVelocity = Vector2.zero;
+            if (_draggedPoint != null && _draggedPoint == rightPoint) _rightVelocity = Vector2.zero;
+
             // Apply movement
             if (leftPoint != null && leftBoundsArea != null)
             {
-                Vector2 newPos = leftPoint.anchoredPosition + _leftVelocity * Time.deltaTime;
+                Vector2 newPos = GetNextPointPosition(leftPoint, _leftVelocity);
                 leftPoint.anchoredPosition = ClampToRectTransform(newPos, leftBoundsArea);
             }
 
             if (_activeBlockCount > 1 && rightPoint != null && rightBoundsArea != null)
             {
-                Vector2 newPos = rightPoint.anchoredPosition + _rightVelocity * Time.deltaTime;
+                Vector2 newPos = GetNextPointPosition(rightPoint, _rightVelocity);
                 rightPoint.anchoredPosition = ClampToRectTransform(newPos, rightBoundsArea);
             }
         }
@@ -635,6 +787,7 @@ namespace Tuning.Core
         private void TriggerSuccess()
         {
             _isActive = false;
+            ResetMouseInteraction();
             feedback?.OnSuccess();
             OnTuningSuccess?.Invoke();
             Debug.Log("[TuningManager] Tuning Success!");
@@ -643,6 +796,7 @@ namespace Tuning.Core
         private void TriggerGameOver()
         {
             _isActive = false;
+            ResetMouseInteraction();
             feedback?.OnGameOver();
             OnTuningGameOver?.Invoke();
             Debug.Log("[TuningManager] Game Over - Overheat!");

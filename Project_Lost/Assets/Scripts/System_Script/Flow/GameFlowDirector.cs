@@ -21,6 +21,9 @@ namespace System_Script.Flow
     /// </summary>
     public class GameFlowDirector : MonoBehaviour
     {
+        [Header("Scenario Authoring")]
+        [SerializeField] private ScenarioFlowCatalog flowCatalog;
+
         [Header("Default Settings")]
         [SerializeField] private StorySequence startingSequence;
         [SerializeField] private bool playOnStart = false;
@@ -36,6 +39,8 @@ namespace System_Script.Flow
         private bool _keywordCompletionPending;
         private int _keywordCompletionChapter = -1;
 
+        private StorySequence StartingSequence => flowCatalog != null ? flowCatalog.StartingSequence : startingSequence;
+
         private void Start()
         {
             SubscribeProgressManager();
@@ -47,9 +52,9 @@ namespace System_Script.Flow
                 {
                      PlaySequence(overrideSeq);
                 }
-                else if (startingSequence != null)
+                else if (StartingSequence != null)
                 {
-                    PlaySequence(startingSequence);
+                    PlaySequence(StartingSequence);
                 }
             }
         }
@@ -136,14 +141,18 @@ namespace System_Script.Flow
             int currentChapter = ProgressManager.Instance.CurrentChapter;
             GamePhase currentPhase = ProgressManager.Instance.CurrentPhase;
 
+            if (flowCatalog != null)
+                return flowCatalog.TryGetOverride(currentChapter, currentPhase, out var sequence) ? sequence : null;
+            if (overrideSequences == null) return null;
+
             // Debug log to check what we are looking for
             Debug.Log($"[GameFlowDirector] GetOverrideSequence: Checking for Ch{currentChapter} - {currentPhase}. Registered overrides: {overrideSequences.Count}");
 
             foreach (var mapping in overrideSequences)
             {
-                if (mapping.targetChapter == currentChapter && mapping.targetPhase == currentPhase)
+                if (mapping != null && mapping.targetChapter == currentChapter && mapping.targetPhase == currentPhase)
                 {
-                    Debug.Log($"[GameFlowDirector] Match found! Sequence: {mapping.sequence.name}");
+                    Debug.Log($"[GameFlowDirector] Match found! Sequence: {(mapping.sequence != null ? mapping.sequence.name : "<none>")}");
                     return mapping.sequence;
                 }
             }
@@ -166,10 +175,10 @@ namespace System_Script.Flow
                 PlaySequence(seq);
                 return true;
             }
-            if (startingSequence != null)
+            if (StartingSequence != null)
             {
                 Debug.Log("[GameFlowDirector] PlaySequenceForCurrentProgress: using startingSequence fallback.");
-                PlaySequence(startingSequence);
+                PlaySequence(StartingSequence);
                 return true;
             }
             Debug.LogWarning("[GameFlowDirector] PlaySequenceForCurrentProgress: No sequence found.");
