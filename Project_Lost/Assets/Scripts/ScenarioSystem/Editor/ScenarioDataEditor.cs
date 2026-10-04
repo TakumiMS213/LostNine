@@ -152,8 +152,9 @@ namespace ScenarioSystem.Editor
             "WaitAction" => "待機", "EffectAction" => "演出", "ProgressUpdateAction" => "進行状態の更新",
             "ProgressScenarioAction" => "現在の進行に対応するシナリオ", "SceneTransitionAction" => "シーン遷移",
             "ComuToggleAction" => "会話状態の切り替え", "ComuToggleInstantAction" => "会話状態の即時切り替え",
-            "CenterPortraitAction" => "中央立ち絵", "PortraitInteractableAction" => "立ち絵の操作許可",
+            "CenterPortraitAction" => "中央立ち絵", "PortraitInteractableAction" => "対話ボタンの操作許可",
             "PortraitGuidanceAction" => "立ち絵の誘導表示", "KeywordEnableAction" => "キーワードの操作許可",
+            "DialogueStartButtonAction" => "対話開始ボタン",
             "LostNoteCharacterAction" => "ノートの人物登録", "TitleLogoAction" => "タイトルロゴ", _ => name
         };
     }
@@ -162,6 +163,10 @@ namespace ScenarioSystem.Editor
     public class ScenarioDataDatabaseEditor : UnityEditor.Editor
     {
         private List<ScenarioDataIssue> _issues;
+
+        private void OnEnable() => Undo.undoRedoPerformed += OnUndoRedo;
+        private void OnDisable() => Undo.undoRedoPerformed -= OnUndoRedo;
+        private void OnUndoRedo() { _issues = null; Repaint(); }
 
         public override void OnInspectorGUI()
         {
@@ -174,18 +179,46 @@ namespace ScenarioSystem.Editor
             }
             EditorGUILayout.HelpBox("ID検索の入口を登録します。次のシナリオ・選択肢の遷移先も検証されます。", MessageType.Info);
             if (GUILayout.Button("登録データを検証"))
-                _issues = ScenarioValidationGUI.ValidateSelection(((ScenarioDataDatabase)target).allScenarios ?? new List<ScenarioData>());
+                _issues = ScenarioValidationGUI.ValidateDatabase((ScenarioDataDatabase)target);
             ScenarioValidationGUI.Draw(_issues);
         }
     }
 
     internal static class ScenarioValidationGUI
     {
+        public static List<ScenarioDataIssue> ValidateDatabase(ScenarioDataDatabase database)
+        {
+            var roots = database.allScenarios?.Where(scenario => scenario != null).Distinct() ?? Enumerable.Empty<ScenarioData>();
+            var issues = ScenarioDataValidator.Validate(roots);
+            CheckRegistrations(database, issues);
+            return issues;
+        }
+
+        private static void CheckRegistrations(ScenarioDataDatabase database, List<ScenarioDataIssue> issues)
+        {
+            if (database.allScenarios == null)
+            {
+                issues.Add(new ScenarioDataIssue(ScenarioDataIssueSeverity.Error, "NULL_REGISTRATIONS",
+                    "登録シナリオのリストがありません。", database, "allScenarios"));
+                return;
+            }
+            var seen = new HashSet<ScenarioData>();
+            for (int i = 0; i < database.allScenarios.Count; i++)
+            {
+                var scenario = database.allScenarios[i];
+                string property = $"allScenarios.Array.data[{i}]";
+                if (scenario == null)
+                    issues.Add(new ScenarioDataIssue(ScenarioDataIssueSeverity.Error, "NULL_REGISTRATION",
+                        $"登録シナリオの {i + 1} 件目に参照がありません。", database, property));
+                else if (!seen.Add(scenario))
+                    issues.Add(new ScenarioDataIssue(ScenarioDataIssueSeverity.Warning, "REPEATED_REGISTRATION",
+                        $"「{scenario.name}」が同じDBへ複数回登録されています。", database, property));
+            }
+        }
+
         public static List<ScenarioDataIssue> ValidateSelection(IEnumerable<ScenarioData> selection)
         {
-            var selected = selection.Where(scenario => scenario != null).ToList();
-            var roots = ScenarioAuthoringService.ValidationRoots();
-            roots.AddRange(selected);
+            var selected = selection.Where(scenario => scenario != null).Distinct().ToList();
             var contexts = new HashSet<UnityEngine.Object>();
             foreach (var scenario in ScenarioGraph.Collect(selected))
             {
@@ -193,7 +226,44 @@ namespace ScenarioSystem.Editor
                 if (scenario.actions != null)
                     foreach (var action in scenario.actions) if (action != null) contexts.Add(action);
             }
-            return ScenarioDataValidator.Validate(roots.Distinct()).Where(issue => contexts.Contains(issue.Context)).ToList();
+            var covered = new HashSet<ScenarioData>();
+            var issues = new List<ScenarioDataIssue>();
+            foreach (var database in ScenarioAuthoringService.Databases)
+            {
+                var graph = ScenarioGraph.Collect(database.allScenarios);
+                var matching = selected.Where(graph.Contains).ToList();
+                if (matching.Count == 0) continue;
+                covered.UnionWith(matching);
+                foreach (var issue in ValidateDatabase(database).Where(issue => contexts.Contains(issue.Context)))
+                    issues.Add(new ScenarioDataIssue(issue.Severity, issue.Code, $"[{database.name}] {issue.Message}", issue.Context, issue.PropertyPath));
+            }
+            foreach (var scenario in selected.Where(scenario => !covered.Contains(scenario)))
+            {
+                issues.Add(new ScenarioDataIssue(ScenarioDataIssueSeverity.Warning, "NO_DATABASE_CONTEXT",
+                    "どのDBからも参照されていないため、このシナリオから辿れる範囲のみ検証しました。独立したキーワード詳細は、同じDBに登録して検証してください。",
+                    scenario, "scenarioId"));
+                issues.AddRange(ScenarioDataValidator.ValidateScenario(scenario));
+            }
+            return issues;
+        }
+
+        public static List<ScenarioDataIssue> ValidateProject()
+        {
+            ScenarioAuthoringService.Invalidate();
+            var issues = new List<ScenarioDataIssue>();
+            var registered = new HashSet<ScenarioData>();
+            foreach (var database in ScenarioAuthoringService.Databases)
+            {
+                registered.UnionWith(ScenarioGraph.Collect(database.allScenarios));
+                foreach (var issue in ValidateDatabase(database))
+                    issues.Add(new ScenarioDataIssue(issue.Severity, issue.Code, $"[{database.name}] {issue.Message}", issue.Context, issue.PropertyPath));
+            }
+            foreach (var scenario in ScenarioAuthoringService.Scenarios)
+                if (!registered.Contains(scenario) && !string.IsNullOrWhiteSpace(scenario.scenarioId))
+                    issues.Add(new ScenarioDataIssue(ScenarioDataIssueSeverity.Warning, "UNREGISTERED_SCENARIO",
+                        "IDが設定されていますが、どのDBからも参照されていません。ID検索で再生する場合は登録してください。直接参照専用なら登録は不要です。",
+                        scenario, "scenarioId"));
+            return issues;
         }
 
         public static void Draw(List<ScenarioDataIssue> issues)
@@ -204,7 +274,7 @@ namespace ScenarioSystem.Editor
             {
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    EditorGUILayout.HelpBox(issue.Message, issue.Severity.ToString() == "Error" ? MessageType.Error : MessageType.Warning);
+                    EditorGUILayout.HelpBox(issue.Message, issue.Severity == ScenarioDataIssueSeverity.Error ? MessageType.Error : MessageType.Warning);
                     string location = (issue.Context != null ? issue.Context.name : "データ") + " / " + issue.PropertyPath;
                     if (GUILayout.Button(location, EditorStyles.linkLabel) && issue.Context != null)
                     {
@@ -218,12 +288,11 @@ namespace ScenarioSystem.Editor
         [MenuItem("Scenario System/Validate Scenario Data", false, 51)]
         private static void ValidateAll()
         {
-            ScenarioAuthoringService.Invalidate();
-            var issues = ScenarioDataValidator.Validate(ScenarioAuthoringService.ValidationRoots());
+            var issues = ValidateProject();
             foreach (var issue in issues)
             {
                 string message = $"[シナリオ検証/{issue.Code}] {issue.Message} ({issue.PropertyPath})";
-                if (issue.Severity.ToString() == "Error") Debug.LogError(message, issue.Context);
+                if (issue.Severity == ScenarioDataIssueSeverity.Error) Debug.LogError(message, issue.Context);
                 else Debug.LogWarning(message, issue.Context);
             }
             Debug.Log($"[シナリオ検証] {ScenarioAuthoringService.Databases.Count}件のDBを検証しました。指摘 {issues.Count}件。データは変更していません。");

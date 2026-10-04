@@ -12,12 +12,12 @@ using TMPro;
 
 /// <summary>
 /// Manages communication start/end UI transitions.
-/// Portrait click behavior is differentiated by current GamePhase.
+/// シナリオで表示する対話ボタンから、現在の GamePhase に応じた会話を開始する。
 /// 判定ロジックは ComuLogic に委譲し、本クラスは UI 操作に専念する。
 ///
 /// Portrait の OnClick にバインドされていた形状変更処理（MoveOnClickandReturn.Play 群、
 /// スプライト変更、フォントサイズ変更）を本クラスに集約。
-/// シーン上の OnClick は ToggleComuforPortrait() の呼び出しのみで動作する。
+/// 対話ボタンの OnClick は ToggleComuFromButton() に接続する。
 /// </summary>
 public class ComuStartandEndManager : MonoBehaviour
 {
@@ -45,6 +45,12 @@ public class ComuStartandEndManager : MonoBehaviour
     [SerializeField] private GameObject backGround_SpeakerName;
 
     [SerializeField] private GameObject Portrait;
+
+    [Header("Dialogue Button")]
+    [Tooltip("Portrait の前面に配置する、シナリオから表示を指定する対話ボタン。")]
+    [SerializeField] private Button dialogueStartButton;
+    [SerializeField] private TMP_Text dialogueStartButtonLabel;
+
     [Tooltip("Overlay displayed when portrait is unclickable in scenario")]
     [SerializeField] private GameObject unclickableOverlay;
     [Tooltip("SE played when clicking portrait while it's unclickable")]
@@ -67,7 +73,7 @@ public class ComuStartandEndManager : MonoBehaviour
     [SerializeField] private string endScenarioId;
 
     [Header("Shape Animators (元 Portrait OnClick バインド)")]
-    [Tooltip("Portrait クリック時にトグルする MoveOnClickandReturn の一覧。\nシーン上の OnClick に直接バインドされていたものをここに設定する。")]
+    [Tooltip("会話状態の切り替え時に動かす MoveOnClickandReturn の一覧。")]
     [SerializeField] private MoveOnClickandReturn[] shapeAnimators;
 
     [Header("Portrait Sprite")]
@@ -95,6 +101,7 @@ public class ComuStartandEndManager : MonoBehaviour
     private GameObject _portraitGuidanceObject;
     private CancellationTokenSource _transitionCancellation;
     private int _transitionVersion;
+    private bool _dialogueStartButtonRequested;
 
     public bool IsInCommunication => _logic.IsInCommunication;
 
@@ -114,6 +121,8 @@ public class ComuStartandEndManager : MonoBehaviour
         }
         if (NamePlate != null && NamePlate.transform is RectTransform nameRect)
             _originalSpeakerNamePosition = nameRect.anchoredPosition;
+
+        RefreshDialogueStartButton();
     }
 
     // ── Unity Lifecycle ──────────────────────────────────────────
@@ -123,6 +132,7 @@ public class ComuStartandEndManager : MonoBehaviour
     private void OnEnable()
     {
         SubscribeThresholdEvent();
+        RefreshDialogueStartButton();
     }
 
     private void Start()
@@ -139,6 +149,7 @@ public class ComuStartandEndManager : MonoBehaviour
     {
         _transitionVersion++;
         _transitionCancellation?.Cancel();
+        RefreshDialogueStartButton();
         if (ProgressManager.Instance != null && _subscribedToThreshold)
         {
             ProgressManager.Instance.OnKeywordThresholdReached -= ActivateMemorizer;
@@ -167,6 +178,36 @@ public class ComuStartandEndManager : MonoBehaviour
 
     public void ComuStart(string scenarioId) => ComuStartTask(scenarioId).Forget();
     public void ComuEnd(string scenarioId) => ComuEndTask(scenarioId).Forget();
+
+    /// <summary>表示要求と操作ロックは別々に保持し、シナリオ終了時に非表示指定を上書きしない。</summary>
+    public void SetDialogueStartButtonVisible(bool visible)
+    {
+        _dialogueStartButtonRequested = visible;
+        RefreshDialogueStartButton();
+    }
+
+    /// <summary>Portrait 本体のクリックではなく、対話ボタンだけが受け付ける入力。</summary>
+    public void ToggleComuFromButton()
+    {
+        if (!_dialogueStartButtonRequested || !isActiveAndEnabled
+            || dialogueStartButton == null || !dialogueStartButton.isActiveAndEnabled
+            || !dialogueStartButton.IsInteractable())
+            return;
+
+        ToggleComuInternal(true, ignorePortraitLock: false);
+    }
+
+    private void RefreshDialogueStartButton()
+    {
+        if (dialogueStartButton == null) return;
+
+        bool visible = _dialogueStartButtonRequested && isActiveAndEnabled
+            && _logic.IsPortraitInteractable && !_logic.IsAnimating;
+        dialogueStartButton.interactable = visible;
+        dialogueStartButton.gameObject.SetActive(visible);
+        if (dialogueStartButtonLabel != null)
+            dialogueStartButtonLabel.text = IsInCommunication ? "対話終了" : "対話開始";
+    }
 
     /// <summary>
     /// Wrapper for ToggleComuforPortrait. Can be called from Button.onClick.
@@ -350,6 +391,7 @@ public class ComuStartandEndManager : MonoBehaviour
         _transitionVersion++;
         _logic.IsAnimating = true;
         _logic.IsInCommunication = inCommunication;
+        RefreshDialogueStartButton();
         var cancellation = new CancellationTokenSource();
         _transitionCancellation = cancellation;
         bool completed = false;
@@ -387,6 +429,7 @@ public class ComuStartandEndManager : MonoBehaviour
             _logic.IsAnimating = false;
             _transitionCancellation = null;
             cancellation.Dispose();
+            RefreshDialogueStartButton();
         }
 
         if (!completed) return;
@@ -517,9 +560,7 @@ public class ComuStartandEndManager : MonoBehaviour
     {
         _logic.IsPortraitInteractable = interactable;
 
-        // Button自体は常にinteractableにしてクリック入力を受け付ける。ToggleComuforPortrait内で弾く。
-        if (Portrait != null && Portrait.TryGetComponent<Button>(out var btn))
-            btn.interactable = true;
+        RefreshDialogueStartButton();
 
         if (updateOverlay && unclickableOverlay != null)
         {

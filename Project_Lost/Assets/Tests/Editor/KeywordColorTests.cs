@@ -166,12 +166,14 @@ public class KeywordColorTests
     }
 
     [Test]
-    public void MemorizerFollowsEitherShiftAndOnlyNotifiesOnStateChanges()
+    public void MemorizerTogglesOnEitherShiftPressAndKeepsItsStateOnRelease()
     {
-        var previousKeyboard = Keyboard.current;
-        var keyboard = InputSystem.AddDevice<Keyboard>();
+        // Editor用の入力更新では押下フレームを再現できないため、ゲーム用の独立した入力環境を使う。
+        var input = new InputTestFixture();
+        input.Setup();
         try
         {
+            var keyboard = InputSystem.AddDevice<Keyboard>();
             Set(_progress, "mainSceneName", SceneManager.GetActiveScene().name);
             Set(_progress, "_isMemorizerActive", false);
             var changes = new List<bool>();
@@ -188,33 +190,42 @@ public class KeywordColorTests
             UpdateKeys(Key.LeftShift);
             Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.True);
             UpdateKeys(Key.LeftShift);
-            UpdateKeys(Key.LeftShift, Key.RightShift);
-            UpdateKeys(Key.RightShift);
-            Assert.That(changes, Is.EqualTo(new[] { true }), "Either Shift must keep it active without restarting effects.");
             UpdateKeys();
+            UpdateKeys();
+            Assert.That(changes, Is.EqualTo(new[] { true }), "Holding or releasing Shift must not toggle it again.");
+            UpdateKeys(Key.RightShift);
+            UpdateKeys(Key.RightShift);
             UpdateKeys();
             Assert.That(changes, Is.EqualTo(new[] { true, false }));
-            UpdateKeys(Key.RightShift);
-            Assert.That(changes, Is.EqualTo(new[] { true, false, true }));
+            UpdateKeys(Key.LeftShift, Key.RightShift);
+            UpdateKeys(Key.LeftShift, Key.RightShift);
+            UpdateKeys();
+            Assert.That(changes, Is.EqualTo(new[] { true, false, true }), "Simultaneous Shift presses must toggle only once.");
 
             Call(_progress, "OnApplicationFocus", false);
-            Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.False);
+            UpdateKeys(Key.RightShift);
             UpdateKeys(Key.RightShift);
             Assert.That(changes, Is.EqualTo(new[] { true, false, true, false }));
             Call(_progress, "OnApplicationFocus", true);
             UpdateKeys(Key.RightShift);
+            Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.False);
+            UpdateKeys();
+            UpdateKeys(Key.LeftShift);
+            Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.True);
             Set(_progress, "mainSceneName", "NotTheActiveScene");
+            UpdateKeys();
             UpdateKeys(Key.RightShift);
             Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.False);
             Set(_progress, "mainSceneName", SceneManager.GetActiveScene().name);
             Set(_progress, "_isMemorizerUnlocked", false);
+            UpdateKeys();
             UpdateKeys(Key.RightShift);
             Assert.That(_progress.GetType().GetProperty("IsMemorizerActive").GetValue(_progress), Is.False);
+            Assert.That(changes, Is.EqualTo(new[] { true, false, true, false, true, false }));
         }
         finally
         {
-            InputSystem.RemoveDevice(keyboard);
-            if (previousKeyboard != null && previousKeyboard.added) previousKeyboard.MakeCurrent();
+            input.TearDown();
         }
     }
 
@@ -244,7 +255,7 @@ public class KeywordColorTests
     }
 
     [Test]
-    public void MemorizerShakesOnlyKeywordsWithoutDriftAndRestoresThemOnRelease()
+    public void MemorizerShakesOnlyKeywordsWithoutDriftAndRestoresThemWhenSwitchedOff()
     {
         var (handler, _, text) = CreateAnimatedText("normal <link=key>word</link> normal");
         int keyword = text.textInfo.linkInfo[0].linkTextfirstCharacterIndex;
@@ -295,7 +306,7 @@ public class KeywordColorTests
     }
 
     [Test]
-    public void ShakeComposesWithChargeAndReleasingShiftCancelsCharge()
+    public void ShakeComposesWithChargeAndSwitchingMemorizerOffCancelsCharge()
     {
         var (handler, _, text) = CreateAnimatedText("normal <link=key>word</link>");
         int keyword = text.textInfo.linkInfo[0].linkTextfirstCharacterIndex;

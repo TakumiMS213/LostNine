@@ -96,6 +96,108 @@ public class ConversationFlowTests
         awaiter.GetType().GetMethod("GetResult").Invoke(awaiter, null);
     }
 
+    private (Component manager, Button button, TMP_Text label) CreateDialogueButtonManager()
+    {
+        var (manager, _, _) = CreateManager();
+        var buttonObject = NewObject("DialogueStartButton");
+        buttonObject.transform.SetParent(manager.transform, false);
+        buttonObject.AddComponent<Image>();
+        var button = buttonObject.AddComponent<Button>();
+        var labelObject = NewObject("Label");
+        labelObject.transform.SetParent(button.transform, false);
+        var label = labelObject.AddComponent<TextMeshProUGUI>();
+        Set(manager, "dialogueStartButton", button);
+        Set(manager, "dialogueStartButtonLabel", label);
+        button.onClick.AddListener(() => Call(manager, "ToggleComuFromButton"));
+        _subscribed.Add(manager);
+        return (manager, button, label);
+    }
+
+    [Test]
+    public void ScenarioButtonVisibilitySurvivesLocksAndManagerReactivation()
+    {
+        var (manager, button, _) = CreateDialogueButtonManager();
+        Call(manager, "SetDialogueStartButtonVisible", true);
+        Assert.That(button.gameObject.activeSelf, Is.False, "An inactive controller cannot expose a clickable button.");
+        manager.gameObject.SetActive(true);
+        Call(manager, "OnEnable");
+        Assert.That(button.isActiveAndEnabled && button.IsInteractable(), Is.True);
+
+        Call(manager, "SetPortraitInteractable", false, true);
+        Assert.That(button.gameObject.activeSelf, Is.False);
+        Call(manager, "SetPortraitInteractable", true, true);
+        Assert.That(button.isActiveAndEnabled && button.IsInteractable(), Is.True, "An interaction lock must not discard the scenario's display request.");
+
+        manager.gameObject.SetActive(false);
+        Call(manager, "OnDisable");
+        Assert.That(button.gameObject.activeSelf, Is.False);
+        manager.gameObject.SetActive(true);
+        Call(manager, "OnEnable");
+        Assert.That(button.isActiveAndEnabled && button.IsInteractable(), Is.True);
+
+        Call(manager, "SetDialogueStartButtonVisible", false);
+        Call(manager, "SetPortraitInteractable", false, true);
+        Call(manager, "SetPortraitInteractable", true, true);
+        CompleteTask(manager, "ComuStartTask");
+        CompleteTask(manager, "ComuEndTask");
+        Assert.That(button.gameObject.activeSelf, Is.False, "Finishing a lock or conversation must not override a scenario's hide request.");
+    }
+
+    [Test]
+    public void DialogueButtonTracksConversationStateAndDisappearsDuringTransitions()
+    {
+        var (manager, button, label) = CreateDialogueButtonManager();
+        manager.gameObject.SetActive(true);
+        Call(manager, "SetDialogueStartButtonVisible", true);
+        Assert.That(label.text, Is.EqualTo("対話開始"));
+        CompleteTask(manager, "ComuStartTask");
+        Assert.That(button.isActiveAndEnabled && button.IsInteractable(), Is.True);
+        Assert.That(label.text, Is.EqualTo("対話終了"));
+
+        var logic = Get(manager, "_logic");
+        logic.GetType().GetProperty("IsAnimating").SetValue(logic, true);
+        Call(manager, "SetDialogueStartButtonVisible", true);
+        Assert.That(button.gameObject.activeSelf, Is.False);
+        button.onClick.Invoke();
+        Assert.That(Property(manager, "IsInCommunication"), Is.True, "A second click must not reverse an in-flight transition.");
+        logic.GetType().GetProperty("IsAnimating").SetValue(logic, false);
+
+        CompleteTask(manager, "ComuEndTask");
+        Assert.That(button.isActiveAndEnabled && button.IsInteractable(), Is.True);
+        Assert.That(label.text, Is.EqualTo("対話開始"));
+    }
+
+    [Test]
+    public void HiddenDisabledAndLockedDialogueButtonsCannotStartConversation()
+    {
+        var (manager, button, _) = CreateDialogueButtonManager();
+        manager.gameObject.SetActive(true);
+        button.onClick.Invoke();
+        Assert.That(Property(manager, "IsInCommunication"), Is.False);
+
+        Call(manager, "SetDialogueStartButtonVisible", true);
+        button.interactable = false;
+        button.onClick.Invoke();
+        Assert.That(Property(manager, "IsInCommunication"), Is.False);
+        button.interactable = true;
+        button.enabled = false;
+        button.onClick.Invoke();
+        Assert.That(Property(manager, "IsInCommunication"), Is.False);
+        button.enabled = true;
+
+        Call(manager, "SetPortraitInteractable", false, true);
+        // A stale event or externally reactivated button still cannot bypass the scenario lock.
+        button.gameObject.SetActive(true);
+        button.interactable = true;
+        button.onClick.Invoke();
+        Assert.That(Property(manager, "IsInCommunication"), Is.False);
+
+        Call(manager, "SetPortraitInteractable", true, true);
+        ((Behaviour)manager).enabled = false;
+        button.onClick.Invoke();
+        Assert.That(Property(manager, "IsInCommunication"), Is.False);
+    }
+
     [Test]
     public void DirectStartAndEndKeepStateShapeAndFontInSyncAcrossRepeatedConversations()
     {
@@ -191,7 +293,7 @@ public class ConversationFlowTests
         var bootstrap = go.AddComponent(GameType("ScenarioSystem.Runtime.ScenarioBootstrap"));
         Call(bootstrap, "Awake");
         var executors = (IDictionary)Get(presenter, "_executors");
-        foreach (var name in new[] { "Dialogue", "Choice", "Overlay", "ComuToggle", "ComuToggleInstant", "ProgressScenario" })
+        foreach (var name in new[] { "Dialogue", "Choice", "Overlay", "ComuToggle", "ComuToggleInstant", "DialogueStartButton", "ProgressScenario" })
             Assert.That(executors.Contains(name), Is.True, name + " must be registered in Awake.");
     }
 

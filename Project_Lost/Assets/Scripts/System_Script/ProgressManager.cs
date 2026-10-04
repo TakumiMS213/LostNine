@@ -33,7 +33,7 @@ public class ProgressManager : MonoBehaviour
     [Tooltip("カチョウのチュートリアル完了後に有効になるメモライザー解放フラグ")]
     [SerializeField] private bool _isMemorizerUnlocked;
 
-    [Tooltip("SHIFTを押している間だけ有効になるメモライザー起動フラグ。フレームUIはこの値を参照する")]
+    [Tooltip("SHIFTを押すたびにON/OFFを切り替えるメモライザー起動フラグ。フレームUIはこの値を参照する")]
     [SerializeField] private bool _isMemorizerActive;
 
     [Tooltip("メモライザー起動中に画面全体へ表示するフレーム画像")]
@@ -120,11 +120,17 @@ public class ProgressManager : MonoBehaviour
 
     private void Update()
     {
+        if (!_isMemorizerUnlocked || !_hasApplicationFocus
+            || SceneManager.GetActiveScene().name != mainSceneName)
+        {
+            SetMemorizerActive(false);
+            return;
+        }
+
         var keyboard = Keyboard.current;
-        bool shiftHeld = keyboard != null
-            && (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed);
-        SetMemorizerActive(_isMemorizerUnlocked && _hasApplicationFocus
-            && SceneManager.GetActiveScene().name == mainSceneName && shiftHeld);
+        if (keyboard != null
+            && (keyboard.leftShiftKey.wasPressedThisFrame || keyboard.rightShiftKey.wasPressedThisFrame))
+            SetMemorizerActive(!_isMemorizerActive);
     }
 
     private void OnApplicationFocus(bool hasFocus)

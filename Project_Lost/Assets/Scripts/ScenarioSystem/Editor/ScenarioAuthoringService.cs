@@ -39,22 +39,15 @@ namespace ScenarioSystem.Editor
             }
         }
 
-        public static List<ScenarioData> ValidationRoots(ScenarioData extra = null)
-        {
-            var roots = Databases.Where(db => db.allScenarios != null)
-                .SelectMany(db => db.allScenarios).Where(scenario => scenario != null).Distinct().ToList();
-            if (extra != null && !roots.Contains(extra)) roots.Add(extra);
-            return roots;
-        }
+        public static IReadOnlyList<ScenarioData> Scenarios => _scenarios ??= FindAssets<ScenarioData>();
 
         public static int ReferenceCount(ScenarioAction action)
         {
             if (action == null) return 0;
             if (_referenceCounts == null)
             {
-                _scenarios ??= FindAssets<ScenarioData>();
                 _referenceCounts = new Dictionary<ScenarioAction, int>();
-                foreach (var scenario in ScenarioGraph.Collect(_scenarios))
+                foreach (var scenario in ScenarioGraph.Collect(Scenarios))
                 {
                     if (scenario.actions == null) continue;
                     foreach (var referenced in scenario.actions.Where(value => value != null).Distinct())
@@ -99,15 +92,20 @@ namespace ScenarioSystem.Editor
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();
             Undo.SetCurrentGroupName(label);
-            Undo.RegisterCompleteObjectUndo(scenario, label);
             AssetDatabase.AddObjectToAsset(action, scenario);
             Undo.RegisterCreatedObjectUndo(action, label);
+            // CreatedObjectのUndo登録が先。逆順ではRedo時に親のリストが復元されない。
+            Undo.RegisterCompleteObjectUndo(scenario, label);
             scenario.actions ??= new List<ScenarioAction>();
             if (replaceIndex < 0) scenario.actions.Add(action);
             else scenario.actions[replaceIndex] = action;
             EditorUtility.SetDirty(scenario);
             EditorUtility.SetDirty(action);
+            scenario.NotifyDataChanged();
+            Undo.FlushUndoRecordObjects();
             Undo.CollapseUndoOperations(group);
+            // 所有ファイルを保存して、Redoでもsubassetの所属情報を復元可能にする。
+            AssetDatabase.SaveAssetIfDirty(scenario);
             Invalidate();
         }
 
@@ -118,6 +116,7 @@ namespace ScenarioSystem.Editor
             Undo.RegisterCompleteObjectUndo(scenario, "シナリオからアクション参照を外す");
             scenario.actions.RemoveAt(index);
             EditorUtility.SetDirty(scenario);
+            scenario.NotifyDataChanged();
             Invalidate();
         }
 

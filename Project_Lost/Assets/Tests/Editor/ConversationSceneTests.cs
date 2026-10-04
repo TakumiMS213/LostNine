@@ -134,6 +134,52 @@ public class ConversationSceneTests
         }
     }
 
+    [Test]
+    public void MainDialogueButtonHasForegroundFrameTextAndTheOnlyPortraitConversationListener()
+    {
+        Inspect("Main", scene =>
+        {
+            var manager = Single(scene, "ComuStartandEndManager");
+            var portrait = (GameObject)Get(manager, "Portrait");
+            var button = (Button)Get(manager, "dialogueStartButton");
+            var label = (TMP_Text)Get(manager, "dialogueStartButtonLabel");
+            Assert.That(button, Is.Not.Null);
+            Assert.That(label, Is.Not.Null);
+            Assert.That(button.transform.IsChildOf(portrait.transform), Is.True, "The button must follow the scenario's portrait placement.");
+            Assert.That(label.transform.IsChildOf(button.transform), Is.True);
+            Assert.That(label.text, Is.EqualTo("対話開始"));
+            Assert.That(label.font, Is.SameAs(AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/Font/DotGothic16-Regular SDF.asset")));
+            Assert.That(label.raycastTarget, Is.False, "The decorative label must not intercept the button's pointer input.");
+            Assert.That(button.enabled, Is.True);
+            Assert.That(button.gameObject.activeSelf, Is.False, "The scenario, rather than scene loading, requests the button.");
+            var background = button.targetGraphic as Image;
+            Assert.That(background, Is.Not.Null);
+            Assert.That(background.enabled && background.raycastTarget, Is.True);
+            Assert.That(background.sprite, Is.SameAs(AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Images/Tuning/flame_Sq.png")));
+            var rect = (RectTransform)button.transform;
+            Assert.That(rect.rect.width, Is.GreaterThan(rect.rect.height * 2f), "The square frame must be stretched into a horizontal button.");
+
+            var buttonCanvas = button.GetComponentInParent<Canvas>(true);
+            var portraitCanvas = portrait.GetComponentInParent<Canvas>(true);
+            Assert.That(buttonCanvas, Is.Not.Null);
+            Assert.That(portraitCanvas, Is.Not.Null);
+            Assert.That(buttonCanvas, Is.Not.SameAs(portraitCanvas));
+            Assert.That(buttonCanvas.overrideSorting, Is.True);
+            Assert.That(buttonCanvas.sortingOrder, Is.GreaterThan(portraitCanvas.sortingOrder), "The button must render and receive clicks in front of Portrait.");
+            Assert.That(buttonCanvas.GetComponent<GraphicRaycaster>(), Is.Not.Null);
+
+            Assert.That(button.onClick.GetPersistentEventCount(), Is.EqualTo(1));
+            Assert.That(button.onClick.GetPersistentTarget(0), Is.SameAs(manager));
+            Assert.That(button.onClick.GetPersistentMethodName(0), Is.EqualTo("ToggleComuFromButton"));
+            Assert.That(button.onClick.GetPersistentListenerState(0), Is.Not.EqualTo(UnityEventCallState.Off));
+            foreach (var oldButton in Find<Button>(scene).Where(candidate => candidate.name == "Portrait" || candidate.name == "DummyPortrait"))
+            {
+                Assert.That(oldButton.enabled, Is.False, oldButton.name + " must no longer start or animate conversations.");
+                Assert.That(oldButton.onClick.GetPersistentEventCount(), Is.Zero, oldButton.name + " still has a legacy portrait click listener.");
+            }
+        });
+    }
+
     [TestCase("Main")]
     [TestCase("Story")]
     public void ConversationCanvasHasPointerRaycastingAndInputActions(string sceneName)
@@ -177,7 +223,7 @@ public class ConversationSceneTests
             // 登録は非シリアライズ辞書のみ。UI状態やシーンアセットには触れない。
             bootstrap.GetType().GetMethod("RegisterAllExecutors", Fields).Invoke(bootstrap, null);
             var executors = (IDictionary)Get(presenter, "_executors");
-            foreach (var name in new[] { "Dialogue", "Effect", "Choice", "Wait", "ProgressUpdate", "ComuToggle", "ComuToggleInstant", "KeywordEnable", "Overlay", "TitleLogo", "ProgressScenario", "CenterPortrait", "SceneTransition", "PortraitInteractable", "PortraitGuidance", "LostNoteCharacter" })
+            foreach (var name in new[] { "Dialogue", "Effect", "Choice", "Wait", "ProgressUpdate", "ComuToggle", "ComuToggleInstant", "DialogueStartButton", "KeywordEnable", "Overlay", "TitleLogo", "ProgressScenario", "CenterPortrait", "SceneTransition", "PortraitInteractable", "PortraitGuidance", "LostNoteCharacter" })
                 Assert.That(executors.Contains(name), Is.True, "Executor is missing: " + name);
             foreach (var scenario in AllScenarios())
                 foreach (var action in (IList)Get(scenario, "actions"))

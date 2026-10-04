@@ -12,7 +12,7 @@ namespace ScenarioSystem.Model.Actions
     {
         public override string ActionType => "SceneTransition";
 
-        [Tooltip("遷移先のシーン名。空の場合は ProgressManager の ChapterSelect シーンへ遷移する。")]
+        [Tooltip("Use Chapter Selectがfalseの場合の遷移先シーン名。この場合は空欄不可。")]
         public string targetSceneName;
 
         /// <summary>遷移先がチャプター選択シーンかどうか。</summary>

@@ -1,6 +1,6 @@
 {
   "name": "LostNine.EditModeTests",
-  "references": ["Unity.TextMeshPro", "UnityEngine.UI", "Unity.InputSystem"],
+  "references": ["Unity.TextMeshPro", "UnityEngine.UI", "Unity.InputSystem", "Unity.InputSystem.TestFramework"],
   "includePlatforms": ["Editor"],
   "optionalUnityReferences": ["TestAssemblies"]
 }

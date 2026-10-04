@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 /// Portrait (立ち絵) へのドロップを受け付けるハンドラ。
 /// 
 /// - Extractionフェーズかつ全キーワード取得済み: Memorizer D&D → Tuning(Memorize)シーンへ遷移
-/// - それ以外: 通常のPortraitクリック処理（ToggleComuforPortrait）
+/// - それ以外: ドロップを無視する。会話の切り替えは対話ボタンが担当する。
 /// </summary>
 public class PortraitDropHandler : MonoBehaviour, IDropHandler
 {

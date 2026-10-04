@@ -1,0 +1,116 @@
+シナリオデータ構造の改善サイクル記録（2026-10-04）
+
+実施結果
+調査 → データ構造・編集機能の改善 → 自動テスト → 発見した不具合の再修正 → 再検証を実施。
+既存のScenarioData / ScenarioAction / Executorという基本構成と保存フィールドを維持した。
+既存台詞、画像指定、アクション順、ID、GUIDを変更していない。
+開始前に保存したProgressSystemDatabase配下267ファイルのSHA-256と最終状態がすべて一致した。
+
+調査で確認した構造
+・ScenarioData: 27件。うち5件は直接参照用の空IDであり、誤設定ではない。
+・アクション参照: 92か所。参照されるアクション実体: 60件。
+・参照されるDialogueAction: 21アセット、217行。
+・キーワードID: 6種。本文のlink、詳細シナリオ、LostNoteDataの対応はすべて解決可能。
+・編集画面のID変更やDB登録変更が、作成済み検索辞書へ反映されない構造になっていた。
+・アクション編集が別アセットへ分散し、共有している場合の影響範囲を見えにくくしていた。
+
+改善1: シナリオのつながりと検索
+ScenarioGraphが、登録シナリオからnextScenarioと選択肢の遷移先をたどる。
+共有参照や循環があっても、一つのシナリオを一度だけ収集する。
+DBは入口を登録すれば、その直参照の遷移先も検索対象にできる。従来の全件登録も有効。
+独立したキーワード詳細など、直参照でつながっていないものは引き続き個別登録する。
+空IDの直接参照シナリオを許容し、明示登録の順序と既存IDの解決先を維持した。
+
+IDの生成・正規化・章番号解析をScenarioKeyに集約した。
+既存のChN_フェーズ名、ChN_Story、ChN_loop、ChN_DialogueStartの表記は維持する。
+前後空白は検索時に除去するが、大文字小文字は区別する。
+曖昧な接頭辞や整数オーバーフローを含むIDから、誤って章番号を取得しない。
+シーンごとのscenarioIdFormatは既存の個別設定を維持した。
+
+編集通知で検索キャッシュを失効させ、必要になった次の検索時に再構築する。
+通常のID検索ごとに全グラフを走査する構造にはしていない。
+IDや選択肢の遷移先の変更、Undo / Redo後の検索も検証した。
+
+改善2: シナリオ単位での編集
+ScenarioDataのInspectorでアクションを折りたたみ、参照先のフィールドを直接編集できる。
+ドラッグで順序変更、＋から新規アクション作成や既存アクションの参照追加ができる。
+新規作成したアクションはScenarioData内のサブアセットとして保存し、専用の別ファイルを増やさない。
+複数シナリオが同じアクションを使う場合は参照元件数を表示する。
+「このシナリオ用に複製して差し替える」で、他シナリオへの影響を避けて編集できる。
+－は参照のみを外す。外部アセット・サブアセット本体は自動削除しない。
+
+最初の実装では、作成したアクションのUndo / Redoで親の参照や所有ファイルが復元されない問題があった。
+作成オブジェクトと親シナリオのUndo登録順、および対象シナリオの保存を修正した。
+追加・複製のUndo / Redoを繰り返し、保存後の再インポートでも参照・所属・値が保持されることを確認した。
+追加・複製操作時は、所有するシナリオファイルのみを保存する。
+
+改善3: 編集時のデータ検証
+Scenario System > Validate Scenario Data でプロジェクトのDBを検証できる。
+ScenarioDataとDBのInspectorにも検証ボタンを設け、指摘から対象を選択できる。
+次の項目をエラーまたは確認用警告として報告し、内容を自動修正しない。
+・ID重複、欠落した登録・アクション、登録漏れ候補
+・空の本文リストや選択肢、不正な列挙値・数値
+・キーワードIDの詳細シナリオ未解決
+・連続する同一アクション、到達できない後続アクション
+・loopとnextScenarioの競合、入力や時間待ちを挟まない自動循環
+
+異なるDBのID空間は分離して検証する。
+別DBの同名IDを誤って重複とせず、別DBにしかないキーワード詳細を解決済みとも扱わない。
+選択シナリオは所属DBの範囲で検証し、未所属の場合は単体検証であることを表示する。
+動的に進行から求める遷移、未使用の旧FlowStepの破損GUIDなどはこの検証器だけでは網羅しない。
+
+検証結果
+Unity 6000.0.67f1、LostNine.EditModeTests: 227件成功、失敗0件、スキップ0件。
+今回追加91件: ScenarioKeyTests 43、ScenarioDataValidationTests 27、ScenarioDatabaseTests 11、ScenarioAuthoringTests 10。
+以前の会話・調律・定着等の136件も含めて成功した。
+最終テストジョブ: d9b68daa0eb34b13a7bb3802e402a18d
+Chapter2をLOAD入口から実プレイし、Story→Mainの導入会話終了まで40回のUIクリックで進行した。
+その経路でゲーム側の例外・Error・DOTween破棄参照警告は出なかった。
+新しいInspectorの選択・描画も確認し、シナリオEditor由来のエラーは出なかった。
+Unityは再生を停止し、Titleの編集状態へ戻した。
+
+既存データで残した確認事項
+・ScenarioData/Ch1/Ch1_04_02.asset は、同じCh1_Extraction_2を2回連続で参照する。
+  新しい検証器ではREPEATED_ACTION警告1件。繰り返しの意図は断定せず、順序・内容を維持した。
+・ScenarioData/Ch2/Ch2_Dialogue.asset と Ch2_DialogueStart.asset は同じ7アクション・後続設定を持つ。
+  異なるIDの入口として使われる可能性があるため、統合しなかった。
+
+未使用・整理候補
+以下のパスはすべて Assets/ScriptableObjects/ProgressSystemDatabase/ からの相対パス。
+22件は.asset/.unity/.prefabからのGUID参照が見つからない。そのうち1件はテストから明示ロードされる。
+内容のある旧会話、将来用の可能性がある素材は保持した。今回はアセット削除を行っていない。
+
+1. Dialogue/Retry.asset — 「もう一度聞いてみよう」の旧Overlay。
+2. Dialogue/Ch_2/Ch2_Presentation_AfterFlash.asset — リドの過去を説明する旧会話8行。
+3. Dialogue/Ch_2/Ch2_Presentation_AfterImage.asset — 突きつけ後の旧会話13行。
+4. Dialogue/Ch_1/Ch1_Epilogue.asset — 本文リストが空の旧Dialogue。
+5. Dialogue/Ch_1/Ch1_Tuning.asset — 本文リストが空。現行ScenarioData/Ch1/Ch1_Tuning.assetとは別物。
+6. Dialogue/Ch_1/Ch1_loop.asset — 話者・本文・画像が空の1行だけ。
+7. Steps/ChapterSelectStep.asset — 章選択への遷移Step。下記同名Stepと同型・同内容。
+8. Steps/KeyWordComplete_Test.asset — 存在しないScenarioData GUIDを参照する旧テストStep。
+9. Actions/Phase/Set_Ch1_Extraction.asset — 保持対象。KeywordProgressContinuityTestsからパス指定で使用する。
+10. Actions/Choices/Test_Choice_1.asset — 遷移先なしの「選択肢１」「選択肢２」を持つテストChoice。
+11. Actions/Other/ProgressScenarioAction.asset — 現在の進行に応じて再生するActionの未使用実体。
+12. Actions/Other/WaitAction_0.1.asset — 0.1秒の待機。
+13. Actions/Other/Test_Dialogue.asset — Chapter1・Dialogueへ設定する旧テストStep。
+14. Actions/Other/ChapterSelectStep.asset — 7番と同型・同内容。
+15. Actions/Other/Test_Epilogue.asset — Chapter1・Epilogueへ設定する旧テストStep。
+16. Actions/Other/ComuToggleAction.asset — 会話切り替えActionの未使用実体。
+17. Actions/Other/WaitAction_2s.asset — 2秒の待機。
+18. Actions/Other/InstantComuStart.asset — 即時会話切り替えAction。20番と同型・同内容。
+19. Actions/Other/BlackFade.asset — ロゴ画像なしの旧TitleLogo。Chapter2の稼働中BlackFadeとは別物。
+20. Actions/Other/InstantComuEnd.asset — 18番と同型・同内容。Start/Endという名前の差は動作の差ではない。
+21. Actions/LostNotes/Ch1_Chara_02.asset — フォルダ名はCh1だが、内容はリドの人物紹介。
+22. Sequence/EX_Clear.asset — 存在しないStep GUIDを参照する旧Sequence。
+
+参照判定はGUID走査に加え、コード・シーン・アセット・JSONの名前/パス/GUID検索で確認した。
+外部ツールや動的に組み立てるパス、将来用途がないことまで証明するものではない。
+未使用のアセット実体があっても、その型やExecutorのクラスは現役の場合がある。
+
+運用手順
+1. ScenarioDataを選択し、＋から作成、三角で展開して編集する。
+2. 共有アクションを一部だけ変更する場合は、専用の複製へ差し替える。
+3. シナリオ/DBの検証ボタンで指摘を確認する。
+4. 内容を調整したら再検証し、対象章を再生して確認する。
+詳しいAPIと既定のPortrait・背景・キーワード運用は以下を更新済み。
+Assets/Scripts/ScenarioSystem/Documentation/Scenario_Usage_Guide.md

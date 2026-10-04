@@ -44,9 +44,14 @@ namespace ScenarioSystem.Model.Validation
             var rootList = roots == null ? new List<ScenarioData>() : new List<ScenarioData>(roots);
             if (roots == null)
                 Error(issues, "NULL_ROOTS", "検証対象のシナリオ一覧がありません。", null, "");
+            var registeredRoots = new HashSet<ScenarioData>();
             for (int i = 0; i < rootList.Count; i++)
+            {
                 if (rootList[i] == null)
                     Error(issues, "NULL_SCENARIO", $"シナリオ一覧の {i + 1} 件目に参照がありません。", null, $"allScenarios.Array.data[{i}]");
+                else if (!registeredRoots.Add(rootList[i]))
+                    Warning(issues, "DUPLICATE_REGISTRATION", $"シナリオ一覧に「{rootList[i].name}」が重複登録されています。", null, $"allScenarios.Array.data[{i}]");
+            }
 
             var scenarios = ScenarioGraph.Collect(rootList);
             var ids = new Dictionary<string, ScenarioData>(StringComparer.Ordinal);
